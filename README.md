@@ -55,5 +55,16 @@
 2020年までのデータで学習する。
 2021年のデータで推論する。
 
+## 環境
+Python 3.9.12
+cuda 11.7.0
+cupy 8.3.0
+
+## installation
+[Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)
+[CUDA Toolkit - Free Tools and Training | NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
+[Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
+
+
 ## 参考
 [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
