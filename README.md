@@ -56,14 +56,14 @@
 2021年のデータで推論する。
 
 ## 環境
-Python 3.9.12
-cuda 11.7.0
-cupy 8.3.0
+* Python 3.9.12
+* cuda 11.7.0
+* cupy 8.3.0
 
 ## installation
-[Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)
-[CUDA Toolkit - Free Tools and Training | NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
-[Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
+1. [Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)
+2. [CUDA Toolkit - Free Tools and Training | NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
+3. [Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
 
 
 ## 参考
