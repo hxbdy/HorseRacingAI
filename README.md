@@ -55,6 +55,15 @@
 2020年までのデータで学習する。
 2021年のデータで推論する。
 
+## コーディングルール
+1. 関数 : camel notation (ex: sampleFunc())
+2. クラス : upper camel case (ex: SampleClass())
+3. 変数 : snake case (ex: sample_tmp)
+
+## 学習済みパラメータについて
+main.pyで学習するとtrainedParamフォルダ以下に学習済みパラメータを保存する。  
+学習済みパラメータを使った推論を行う場合、これらをロードする。  
+
 ## 環境
 * Python 3.9.12
 * cuda 11.7.0
