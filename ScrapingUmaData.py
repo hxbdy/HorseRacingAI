@@ -13,7 +13,7 @@ def go_page(driver, url):
     url先にアクセス
     """
     driver.get(url)
-    time.sleep(1)
+    time.sleep(3)
 
 def select_from_dropdown(driver, select_name, select_value):
     """
@@ -61,7 +61,9 @@ def get_raceID(driver, yearlist, race_class_list=["check_grade_1"]):
             # 表示件数を100件にする
             select_from_dropdown(driver, "list", "100")
             # 検索ボタンをクリック
+            time.sleep(3)
             click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
+            time.sleep(3)
 
             ## 画面遷移後
             # raceIDをレース名のURLから取得
@@ -164,6 +166,7 @@ if __name__ == "__main__":
         horse_data_all.append(horse_data)
 
         ## がんばって整形する
+        ## 保存処理
 
         ## 以下保留事項
         # 血統を評価する際に、horseIDs_allから辿れない馬(収集期間内にG1,G2,G3に出場経験のない馬)のhorseIDをどこかに保存しておく
