@@ -13,7 +13,7 @@ def go_page(driver, url):
     url先にアクセス
     """
     driver.get(url)
-    time.sleep(5)
+    time.sleep(1)
 
 def select_from_dropdown(driver, select_name, select_value):
     """
@@ -62,7 +62,6 @@ def get_raceID(driver, yearlist, race_class_list=["check_grade_1"]):
             select_from_dropdown(driver, "list", "100")
             # 検索ボタンをクリック
             click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
-            time.sleep(5)
 
             ## 画面遷移後
             # raceIDをレース名のURLから取得
@@ -132,18 +131,23 @@ def get_horseID_racedata(driver, raceID_list):
 
 
 if __name__ == "__main__":
-    # Chromeを起動
-    driver = webdriver.Chrome(DRIVERPATH + "\\chromedriver")
+    # Chromeを起動 (エラーメッセージを表示しない)
+    ChromeOptions = webdriver.ChromeOptions()
+    ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
+    driver = webdriver.Chrome(DRIVERPATH + "\\chromedriver", options=ChromeOptions)
     
     # raceIDを取得してくる
-    #raceIDs_all = get_raceID(driver, list(range(1986,1987)))
-   
+    race_class_list =["check_grade_1", "check_grade_2", "check_grade_3"]
+    raceIDs_all = get_raceID(driver, list(range(1986,1987)), race_class_list)
+    
     # horseIDを取得する & race情報を得る
     #raceIDs_all = ["198606050810"] #test用
-    #horse_IDs_all, race_data_all = get_horseID_racedata(driver, raceIDs_all)
+    horse_IDs_all, race_data_all = get_horseID_racedata(driver, raceIDs_all)
 
     # 馬データを取得してくる
-    horseID_list = ["1983104089"] #test用
+    #horseID_list = ["1983104089"] #test用
+    horseID_list = horse_IDs_all
+    horse_data_all = []
     for horseID in horseID_list:
         ## 馬のページにアクセス
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
@@ -156,9 +160,13 @@ if __name__ == "__main__":
         ## 競走成績テーブルの取得
         perform_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']/tbody")
 
+        horse_data = [horseID, prof_table, blood_table, perform_table]
+        horse_data_all.append(horse_data)
+
         ## がんばって整形する
 
         ## 以下保留事項
         # 血統を評価する際に、horseIDs_allから辿れない馬(収集期間内にG1,G2,G3に出場経験のない馬)のhorseIDをどこかに保存しておく
         # 血統テーブルから過去の馬に遡ることになるが、その過去の馬のデータが無い場合どうするか
         # そもそも外国から参加してきた馬はどう処理するのか
+    

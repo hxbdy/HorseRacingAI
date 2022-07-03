@@ -11,6 +11,7 @@
 
 環境
 Python 3.8.3
+selenium 4.2.0
 
 ChromeDriver 103.0.5060.53
 https://chromedriver.chromium.org/downloads
