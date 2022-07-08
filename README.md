@@ -64,16 +64,19 @@
 main.pyで学習するとtrainedParamフォルダ以下に学習済みパラメータを保存する。  
 学習済みパラメータを使った推論を行う場合、これらをロードする。  
 
-## 環境
-* Python 3.9.12
+## caonda env
+* Python 3.8.13
 * cuda 11.7.0
 * cupy 8.3.0
+* selenium 4.2.0
 
-## installation
+
+## conda installation
 1. [Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)
 2. [CUDA Toolkit - Free Tools and Training | NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
 3. [Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
-
+4. [Selenium::Anaconda.org](https://anaconda.org/conda-forge/selenium)
+5. [Webdriver Manager :: Anaconda.org](https://anaconda.org/conda-forge/webdriver-manager)
 
 ## 参考
 [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
