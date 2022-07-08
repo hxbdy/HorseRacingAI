@@ -1,16 +1,16 @@
+from tkinter import BROWSE
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.chrome.options import Options
+
 import time
 import os
 import pickle
-from selenium.webdriver.chrome.options import Options
+import logging
 
 from webdriver_manager.chrome import ChromeDriverManager
-
-import time
-import logging
 
 """driverの操作"""
 def go_page(driver, url):
@@ -147,7 +147,6 @@ def get_horseID_save_racedata(driver, raceID_list):
     
     return horseID_set
 
-
 def save_horsedata(driver, horseID_list):
     """
     馬のデータを取得して保存する
@@ -181,34 +180,34 @@ def save_horsedata(driver, horseID_list):
         # 血統テーブルから過去の馬に遡ることになるが、その過去の馬のデータが無い場合どうするか
         # そもそも外国から参加してきた馬はどう処理するのか
 
-
-
 if __name__ == "__main__":
 
     # debug initialize
+    # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     # logger.disable(logging.DEBUG)
 
-    # Chromeを起動 (エラーメッセージを表示しない)
-    logger.debug('initialize chrome driver')
-    service = Service(executable_path=ChromeDriverManager().install())
-    ChromeOptions = webdriver.ChromeOptions()
-    ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
-    ChromeOptions.add_argument('-incognito')
-    driver = webdriver.Chrome(service=service, options=ChromeOptions)
-    logger.debug('initialize chrome driver comp')
-
-    """
-    # Chromeを起動 (エラーメッセージを表示しない)
-    ChromeOptions = webdriver.ChromeOptions()
-    ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
-    driver = webdriver.Chrome(DRIVERPATH + "\\chromedriver", options=ChromeOptions)
-    """
-    # Firefoxを起動
-    FirefoxOptions = webdriver.FirefoxOptions()
-    driver = webdriver.Firefox()
+    # ブラウザ起動
+    # 使用ブラウザ 1:Chrome 2:FireFox
+    BROWSER = 1 # 2
+    if(BROWSER == 1):
+        # Chromeを起動 (エラーメッセージを表示しない)
+        logger.debug('initialize chrome driver')
+        service = Service(executable_path=ChromeDriverManager().install())
+        ChromeOptions = webdriver.ChromeOptions()
+        ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
+        ChromeOptions.add_argument('-incognito') # シークレットモード
+        # ChromeOptions.add_argument('--headless') # ヘッドレスモード
+        driver = webdriver.Chrome(service=service, options=ChromeOptions)
+        logger.debug('initialize chrome driver comp')
+    elif(BROWSER == 2):
+        # Firefoxを起動
+        logger.debug('initialize firefox driver')
+        FirefoxOptions = webdriver.FirefoxOptions()
+        driver = webdriver.Firefox()
+        logger.debug('initialize firefox driver comp')
     
     # raceIDを取得してくる
     #logger.debug('get_raceID')
