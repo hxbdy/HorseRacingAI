@@ -1,12 +1,16 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 import time
 import os
 import pickle
+from selenium.webdriver.chrome.options import Options
 
-# ChromeDriverのパス
-DRIVERPATH = "E:\\Git_share\\uma_deep\\HorseRacingAI"
+from webdriver_manager.chrome import ChromeDriverManager
+
+import time
+import logging
 
 """driverの操作"""
 def go_page(driver, url):
@@ -143,6 +147,7 @@ def get_horseID_save_racedata(driver, raceID_list):
     
     return horseID_set
 
+
 def save_horsedata(driver, horseID_list):
     """
     馬のデータを取得して保存する
@@ -150,14 +155,19 @@ def save_horsedata(driver, horseID_list):
     """
     for horseID in horseID_list:
         ## 馬のページにアクセス
+        logger.debug('access netkeiba')
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
         go_page(driver, horse_url)
+        logger.debug('access netkeiba comp')
 
-        ## プロフィールテーブルのhtml取得
+        ## プロフィールテーブルの取得
+        logger.debug('get profile table')
         prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']/tbody")
-        ## 血統テーブルのhtml取得
+        ## 血統テーブルの取得
+        logger.debug('get blood table')
         blood_table = driver.find_element(By.XPATH, "//*[@class='blood_table']/tbody")
-        ## 競走成績テーブルのhtml取得
+        ## 競走成績テーブルの取得
+        logger.debug('get result table')
         perform_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']/tbody")
 
         horse_data = [horseID, prof_table, blood_table, perform_table]
@@ -174,6 +184,22 @@ def save_horsedata(driver, horseID_list):
 
 
 if __name__ == "__main__":
+
+    # debug initialize
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    # logger.disable(logging.DEBUG)
+
+    # Chromeを起動 (エラーメッセージを表示しない)
+    logger.debug('initialize chrome driver')
+    service = Service(executable_path=ChromeDriverManager().install())
+    ChromeOptions = webdriver.ChromeOptions()
+    ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
+    ChromeOptions.add_argument('-incognito')
+    driver = webdriver.Chrome(service=service, options=ChromeOptions)
+    logger.debug('initialize chrome driver comp')
+
     """
     # Chromeを起動 (エラーメッセージを表示しない)
     ChromeOptions = webdriver.ChromeOptions()
@@ -185,9 +211,11 @@ if __name__ == "__main__":
     driver = webdriver.Firefox()
     
     # raceIDを取得してくる
+    #logger.debug('get_raceID')
     #race_class_list =["check_grade_1", "check_grade_2", "check_grade_3"]
     #raceID_list = get_raceID(driver, list(range(1986,1987)), race_class_list)
     #save_data(raceID_list, "raceID")
+    #logger.debug('get_raceID comp')
     
     # horseIDを取得する & race情報を得る
     #raceIDs_all = ["198606050810"] #test用
@@ -196,7 +224,7 @@ if __name__ == "__main__":
 
     # 馬データを取得してくる
     horseID_list = ["1983104089"] #test用
+    #    logger.debug('get_horseID_racedata')
     #horseID_list = list(known_horseID_set)
     save_horsedata(driver, horseID_list)
-    
-    
+    #logger.debug('get_horseID_racedata comp')
