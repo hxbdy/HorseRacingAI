@@ -10,8 +10,16 @@
 3. https://db.netkeiba.com/horse/<<horseID>> <<horseID>>に2)で取得したホースIDを入れて、馬の情報を得る。
 
 # private.iniについて
-メールアドレスなど個人ごとにユニークな定数を書いておく  
+srcフォルダ直下に private.ini を作成して以下を記入して保存してください。
+メールとパスワードはネット競馬にログインするために使用します。  
 **まちがってもパスワードを入力したprivate.iniをプッシュしないこと**
+
+```txt:whatprivate.ini
+[scraping]
+browser = Chrome or FireFox
+mail = hogehoge@mail.com
+pass = password
+```
 
 # 環境
 - Python 3.8.3
