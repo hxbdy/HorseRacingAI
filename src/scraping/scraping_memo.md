@@ -9,6 +9,9 @@
 2. https://db.netkeiba.com/race/<<raceID>> <<raceID>>に1)で取得したレースIDを入れて、レース情報と出走馬のIDを得る。
 3. https://db.netkeiba.com/horse/<<horseID>> <<horseID>>に2)で取得したホースIDを入れて、馬の情報を得る。
 
+# private.iniについて
+メールアドレスなど個人ごとにユニークな定数を書いておく  
+**まちがってもパスワードを入力したprivate.iniをプッシュしないこと**
 
 # 環境
 - Python 3.8.3

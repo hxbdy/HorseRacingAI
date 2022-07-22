@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
+import configparser
 
 import time
 import os
@@ -14,6 +15,8 @@ import logging
 from sqlalchemy import TEXT
 
 from webdriver_manager.chrome import ChromeDriverManager
+
+OUTPUT_PATH = "../../dst/scrapingResult/"
 
 """driverの操作"""
 def go_page(driver, url):
@@ -47,8 +50,6 @@ def save_data(save_data, save_file_name):
     """
     resultフォルダ内にpicle化したファイルを保存する。
     """
-    # folder path
-    OUTPUT_PATH = "../../dst/scrapingResult/"
     with open(OUTPUT_PATH + save_file_name + ".pickle", 'wb') as f:
         pickle.dump(save_data, f)
 
@@ -262,10 +263,14 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     #logger.disable(logging.DEBUG)
 
+    # load config
+    config = configparser.ConfigParser()
+    config.read('../private.ini')
+    section = 'scraping'
+
     # ブラウザ起動
-    # 使用ブラウザ 1:Chrome 2:FireFox
-    BROWSER = 2 # 2
-    if(BROWSER == 1):
+    # 使用ブラウザ Chrome or FireFox
+    if(config.get(section, 'browser') == 'Chrome'):
         # Chromeを起動 (エラーメッセージを表示しない)
         logger.debug('initialize chrome driver')
         service = Service(executable_path=ChromeDriverManager().install())
@@ -275,7 +280,7 @@ if __name__ == "__main__":
         # ChromeOptions.add_argument('--headless') # ヘッドレスモード
         driver = webdriver.Chrome(service=service, options=ChromeOptions)
         logger.debug('initialize chrome driver comp')
-    elif(BROWSER == 2):
+    elif(config.get(section, 'browser') == 'FireFox'):
         # Firefoxを起動
         logger.debug('initialize firefox driver')
         FirefoxOptions = webdriver.FirefoxOptions()
@@ -283,14 +288,12 @@ if __name__ == "__main__":
         logger.debug('initialize firefox driver comp')
     
     # 保存先フォルダの存在確認
-    os.makedirs("../../dst/scrapingResult", exist_ok=True)
-    os.makedirs("../../dst/scrapingResult/race", exist_ok=True)
-    os.makedirs("../../dst/scrapingResult/horse", exist_ok=True)
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    os.makedirs(OUTPUT_PATH + "race", exist_ok=True)
+    os.makedirs(OUTPUT_PATH + "horse", exist_ok=True)
 
     # netkeibaにログイン
-    MAIL_ADDRESS = ""
-    PASSWORD = ""
-    login(driver, MAIL_ADDRESS, PASSWORD)
+    login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
     # raceIDを取得してくる
     logger.debug('get_raceID')
