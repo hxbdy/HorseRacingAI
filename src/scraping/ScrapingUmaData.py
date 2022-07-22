@@ -47,7 +47,9 @@ def save_data(save_data, save_file_name):
     """
     resultフォルダ内にpicle化したファイルを保存する。
     """
-    with open("result\\" + save_file_name + ".pickle", 'wb') as f:
+    # folder path
+    OUTPUT_PATH = "../../dst/scrapingResult/"
+    with open(OUTPUT_PATH + save_file_name + ".pickle", 'wb') as f:
         pickle.dump(save_data, f)
 
 """主要部"""
@@ -150,7 +152,7 @@ def get_horseID_save_racedata(driver, raceID_list):
             horse_weight.append(race_table_row[14].text)
             money.append(race_table_row[-1].text)
         
-        # result\race内にファイル名raceIDで保存
+        # scrapingResult/race内にファイル名raceIDで保存
         race_data = [raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money]
         save_data(race_data, "race\\{}".format(raceID))
 
@@ -281,9 +283,9 @@ if __name__ == "__main__":
         logger.debug('initialize firefox driver comp')
     
     # 保存先フォルダの存在確認
-    os.makedirs("result", exist_ok=True)
-    os.makedirs("result\\race", exist_ok=True)
-    os.makedirs("result\\horse", exist_ok=True)
+    os.makedirs("../../dst/scrapingResult", exist_ok=True)
+    os.makedirs("../../dst/scrapingResult/race", exist_ok=True)
+    os.makedirs("../../dst/scrapingResult/horse", exist_ok=True)
 
     # netkeibaにログイン
     MAIL_ADDRESS = ""
