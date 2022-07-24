@@ -198,15 +198,15 @@ def save_horsedata(driver, horseID_list):
 
     for horseID in horseID_list:
         ## 馬のページにアクセス
-        logger.debug('access netkeiba')
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
+        logger.info('access {}'.format(horse_url))
         go_page(driver, horse_url)
-        logger.debug('access netkeiba comp')
+        logger.info('access {} comp'.format(horse_url))
         
         horsedb.appendHorseID(horseID)
 
         ## プロフィールテーブルの取得
-        logger.debug('get profile table')
+        logger.info('get profile table')
         prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']")
         # 過去と現在で表示内容が違うため、行ラベルを認識して整形
         row_name_data = prof_table.find_elements(By.TAG_NAME, "th")
@@ -228,7 +228,7 @@ def save_horsedata(driver, horseID_list):
         horsedb.appendProfContents(prof_contents)
 
         ## 血統テーブルの取得
-        logger.debug('get blood table')
+        logger.info('get blood table')
         blood_table = driver.find_element(By.XPATH, "//*[@class='blood_table']")
         blood_table = blood_table.find_elements(By.TAG_NAME, "a")
         # 血統のhorseID。順番：[父, 父父, 父母, 母, 母父, 母母]
@@ -240,7 +240,7 @@ def save_horsedata(driver, horseID_list):
         horsedb.appendBloodList(blood_list)
 
         ## 競走成績テーブルの取得
-        logger.debug('get result table')
+        logger.info('get result table')
         perform_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
         perform_table = perform_table.find_elements(By.TAG_NAME, "tr")
         # 列名の取得と整形
@@ -310,20 +310,20 @@ if __name__ == "__main__":
     # 使用ブラウザ Chrome or FireFox
     if(config.get(section, 'browser') == 'Chrome'):
         # Chromeを起動 (エラーメッセージを表示しない)
-        logger.debug('initialize chrome driver')
+        logger.info('initialize chrome driver')
         service = Service(executable_path=ChromeDriverManager().install())
         ChromeOptions = webdriver.ChromeOptions()
         ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
         ChromeOptions.add_argument('-incognito') # シークレットモード
         # ChromeOptions.add_argument('--headless') # ヘッドレスモード
         driver = webdriver.Chrome(service=service, options=ChromeOptions)
-        logger.debug('initialize chrome driver comp')
+        logger.info('initialize chrome driver comp')
     elif(config.get(section, 'browser') == 'FireFox'):
         # Firefoxを起動
-        logger.debug('initialize firefox driver')
+        logger.info('initialize firefox driver')
         FirefoxOptions = webdriver.FirefoxOptions()
         driver = webdriver.Firefox()
-        logger.debug('initialize firefox driver comp')
+        logger.info('initialize firefox driver comp')
     
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
@@ -334,11 +334,11 @@ if __name__ == "__main__":
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
     # raceIDを取得してくる
-    logger.debug('get_raceID')
+    logger.info('get_raceID')
     race_class_list =["check_grade_1", "check_grade_2", "check_grade_3"]
     raceID_list = get_raceID(driver, list(range(1986,1987)), race_class_list)
     save_data(raceID_list, "raceID")
-    logger.debug('get_raceID comp')
+    logger.info('get_raceID comp')
     
     # horseIDを取得する & race情報を得る
     #raceIDs_all = ["198606050810"] #test用
@@ -347,9 +347,9 @@ if __name__ == "__main__":
 
     # 馬データを取得してくる
     #horseID_list = ["1983104089"] #test用
-    logger.debug('get_horseID_racedata')
+    logger.info('get_horseID_racedata')
     horseID_list = list(horseID_set)
     save_horsedata(driver, horseID_list)
-    logger.debug('get_horseID_racedata comp')
+    logger.info('get_horseID_racedata comp')
 
     driver.close()
