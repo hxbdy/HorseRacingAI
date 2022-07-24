@@ -44,31 +44,3 @@ class RaceDB:
 
     def appendMoney(self, data):
         self.money.append(data)
-
-    # 各パラメータゲッタ
-    def getRaceID(self, data):
-        return self.raceID
-
-    def getRaceName(self, data):
-        return self.race_name
-
-    def getRaceData1(self):
-        return self.race_data1
-
-    def getRaceData2(self):
-        return self.race_data2
-
-    def getHorseIDsRace(self):
-        return self.horseIDs_race
-
-    def getGoalTime(self):
-        return self.goal_time
-
-    def getGoalDiff(self):
-        return self.goal_dif
-
-    def getHorseWeight(self):
-        return self.horse_weight
-
-    def getMoney(self):
-        return self.money
