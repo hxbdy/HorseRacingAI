@@ -47,20 +47,21 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logger.disable(logging.DEBUG)
+    #logging.disable(logging.DEBUG)
 
     # レース情報読み込み
     with open("../../dst/scrapingResult/racedb.pickle", 'rb') as f:
             racedb = pickle.load(f)
-            logger.info(racedb.raceID[0])
-            logger.info(racedb.race_name[0])
-            logger.info(racedb.race_data1[0])
-            logger.info(racedb.race_data2[0])
-            logger.info(racedb.horseIDs_race[0])
-            logger.info(racedb.goal_time[0])
-            logger.info(racedb.goal_dif[0])
-            logger.info(racedb.horse_weight[0])
-            logger.info(racedb.money[0])
+            printIdx = 0
+            logger.info(racedb.raceID[printIdx])
+            logger.info(racedb.race_name[printIdx])
+            logger.info(racedb.race_data1[printIdx])
+            logger.info(racedb.race_data2[printIdx])
+            logger.info(racedb.horseIDs_race[printIdx])
+            logger.info(racedb.goal_time[printIdx])
+            logger.info(racedb.goal_dif[printIdx])
+            logger.info(racedb.horse_weight[printIdx])
+            logger.info(racedb.money[printIdx])
 
     # 馬情報読み込み
     with open("../../dst/scrapingResult/horsedb.pickle", 'rb') as f:

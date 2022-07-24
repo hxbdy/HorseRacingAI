@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-#logger.disable(logging.DEBUG)
+#logging.disable(logging.DEBUG)
 
 class HorseDB:
     def __init__(self):

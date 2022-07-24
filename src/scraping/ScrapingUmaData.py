@@ -137,6 +137,7 @@ def get_horseID_save_racedata(driver, raceID_list):
     for raceID in raceID_list:
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
+        logger.info('access {}'.format(race_url))
         go_page(driver, race_url)
 
         racedb.appendRaceID(raceID)
@@ -299,7 +300,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logger.disable(logging.DEBUG)
+    logging.disable(logging.DEBUG)
 
     # load config
     config = configparser.ConfigParser()
