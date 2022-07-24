@@ -37,14 +37,14 @@ def getHorseInfoFromPkl(horseID):
         if path.name == horseID + ".pickle":
             with open(path, 'rb') as f:
                 data = pickle.load(f)
-                print(data)
+                logger.info('{0} is found'.format(horseID))
                 return
     logger.warning('HorseID : {0} is not exist'.format(horseID))
 
 if __name__ == "__main__":
     # debug initialize
     # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     #logger.disable(logging.DEBUG)
@@ -52,15 +52,15 @@ if __name__ == "__main__":
     # レース情報読み込み
     with open("../../dst/scrapingResult/racedb.pickle", 'rb') as f:
             racedb = pickle.load(f)
-            print(racedb.raceID[0])
-            print(racedb.race_name[0])
-            print(racedb.race_data1[0])
-            print(racedb.race_data2[0])
-            print(racedb.horseIDs_race[0])
-            print(racedb.goal_time[0])
-            print(racedb.goal_dif[0])
-            print(racedb.horse_weight[0])
-            print(racedb.money[0])
+            logger.info(racedb.raceID[0])
+            logger.info(racedb.race_name[0])
+            logger.info(racedb.race_data1[0])
+            logger.info(racedb.race_data2[0])
+            logger.info(racedb.horseIDs_race[0])
+            logger.info(racedb.goal_time[0])
+            logger.info(racedb.goal_dif[0])
+            logger.info(racedb.horse_weight[0])
+            logger.info(racedb.money[0])
 
     # 馬情報読み込み
     with open("../../dst/scrapingResult/horsedb.pickle", 'rb') as f:

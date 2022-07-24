@@ -8,7 +8,7 @@ import logging
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s HorseDB [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 #logger.disable(logging.DEBUG)
