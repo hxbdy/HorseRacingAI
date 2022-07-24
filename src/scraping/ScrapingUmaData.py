@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# commonディレクトリ以下を使用したいため
+# scrapingディレクトリにcdしてから実行すること
+
 from tkinter import BROWSE
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -13,6 +16,16 @@ import os
 import pickle
 import logging
 from sqlalchemy import TEXT
+import sys
+
+# commonフォルダ内読み込みのため
+sys.path.append(os.path.abspath(".."))
+parentDir = os.path.dirname(os.path.abspath(__file__))
+if parentDir not in sys.path:
+    sys.path.append(parentDir)
+
+from common.HorseDB import HorseDB
+from common.RaceDB import RaceDB
 
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -119,10 +132,14 @@ def get_horseID_save_racedata(driver, raceID_list):
     """
     horseID_set = set()
 
+    racedb = RaceDB()
+
     for raceID in raceID_list:
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
         go_page(driver, race_url)
+
+        racedb.appendRaceID(raceID)
 
         ## horseIDの取得とhorseID_setへの追加
         horse_column_html = driver.find_elements(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody/tr/td[4]")
@@ -132,13 +149,20 @@ def get_horseID_save_racedata(driver, raceID_list):
             horseID = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
             horseIDs_race.append(horseID)
         horseID_set |= set(horseIDs_race)
+        racedb.appendHorseIDsRace(horseIDs_race)
 
 
         ## race情報の取得・整形と保存 (払い戻しの情報は含まず)
         # レース名、レースデータ1(天候など)、レースデータ2(日付など)  <未補正 文字列>
         race_name = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/h1").text
+        racedb.appendRaceName(race_name)
+
         race_data1 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/p/diary_snap_cut/span").text
+        racedb.appendRaceData1(race_data1)
+
         race_data2 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/p").text
+        racedb.appendRaceData2(race_data2)
+
         # テーブルデータ
         race_table_data = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody")
         race_table_data_rows = race_table_data.find_elements(By.TAG_NAME, "tr")
@@ -152,11 +176,15 @@ def get_horseID_save_racedata(driver, raceID_list):
             goal_dif.append(race_table_row[8].text)
             horse_weight.append(race_table_row[14].text)
             money.append(race_table_row[-1].text)
+        racedb.appendGoalTime(goal_time)
+        racedb.appendGoalDiff(goal_dif)
+        racedb.appendHorseWeight(horse_weight)
+        racedb.appendMoney(money)
         
         # scrapingResult/race内にファイル名raceIDで保存
         race_data = [raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money]
         save_data(race_data, "race\\{}".format(raceID))
-
+    save_data(racedb, "racedb")
     
     return horseID_set
 
@@ -165,12 +193,17 @@ def save_horsedata(driver, horseID_list):
     馬のデータを取得して保存する
     [入力] horseID_list: 調べるhorseIDのリスト
     """
+
+    horsedb = HorseDB()
+
     for horseID in horseID_list:
         ## 馬のページにアクセス
         logger.debug('access netkeiba')
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
         go_page(driver, horse_url)
         logger.debug('access netkeiba comp')
+        
+        horsedb.appendHorseID(horseID)
 
         ## プロフィールテーブルの取得
         logger.debug('get profile table')
@@ -192,6 +225,7 @@ def save_horsedata(driver, horseID_list):
             # 競走成績テーブルが全て取得できているか確認するため、出走数を取得しておく
             if row_name[row] == "通算成績":
                 num_entry_race = int(prof_contents[row][:prof_contents[row].find("戦")])
+        horsedb.appendProfContents(prof_contents)
 
         ## 血統テーブルの取得
         logger.debug('get blood table')
@@ -203,6 +237,7 @@ def save_horsedata(driver, horseID_list):
             blood_horse_url_str = blood_table[i].get_attribute("href")
             blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
             blood_list.append(blood_horseID)
+        horsedb.appendBloodList(blood_list)
 
         ## 競走成績テーブルの取得
         logger.debug('get result table')
@@ -238,16 +273,19 @@ def save_horsedata(driver, horseID_list):
                         perform_contents_row.append(id)
                         break
             perform_contents.append(perform_contents_row)
+        horsedb.appendPerformContents(perform_contents)
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_table) -1:
             check = "pass"
         else:
             check = "lack_data"
+        horsedb.appendCheck(check)
 
         ## 保存処理
         horse_data = [horseID, prof_contents, blood_list, perform_contents, check]
         save_data(horse_data, "horse\\{}".format(horseID))
+    save_data(horsedb, "horsedb")
 
         ## 以下保留事項
         # 血統を評価する際に、horseIDs_allから辿れない馬(収集期間内にG1,G2,G3に出場経験のない馬)のhorseIDをどこかに保存しておく
