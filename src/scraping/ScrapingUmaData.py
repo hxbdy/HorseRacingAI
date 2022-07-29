@@ -26,6 +26,7 @@ if parentDir not in sys.path:
 
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
+from common.RaceGradeDB import RaceGradeDB
 
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -58,7 +59,19 @@ def click_button(driver, xpath):
     """
     driver.find_element(By.XPATH, xpath).click()
 
-"""pickleでデータを保存"""
+"""pickleでデータを読み込み・保存"""
+def read_data(read_file_name):
+    """
+    resultフォルダ内にpicle化したファイルを読み込む。
+    存在しない場合は文字列を返す．
+    """
+    try:
+        with open(OUTPUT_PATH + read_file_name + ".pickle", "rb") as f:
+            data = pickle.load(f)
+    except FileNotFoundError:
+        data = "FileNotFoundError"
+    return data
+
 def save_data(save_data, save_file_name):
     """
     resultフォルダ内にpicle化したファイルを保存する。
@@ -77,17 +90,27 @@ def login(driver, mail_address, password):
     driver.find_element(By.XPATH, "//*[@id='contents']/div/form/div/div[1]/input").click()
 
 
-def get_raceID(driver, yearlist, race_class_list=["check_grade_1"]):
+def save_raceID(driver, yearlist, race_grade_list=["check_grade_1"]):
     """
     検索をかけてraceIDを取得する。
     [入力] driver: webdriver
     [入力] yearlist: 取得する年のリスト(1986-2022)
-    [入力] race_class_list: 取得するクラスのリスト(G1, G2, opなど) 1: G1, 2: G2, 3: G3, 4: OP
+    [入力] race_grade_list: 取得するグレードのリスト(G1, G2, opなど) 1: G1, 2: G2, 3: G3, 4: OP
     [出力] raceID_list: raceIDのリスト
     """
-    raceID_list = []
-    for race_class in race_class_list:
-        for year in yearlist:
+    # raceGradedbを読み込む．存在しない場合は新たに作る．
+    raceGradedb = read_data("raceGradedb")
+    if raceGradedb == "FileNotFoundError":
+        raceGradedb = RaceGradeDB()
+
+    # 定期的なデータセーブのためのループ回数カウンター
+    save_counter = 0
+
+    for year in yearlist:
+        for race_grade in race_grade_list:
+            save_counter += 1
+
+            ## レース種別を入力して検索
             # レース詳細検索に移動
             URL_find_race_id = "https://db.netkeiba.com/?pid=race_search_detail"
             go_page(driver, URL_find_race_id)
@@ -99,7 +122,7 @@ def get_raceID(driver, yearlist, race_class_list=["check_grade_1"]):
             for i in range(1,11): # 全競馬場を選択
                 click_checkbox(driver, "check_Jyo_{:02}".format(i))
             # クラスの選択
-            click_checkbox(driver, race_class)
+            click_checkbox(driver, race_grade)
             # 表示件数を100件にする
             select_from_dropdown(driver, "list", "100")
             # 検索ボタンをクリック
@@ -110,31 +133,45 @@ def get_raceID(driver, yearlist, race_class_list=["check_grade_1"]):
             # raceIDをレース名のURLから取得
             # 5列目のデータ全部
             race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
-            raceIDs_year = []
+            raceID_list = []
             for i in range(len(race_column_html)):
                 race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
                 raceID = race_url_str[race_url_str.find("race/")+5 : -1] # 最後の/を除去
-                raceIDs_year.append(raceID)
+                raceID_list.append(raceID)
 
-            # raceIDs_yearが日付降順なので、昇順にする
-            raceIDs_year = raceIDs_year[::-1]
+            # raceID_listが日付降順なので、昇順にする
+            raceID_list = raceID_list[::-1]
+            # raceGradedbに保存
+            raceGradedb.appendRaceIDList(raceID_list, int(year), race_grade[-1])
+            # raceGradedbを10回ごとに外部に出力
+            if save_counter % 10 == 0:
+                save_data(raceGradedb, "raceGradedb")
+                logger.info("save raceGradedb comp, year: {}, grade: {}, save_counter:{}"\
+                    .format(year, race_grade[-1], save_counter))
+        
+    # raceGradedbを外部に出力
+    save_data(raceGradedb, "raceGradedb")
 
-            raceID_list += raceIDs_year
-
-    return raceID_list
-
-def get_horseID_save_racedata(driver, raceID_list):
+def save_racedata(driver, raceID_list):
     """
     horseIDを取得する & race情報を得る。
     [入力] driver: webdriver
     [入力] raceID_list: 調べるraceIDのリスト
     [出力] horseID_set: 出現したhorseIDの集合。
     """
+    # racedbを読み込む．存在しない場合は新たに作る．
+    racedb = read_data("racedb")
+    if racedb == "FileNotFoundError":
+        racedb = RaceDB()
+
+    # 定期的なデータセーブのためのループ回数カウンター
+    save_counter = 0
+
     horseID_set = set()
 
-    racedb = RaceDB()
-
     for raceID in raceID_list:
+        save_counter += 1
+
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
         logger.info('access {}'.format(race_url))
@@ -182,12 +219,13 @@ def get_horseID_save_racedata(driver, raceID_list):
         racedb.appendHorseWeight(horse_weight)
         racedb.appendMoney(money)
         
-        # scrapingResult/race内にファイル名raceIDで保存
-        race_data = [raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money]
-        save_data(race_data, "race\\{}".format(raceID))
+        # racedbを10回ごとに外部に出力
+        if save_counter % 10 == 0:
+            save_data(racedb, "racedb")
+            logger.info("save racedb comp, save_counter:{}".format(save_counter))
+
     save_data(racedb, "racedb")
-    
-    return horseID_set
+
 
 def save_horsedata(driver, horseID_list):
     """
@@ -195,9 +233,27 @@ def save_horsedata(driver, horseID_list):
     [入力] horseID_list: 調べるhorseIDのリスト
     """
 
-    horsedb = HorseDB()
+    # horsedbを読み込む．存在しない場合は新たに作る．
+    horsedb = read_data("horsedb")
+    if horsedb == "FileNotFoundError":
+        horsedb = HorseDB()
+    
+    # 定期的なデータセーブのためのループ回数カウンター
+    save_counter = 0
+    
+    # 既にhorsedb内に存在するhorseIDを記録する集合
+    searched_horseID_set = set(horsedb.horseID)
 
     for horseID in horseID_list:
+        save_counter += 1
+
+        if horseID in searched_horseID_set:
+            # horsedbを10回ごとに外部に出力
+            if save_counter % 10 == 0:
+                save_data(horsedb, "horsedb")
+                logger.info("save horsedb comp, save_counter:{}".format(save_counter))
+            continue
+
         ## 馬のページにアクセス
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
         logger.info('access {}'.format(horse_url))
@@ -218,9 +274,12 @@ def save_horsedata(driver, horseID_list):
             row_name.append(row_name_data[row].text)
             # 調教師の場合はurlから調教師IDを取得し、それ以外はテキストで取得
             if row_name[row] == "調教師":
-                trainer_url_str = prof_contents_data[row].find_element(By.TAG_NAME, "a").get_attribute("href")
-                trainerID = trainer_url_str[trainer_url_str.find("trainer/")+8 : -1] # 最後の/を除去
-                prof_contents.append(trainerID)
+                try:
+                    trainer_url_str = prof_contents_data[row].find_element(By.TAG_NAME, "a").get_attribute("href")
+                    trainerID = trainer_url_str[trainer_url_str.find("trainer/")+8 : -1] # 最後の/を除去
+                    prof_contents.append(trainerID)
+                except:
+                    prof_contents.append(prof_contents_data[row].text)
             else:
                 prof_contents.append(prof_contents_data[row].text)
             # 競走成績テーブルが全て取得できているか確認するため、出走数を取得しておく
@@ -265,27 +324,34 @@ def save_horsedata(driver, horseID_list):
                         break
                 for icn in ID_COL_NAME:
                     if column_name[col] == icn:
-                        id_url_str = perform_table_row[col].find_element(By.TAG_NAME, "a").get_attribute("href")
-                        # ID_COL_NAMEを変更した場合、ここのif文の変更が必要
-                        if icn == "レース名":
-                            id = id_url_str[id_url_str.find("race/")+5 : -1]
-                        elif icn == "騎手":
-                            id = id_url_str[id_url_str.find("jockey/result/recent/")+21 : -1]
-                        perform_contents_row.append(id)
+                        try:
+                            id_url_str = perform_table_row[col].find_element(By.TAG_NAME, "a").get_attribute("href")
+                            # ID_COL_NAMEを変更した場合、ここのif文の変更が必要
+                            if icn == "レース名":
+                                id = id_url_str[id_url_str.find("race/")+5 : -1]
+                            elif icn == "騎手":
+                                id = id_url_str[id_url_str.find("jockey/result/recent/")+21 : -1]
+                            perform_contents_row.append(id)
+                        except:
+                            perform_contents_row.append(perform_table_row[col].text)
                         break
             perform_contents.append(perform_contents_row)
         horsedb.appendPerformContents(perform_contents)
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_table) -1:
-            check = "pass"
+            check = 1 # OK
         else:
-            check = "lack_data"
+            check = 0 # データ欠損アリ (prof_tableとperform_tableで一致しない)
         horsedb.appendCheck(check)
 
-        ## 保存処理
-        horse_data = [horseID, prof_contents, blood_list, perform_contents, check]
-        save_data(horse_data, "horse\\{}".format(horseID))
+        ## searched_horseID_setの更新と保存処理
+        searched_horseID_set.add(horseID)
+        # horsedbを10回ごとに外部に出力
+        if save_counter % 10 == 0:
+            save_data(racedb, "horsedb")
+            logger.info("save horsedb comp, save_counter:{}".format(save_counter))
+
     save_data(horsedb, "horsedb")
 
         ## 以下保留事項
@@ -328,29 +394,31 @@ if __name__ == "__main__":
     
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
-    os.makedirs(OUTPUT_PATH + "race", exist_ok=True)
-    os.makedirs(OUTPUT_PATH + "horse", exist_ok=True)
+
 
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
     # raceIDを取得してくる
-    logger.info('get_raceID')
+    logger.info('save_raceID')
     race_class_list =["check_grade_1", "check_grade_2", "check_grade_3"]
-    raceID_list = get_raceID(driver, list(range(1986,1987)), race_class_list)
-    save_data(raceID_list, "raceID")
-    logger.info('get_raceID comp')
+    save_raceID(driver, list(range(1986,1987)), race_class_list)
+    logger.info('save_raceID comp')
     
     # horseIDを取得する & race情報を得る
-    #raceIDs_all = ["198606050810"] #test用
-    horseID_set = get_horseID_save_racedata(driver, raceID_list)
-    save_data(list(horseID_set), "horseID")
+    logger.info('save_racedata')
+    raceGradedb = read_data("raceGradedb")
+    raceID_list = raceGradedb.getRaceIDList()
+    #raceID_list = ["198606050810"] #test用
+    save_racedata(driver, raceID_list)
+    logger.info('save_racedata comp')
 
     # 馬データを取得してくる
+    logger.info('save_horsedata')
+    racedb = read_data("racedb")
+    horseID_list = racedb.getHorseIDList()
     #horseID_list = ["1983104089"] #test用
-    logger.info('get_horseID_racedata')
-    horseID_list = list(horseID_set)
     save_horsedata(driver, horseID_list)
-    logger.info('get_horseID_racedata comp')
+    logger.info('save_horsedata comp')
 
     driver.close()

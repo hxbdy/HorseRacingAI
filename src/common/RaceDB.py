@@ -44,3 +44,10 @@ class RaceDB:
 
     def appendMoney(self, data):
         self.money.append(data)
+
+    # horseIDs_raceを1次元配列に直して出力
+    def getHorseIDList(self):
+        output = []
+        for i in range(len(self.horseIDs_race)):
+            output += self.horseIDs_race[i]
+        return output
