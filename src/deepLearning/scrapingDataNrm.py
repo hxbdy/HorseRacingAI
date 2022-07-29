@@ -10,18 +10,6 @@ parentDir = os.path.dirname(os.path.abspath(__file__))
 if parentDir not in sys.path:
     sys.path.append(parentDir)
 
-# ENUM race_data
-# race_data = [raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money]
-# '198601010809'
-# '第22回札幌記念(G3)'
-# 'ダ右2000m / 天候 : 曇 / ダート : 良 / 発走 : 15:50'
-# '1986年6月29日 1回札幌8日目 4歳以上オープン  (混)(ハンデ)'
-# ['1982101018', '1981101906', '1981105792', '1980103815', '1981101953', '1982102717', '1981100539', '1980103942']
-# ['2:02.3', '2:03.1', '2:03.4', '2:03.7', '2:03.9', '2:04.7', '2:04.9', '2:06.3']
-# ['', '5', '2', '2', '1.1/4', '5', '1', '9']
-# ['506(+12)', '516(+2)', '548(0)', '496(+8)', '488(-6)', '462(-4)', '502(-2)', '530(0)']
-# ['2,700.0', '1,100.0', '680.0', '410.0', '270.0', '', '', '']
-
 # ENUM horse_data
 # horse_data = [horseID, prof_contents, blood_list, perform_contents, check]
 # '1982101018'
@@ -52,25 +40,35 @@ if __name__ == "__main__":
     # レース情報読み込み
     with open("../../dst/scrapingResult/racedb.pickle", 'rb') as f:
             racedb = pickle.load(f)
-            printIdx = 0
-            logger.info(racedb.raceID[printIdx])
-            logger.info(racedb.race_name[printIdx])
-            logger.info(racedb.race_data1[printIdx])
-            logger.info(racedb.race_data2[printIdx])
-            logger.info(racedb.horseIDs_race[printIdx])
-            logger.info(racedb.goal_time[printIdx])
-            logger.info(racedb.goal_dif[printIdx])
-            logger.info(racedb.horse_weight[printIdx])
-            logger.info(racedb.money[printIdx])
 
     # 馬情報読み込み
     with open("../../dst/scrapingResult/horsedb.pickle", 'rb') as f:
             horsedb = pickle.load(f)
     
     # 出力
+    printIdx = 0
+
+    logger.info(racedb.raceID[printIdx])
+    logger.info(racedb.race_name[printIdx])
+    logger.info(racedb.race_data1[printIdx])
+    logger.info(racedb.race_data2[printIdx])
+    logger.info(racedb.horseIDs_race[printIdx])
+    logger.info(racedb.goal_time[printIdx])
+    logger.info(racedb.goal_dif[printIdx])
+    logger.info(racedb.horse_weight[printIdx])
+    logger.info(racedb.money[printIdx])
+
     index = horsedb.getHorseInfo(racedb.horseIDs_race[0][0])
     logger.debug('HorseIDIndex : {0} '.format(index))
     horsedb.printAllMethodIndex(index)
+
+    # レースでのタイムをsecに変換する
+    racedb.goalTimeConv2Sec(printIdx)
+    logger.info(racedb.goal_time[printIdx])
+
+    # レースタイムを正規化
+    racedb.goalTimeNrm(printIdx)
+    logger.info(racedb.goal_time[printIdx])
 
     # レースごとに入力する
     # 1レースのpklロード
