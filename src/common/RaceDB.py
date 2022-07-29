@@ -1,3 +1,4 @@
+from http.client import MULTI_STATUS
 import numpy as np
 import os
 import sys
@@ -66,15 +67,14 @@ class RaceDB:
         return output
         
     def goalTimeNrm(self,index):
-        # sigmoid で標準化
+        # sigmoid で標準化．MUはハイパーパラメータ．
         # 計算式 : y = 1 / (1 + exp(x))
         # テキストではexp(-x)だが今回は値が小さい方が「良いタイム」のためexp(x)としてみた
-        # 例えば90[sec]をそのまま入れると exp(90)を計算することになり
-        # y = 0 に近づきすぎるため良くないと思うので一度最大値で割っておく
         # 最大値 = 最下位のタイム
         npGoalTime = np.array(self.goal_time[index])
-        c = np.max(npGoalTime)
-        y = 1 / (1 + np.exp(npGoalTime / c))
+        ave = np.average(npGoalTime)
+        MU = 50
+        y = 1 / (1 + np.exp(npGoalTime / MU - ave))
         # ndarray と list の違いがよくわかっていないので一応リストに変換しておく
         self.goal_time[index] = y.tolist()
 
