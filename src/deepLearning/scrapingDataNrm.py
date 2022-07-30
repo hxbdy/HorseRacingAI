@@ -50,44 +50,27 @@ if __name__ == "__main__":
     # 出力
     printIdx = 0
 
-    logger.info(racedb.raceID[printIdx])
-    logger.info(racedb.race_name[printIdx])
-    logger.info(racedb.race_data1[printIdx])
-    logger.info(racedb.race_data2[printIdx])
-    logger.info(racedb.horseIDs_race[printIdx])
-    logger.info(racedb.goal_time[printIdx])
-    logger.info(racedb.goal_dif[printIdx])
-    logger.info(racedb.horse_weight[printIdx])
-    logger.info(racedb.money[printIdx])
-
-    index = horsedb.getHorseInfo(racedb.horseIDs_race[0][0])
-    logger.debug('HorseIDIndex : {0} '.format(index))
-    horsedb.printAllMethodIndex(index)
+    # レースの情報一覧出力
+    racedb.printAllMethodIndex(printIdx)
 
     # レースでのタイムをsecに変換する
     racedb.goalTimeConv2Sec(printIdx)
-    logger.info(racedb.goal_time[printIdx])
 
     # レースタイムを正規化
     racedb.goalTimeNrm(printIdx)
-    logger.info(racedb.goal_time[printIdx])
 
     # レース開催日
     d0 = racedb.getRaceDate(printIdx)
 
-    # 出走馬の年齢一覧出力
+    # 出走馬の情報一覧出力
     horseOldList = []
     for horseID in racedb.horseIDs_race[printIdx]:
         index = horsedb.getHorseInfo(horseID)
+        horsedb.printAllMethodIndex(index)
+
+        # レース開催日の馬の年齢を計算
         d1 = horsedb.getBirthDay(index)
         dy = relativedelta(d0, d1)
+
         # 月, 日 も小数点以下で表現した歳にする
         horseOldList.append(dy.years + (dy.months / 12.0) + (dy.days / 365.0))
-    logger.debug(horseOldList)
-
-    # レースごとに入力する
-    # 1レースのpklロード
-    #  - HorseID参照、展開
-    # 正規化(ここが一番たいへん)
-    #  - 足りないデータをダミーデータで埋める
-    #  - 古いデータの影響度係数をかけてみたりするのもここ

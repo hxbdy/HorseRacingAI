@@ -23,10 +23,15 @@ class HorseDB:
         self.check = []
 
     def printAllMethodIndex(self, index):
+        logger.info("horseID => ")
         logger.info(self.horseID[index])
+        logger.info("prof_contents => ")
         logger.info(self.prof_contents[index])
+        logger.info("blood_list => ")
         logger.info(self.blood_list[index])
+        logger.info("perform_contents => ")
         logger.info(self.perform_contents[index])
+        logger.info("check => ")
         logger.info(self.check[index])
 
     # 各パラメータセッタ

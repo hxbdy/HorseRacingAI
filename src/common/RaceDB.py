@@ -3,10 +3,18 @@ from datetime import date
 import numpy as np
 import os
 import sys
+import logging
 
 # スクレイピング側とAI側で扱うパラメータを共通化するためのインタフェースとして機能する
 # スクレイピングで取得するパラメータを変更する場合、ここをメンテすること
 # pickleで保存できなくなるのでファイル読み書き系処理は追加しないこと
+
+# debug initialize
+# LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+#logging.disable(logging.DEBUG)
 
 # ENUM race_data
 # race_data = [raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money]
@@ -31,6 +39,26 @@ class RaceDB:
         self.goal_dif = []
         self.horse_weight = []
         self.money = []
+    
+    def printAllMethodIndex(self, index):
+        logger.info("raceID => ")
+        logger.info(self.raceID[index])
+        logger.info("race_name => ")
+        logger.info(self.race_name[index])
+        logger.info("race_data1 => ")
+        logger.info(self.race_data1[index])
+        logger.info("race_data2 => ")
+        logger.info(self.race_data2[index])
+        logger.info("horseIDs_race => ")
+        logger.info(self.horseIDs_race[index])
+        logger.info("goal_time => ")
+        logger.info(self.goal_time[index])
+        logger.info("goal_dif => ")
+        logger.info(self.goal_dif[index])
+        logger.info("horse_weight => ")
+        logger.info(self.horse_weight[index])
+        logger.info("money => ")
+        logger.info(self.money[index])
 
     # 各パラメータセッタ
     def appendRaceID(self, data):
