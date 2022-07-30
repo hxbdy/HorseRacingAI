@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 import logging
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 # commonフォルダ内読み込みのため
 sys.path.append(os.path.abspath(".."))
@@ -69,6 +71,19 @@ if __name__ == "__main__":
     # レースタイムを正規化
     racedb.goalTimeNrm(printIdx)
     logger.info(racedb.goal_time[printIdx])
+
+    # レース開催日
+    d0 = racedb.getRaceDate(printIdx)
+
+    # 出走馬の年齢一覧出力
+    horseOldList = []
+    for horseID in racedb.horseIDs_race[printIdx]:
+        index = horsedb.getHorseInfo(horseID)
+        d1 = horsedb.getBirthDay(index)
+        dy = relativedelta(d0, d1)
+        # 月, 日 も小数点以下で表現した歳にする
+        horseOldList.append(dy.years + (dy.months / 12.0) + (dy.days / 365.0))
+    logger.debug(horseOldList)
 
     # レースごとに入力する
     # 1レースのpklロード

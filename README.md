@@ -77,6 +77,7 @@ main.pyで学習するとtrainedParamフォルダ以下に学習済みパラメ�
 3. [Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
 4. [Selenium::Anaconda.org](https://anaconda.org/conda-forge/selenium)
 5. [Webdriver Manager :: Anaconda.org](https://anaconda.org/conda-forge/webdriver-manager)
+6. [Python Dateutil :: Anaconda.org](https://anaconda.org/conda-forge/python-dateutil)
 
 ## 参考
 [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)

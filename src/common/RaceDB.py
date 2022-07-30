@@ -1,4 +1,5 @@
 from http.client import MULTI_STATUS
+from datetime import date
 import numpy as np
 import os
 import sys
@@ -96,3 +97,13 @@ class RaceDB:
             sec = float(self.goal_time[index][gtime].split(':')[1])
             # 秒に変換したタイムをリストに入れ直す
             self.goal_time[index][gtime] = min * 60 + sec
+
+    def getRaceDate(self, index):
+        # レース開催日を取り出す
+        # 以下の前提で計算する
+        # race_data2 にレース開催日が含まれていること
+        raceDate = self.race_data2[index]
+        raceDateYear = int(raceDate.split("年")[0])
+        raceDateMon = int(raceDate.split("年")[1].split("月")[0])
+        raceDateDay = int(raceDate.split("月")[1].split("日")[0])
+        return date(raceDateYear, raceDateMon, raceDateDay)

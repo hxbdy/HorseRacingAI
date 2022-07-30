@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from datetime import date
 
 # スクレイピング側とAI側で扱うパラメータを共通化するためのインタフェースとして機能する
 # スクレイピングで取得するパラメータを変更する場合、ここをメンテすること
@@ -48,3 +49,14 @@ class HorseDB:
         for index in range(len(self.horseID)):
             if self.horseID[index] == searchID:
                 return index
+
+    def getBirthDay(self, index):
+        # 誕生日を取り出す
+        # 以下の前提で計算する
+        # prof_contents[index][0] に誕生日が含まれていること
+        data = self.prof_contents[index][0]
+        birthYear = int(data.split("年")[0])
+        birthMon = int(data.split("年")[1].split("月")[0])
+        birthDay = int(data.split("月")[1].split("日")[0])
+        return date(birthYear, birthMon, birthDay)
+    
