@@ -135,3 +135,16 @@ class RaceDB:
         raceDateMon = int(raceDate.split("年")[1].split("月")[0])
         raceDateDay = int(raceDate.split("月")[1].split("日")[0])
         return date(raceDateYear, raceDateMon, raceDateDay)
+
+    def moneyNrm(self, index):
+        # 賞金標準化
+        # 空の要素はゼロyenにする
+        # 1位賞金で割る
+        # 値が大きいため標準化の方法は色々あると思う
+        money1st = float(self.money[index][0].replace(",",""))
+        for m in range(len(self.money[index])):
+            if self.money[index][m] == "":
+                fm = "0.0"
+            else:
+                fm = self.money[index][m].replace(",","")
+            self.money[index][m] = float(fm) / money1st

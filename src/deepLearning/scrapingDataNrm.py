@@ -74,3 +74,7 @@ if __name__ == "__main__":
 
         # 月, 日 も小数点以下で表現した歳にする
         horseOldList.append(dy.years + (dy.months / 12.0) + (dy.days / 365.0))
+
+    # 1位賞金出力
+    racedb.moneyNrm(printIdx)
+    logger.debug(racedb.money[printIdx])
