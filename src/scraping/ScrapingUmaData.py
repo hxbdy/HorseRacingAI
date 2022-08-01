@@ -20,7 +20,7 @@ import sys
 
 # commonフォルダ内読み込みのため
 sys.path.append(os.path.abspath(".."))
-parentDir = os.path.dirname(os.path.abspath(__file__))
+parentDir = os.path.dirname(os.path.abspath('__file__'))
 if parentDir not in sys.path:
     sys.path.append(parentDir)
 
@@ -96,7 +96,6 @@ def save_raceID(driver, yearlist, race_grade_list=["check_grade_1"]):
     [入力] driver: webdriver
     [入力] yearlist: 取得する年のリスト(1986-2022)
     [入力] race_grade_list: 取得するグレードのリスト(G1, G2, opなど) 1: G1, 2: G2, 3: G3, 4: OP
-    [出力] raceID_list: raceIDのリスト
     """
     # raceGradedbを読み込む．存在しない場合は新たに作る．
     raceGradedb = read_data("raceGradedb")
@@ -157,7 +156,6 @@ def save_racedata(driver, raceID_list):
     horseIDを取得する & race情報を得る。
     [入力] driver: webdriver
     [入力] raceID_list: 調べるraceIDのリスト
-    [出力] horseID_set: 出現したhorseIDの集合。
     """
     # racedbを読み込む．存在しない場合は新たに作る．
     racedb = read_data("racedb")
@@ -259,8 +257,12 @@ def save_horsedata(driver, horseID_list):
         logger.info('access {}'.format(horse_url))
         go_page(driver, horse_url)
         logger.info('access {} comp'.format(horse_url))
-        
         horsedb.appendHorseID(horseID)
+
+        ## 馬名，英名，抹消/現役，牡牝，毛の色
+        # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
+        horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
+        horsedb.appendCommon(horse_title)
 
         ## プロフィールテーブルの取得
         logger.info('get profile table')
@@ -349,7 +351,7 @@ def save_horsedata(driver, horseID_list):
         searched_horseID_set.add(horseID)
         # horsedbを10回ごとに外部に出力
         if save_counter % 10 == 0:
-            save_data(racedb, "horsedb")
+            save_data(horsedb, "horsedb")
             logger.info("save horsedb comp, save_counter:{}".format(save_counter))
 
     save_data(horsedb, "horsedb")
@@ -400,9 +402,12 @@ if __name__ == "__main__":
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
     # raceIDを取得してくる
+    # データを取得する開始年と終了年
+    START_YEAR = 1986
+    END_YEAR = 1987
+    RACE_CLASS_LIST =["check_grade_1", "check_grade_2", "check_grade_3"]
     logger.info('save_raceID')
-    race_class_list =["check_grade_1", "check_grade_2", "check_grade_3"]
-    save_raceID(driver, list(range(1986,1987)), race_class_list)
+    save_raceID(driver, list(range(START_YEAR,END_YEAR+1)), RACE_CLASS_LIST)
     logger.info('save_raceID comp')
     
     # horseIDを取得する & race情報を得る

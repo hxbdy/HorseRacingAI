@@ -17,6 +17,7 @@ logger.setLevel(logging.DEBUG)
 class HorseDB:
     def __init__(self):
         self.horseID = []
+        self.common = []
         self.prof_contents = []
         self.blood_list = []
         self.perform_contents = []
@@ -25,6 +26,8 @@ class HorseDB:
     def printAllMethodIndex(self, index):
         logger.info("horseID => ")
         logger.info(self.horseID[index])
+        logger.info("common => ")
+        logger.info(self.common[index])
         logger.info("prof_contents => ")
         logger.info(self.prof_contents[index])
         logger.info("blood_list => ")
@@ -37,6 +40,9 @@ class HorseDB:
     # 各パラメータセッタ
     def appendHorseID(self, data):
         self.horseID.append(data)
+
+    def appendCommon(self, data):
+        self.common.append(data)
     
     def appendProfContents(self, data):
         self.prof_contents.append(data)
