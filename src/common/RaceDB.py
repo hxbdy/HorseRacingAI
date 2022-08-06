@@ -4,6 +4,7 @@ import numpy as np
 import os
 import sys
 import logging
+import re
 
 # スクレイピング側とAI側で扱うパラメータを共通化するためのインタフェースとして機能する
 # スクレイピングで取得するパラメータを変更する場合、ここをメンテすること
@@ -193,3 +194,51 @@ class RaceDB:
             else:
                 fm = self.money[index][m].replace(",","")
             self.money[index][m] = float(fm) / money1st
+
+    def getWeather(self, index):
+        # 天気取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = self.race_data1[index].split(":")[1]
+        #  晴 / 芝 
+        sep1 = sep1.split("/")[0]
+        # 晴 
+        sep1 = sep1.replace(" ", "")
+
+        return sep1
+
+    def getCourseCondition(self, index):
+        # コース状態取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = self.race_data1[index].split(":")[2]
+        #  良 / 発走 
+        sep1 = sep1.split("/")[0]
+        # 良
+        sep1 = sep1.replace(" ", "")
+
+        return sep1
+
+    def getRaceStartTime(self, index):
+        # 出走時刻取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = self.race_data1[index].split("/")[3]
+        #  発走 : 15:35
+        sep1 = sep1.split(" : ")[1]
+        #  15:35
+        sep1 = sep1.replace(" ", "")
+
+        return sep1
+    
+    def getCourseDistance(self, index):
+        # 距離取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = self.race_data1[index].split(":")[0]
+        # 芝右1600m
+        # 数字以外を削除
+        sep1 = re.sub(r'\D', '', sep1)
+        sep1 = sep1.replace(" ", "")
+
+        return sep1
+
+    def getHorseNum(self, index):
+        # 頭数取得
+        return len(self.horseIDs_race[index])
