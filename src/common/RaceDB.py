@@ -242,3 +242,13 @@ class RaceDB:
     def getHorseNum(self, index):
         # 頭数取得
         return len(self.horseIDs_race[index])
+
+    def getWeight(self, index):
+        # 斤量
+        # 増減は考慮しない
+        # ['454(+2)', '462(+4)', '470(0)', '434(-8)', '438(+4)', '472(-6)']
+        fweight = []
+        for weight in self.horse_weight[index]:
+            weight = weight.split("(")[0]
+            fweight.append(float(weight))
+        return fweight
