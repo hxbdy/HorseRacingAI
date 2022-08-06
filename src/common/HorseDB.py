@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 from datetime import date
+from dateutil.relativedelta import relativedelta
 
 # スクレイピング側とAI側で扱うパラメータを共通化するためのインタフェースとして機能する
 # スクレイピングで取得するパラメータを変更する場合、ここをメンテすること
@@ -113,6 +114,13 @@ class HorseDB:
         birthMon = int(data.split("年")[1].split("月")[0])
         birthDay = int(data.split("月")[1].split("日")[0])
         return date(birthYear, birthMon, birthDay)
+
+    def ageNrm(self, birthday, raceday):
+        # レース開催日の馬の年齢を計算
+        # 小数点以下閏年未考慮
+        dy = relativedelta(birthday, raceday)
+        age = dy.years + (dy.months / 12.0) + (dy.days / 365.0)
+        return age
     
     def getJockeyID(self, index, raceID):
         # index馬の出場したレース一覧からraceIDの一致した時の騎手IDを返す
@@ -135,3 +143,22 @@ class HorseDB:
                     if j[8] == jockeyID:
                         count += 1
         return count
+
+    def getTotalEarned(self, index):
+        # 生涯獲得賞金
+        total = 0
+        for content in self.perform_contents[index]:
+            money = float(content[-1].replace(",",""))
+            total += money
+        return total
+
+    def getTotalWLRatio(self, index):
+        wl = []
+        # '24戦4勝 [4-1-2-17]'
+        match = self.prof_contents[index][7]
+        # 4-1-2-17]
+        match = match.split("[")[1]
+        wl.append(float(match.split("-")[0])) # 1st
+        wl.append(float(match.split("-")[1])) # 2nd
+        wl.append(float(match.split("-")[2])) # 3rd
+        return wl
