@@ -23,6 +23,41 @@ class HorseDB:
         self.perform_contents = []
         self.check = []
 
+    # 一貫性チェック
+    # すべての要素の数は同じである必要がある
+    def selfConsistencyCheck(self):
+        lengthMtr = len(self.horseID)
+        errMsg  = "CHECK HorseDB CONSISTENCY !! => (len(horseID) != len({0})) == ({1} != {2})"
+        consisFlg = True
+
+        lengthSlv = len(self.common)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("common", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.prof_contents)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("prof_contents", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.blood_list)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("blood_list", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.perform_contents)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("perform_contents", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.check)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("check", lengthMtr, lengthSlv))
+            consisFlg = False
+        
+        logger.info("Self consistency check : PASS (length = {})".format(lengthMtr))
+        return consisFlg
+
     def printAllMethodIndex(self, index):
         logger.info("horseID => ")
         logger.info(self.horseID[index])

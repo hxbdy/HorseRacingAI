@@ -39,6 +39,51 @@ class RaceDB:
         self.goal_dif = []
         self.horse_weight = []
         self.money = []
+
+    # 一貫性チェック
+    # すべての要素の数は同じである必要がある
+    def selfConsistencyCheck(self):
+        lengthMtr = len(self.raceID)
+        errMsg  = "CHECK RaceDB CONSISTENCY !! => (len(raceID) != len({0})) == ({1} != {2})"
+        consisFlg = True
+
+        lengthSlv = len(self.race_name)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("race_name", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.race_data1)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("race_data1", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.race_data2)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("race_data2", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.goal_time)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("goal_time", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.goal_dif)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("goal_dif", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.horse_weight)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("horse_weight", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        lengthSlv = len(self.money)
+        if lengthMtr != lengthSlv:
+            logger.critical(errMsg.format("money", lengthMtr, lengthSlv))
+            consisFlg = False
+
+        logger.info("Self consistency check : PASS (length = {})".format(lengthMtr))
+        return consisFlg
     
     def printAllMethodIndex(self, index):
         logger.info("raceID => ")
