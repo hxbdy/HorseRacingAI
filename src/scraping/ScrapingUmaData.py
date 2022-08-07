@@ -1,38 +1,68 @@
 # -*- coding: utf-8 -*-
 
-# commonディレクトリ以下を使用したいため
-# scrapingディレクトリにcdしてから実行すること
-
 from tkinter import BROWSE
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
-import configparser
+from webdriver_manager.chrome import ChromeDriverManager
 
+import configparser
 import time
 import os
 import pickle
 import logging
-from sqlalchemy import TEXT
 import sys
 
+# debug initialize
+# LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logging.disable(logging.DEBUG)
+
 # commonフォルダ内読み込みのため
-sys.path.append(os.path.abspath(".."))
-parentDir = os.path.dirname(os.path.abspath('__file__'))
-if parentDir not in sys.path:
-    sys.path.append(parentDir)
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+logger.debug('current directory is changed to {}'.format(os.getcwd()))
+parentDir = [os.path.dirname(os.path.abspath('..')), os.path.abspath('..')]
+for dir_name in parentDir:
+    if dir_name not in sys.path:
+        sys.path.append(dir_name)
 
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
 from common.RaceGradeDB import RaceGradeDB
-
-from webdriver_manager.chrome import ChromeDriverManager
+from common.JockeyDB import JockeyDB
 
 OUTPUT_PATH = "../../dst/scrapingResult/"
 
+
 """driverの操作"""
+def start_driver(browser):
+    """
+    ブラウザの起動
+    使用ブラウザ: Chrome or FireFox
+    """
+    if(browser == 'Chrome'):
+        # Chromeを起動 (エラーメッセージを表示しない)
+        logger.info('initialize chrome driver')
+        service = Service(executable_path=ChromeDriverManager().install())
+        ChromeOptions = webdriver.ChromeOptions()
+        ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
+        ChromeOptions.add_argument('-incognito') # シークレットモード
+        # ChromeOptions.add_argument('--headless') # ヘッドレスモード
+        driver = webdriver.Chrome(service=service, options=ChromeOptions)
+        logger.info('initialize chrome driver comp')
+    elif(browser == 'FireFox'):
+        # Firefoxを起動
+        logger.info('initialize firefox driver')
+        FirefoxOptions = webdriver.FirefoxOptions()
+        driver = webdriver.Firefox()
+        logger.info('initialize firefox driver comp')
+
+    return driver
+
 def go_page(driver, url):
     """
     url先にアクセス
@@ -62,7 +92,7 @@ def click_button(driver, xpath):
 """pickleでデータを読み込み・保存"""
 def read_data(read_file_name):
     """
-    resultフォルダ内にpicle化したファイルを読み込む。
+    scrapingResultフォルダ内にpicle化したファイルを読み込む。
     存在しない場合は文字列を返す．
     """
     try:
@@ -74,10 +104,19 @@ def read_data(read_file_name):
 
 def save_data(save_data, save_file_name):
     """
-    resultフォルダ内にpicle化したファイルを保存する。
+    scrapingResultフォルダ内にpicle化したファイルを保存する。
     """
     with open(OUTPUT_PATH + save_file_name + ".pickle", 'wb') as f:
         pickle.dump(save_data, f)
+
+def remove_data(file_name):
+    """
+    scrapingResultフォルダ内のpickleファイルを削除する
+    """
+    try:
+        os.remove(OUTPUT_PATH + file_name + ".pickle")
+    except Exception as e:
+        raise e
 
 """主要部"""
 def login(driver, mail_address, password):
@@ -88,7 +127,6 @@ def login(driver, mail_address, password):
     driver.find_element(By.NAME, "login_id").send_keys(mail_address)
     driver.find_element(By.NAME, "pswd").send_keys(password)
     driver.find_element(By.XPATH, "//*[@id='contents']/div/form/div/div[1]/input").click()
-
 
 def save_raceID(driver, yearlist, race_grade_list=["check_grade_1"]):
     """
@@ -165,8 +203,6 @@ def save_racedata(driver, raceID_list):
     # 定期的なデータセーブのためのループ回数カウンター
     save_counter = 0
 
-    horseID_set = set()
-
     for raceID in raceID_list:
         save_counter += 1
 
@@ -224,24 +260,28 @@ def save_racedata(driver, raceID_list):
 
     save_data(racedb, "racedb")
 
-
-def save_horsedata(driver, horseID_list):
+def save_horsedata(driver, horseID_list, start_count=0):
     """
     馬のデータを取得して保存する
     [入力] horseID_list: 調べるhorseIDのリスト
+    [入力] start_count: horseID_listの何番目から探索するか
+    (前回がエラーで停止した場合，最後にセーブしたときのsave_counterを入力すると速く開始できる)
     """
 
     # horsedbを読み込む．存在しない場合は新たに作る．
     horsedb = read_data("horsedb")
     if horsedb == "FileNotFoundError":
         horsedb = HorseDB()
-    
-    # 定期的なデータセーブのためのループ回数カウンター
-    save_counter = 0
+    # 開始前のhorsedbは念のため一次保存しておく
+    save_data(horsedb, "horsedb_before_search_tmp")
     
     # 既にhorsedb内に存在するhorseIDを記録する集合
     searched_horseID_set = set(horsedb.horseID)
 
+    # 定期的なデータセーブのためのループ回数カウンター
+    save_counter = 0 + start_count
+    horseID_list = horseID_list[save_counter:]
+    
     for horseID in horseID_list:
         save_counter += 1
 
@@ -266,8 +306,11 @@ def save_horsedata(driver, horseID_list):
 
         ## プロフィールテーブルの取得
         logger.info('get profile table')
-        prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']")
-        # 過去と現在で表示内容が違うため、行ラベルを認識して整形
+        # 過去と現在(2003年ごろ以降に誕生の馬)で表示内容が違うため、tryを使用
+        try:
+            prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']")
+        except:
+            prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table ']")
         row_name_data = prof_table.find_elements(By.TAG_NAME, "th")
         prof_contents_data = prof_table.find_elements(By.TAG_NAME, "td")
         row_name = []
@@ -355,49 +398,111 @@ def save_horsedata(driver, horseID_list):
             logger.info("save horsedb comp, save_counter:{}".format(save_counter))
 
     save_data(horsedb, "horsedb")
+    remove_data("horsedb_before_search_tmp")
 
         ## 以下保留事項
         # 血統を評価する際に、horseIDs_allから辿れない馬(収集期間内にG1,G2,G3に出場経験のない馬)のhorseIDをどこかに保存しておく
         # 血統テーブルから過去の馬に遡ることになるが、その過去の馬のデータが無い場合どうするか
         # そもそも外国から参加してきた馬はどう処理するのか
 
-if __name__ == "__main__":
+def save_jockeydata(driver, jockeyID_list, start_count=0):
+    """
+    騎手の年度別成績を取得する.
+    save_horsedataと構造は同じ
+    """
+    jockeydb = read_data("jockeydb")
+    if jockeydb == "FileNotFoundError":
+        jockeydb = JockeyDB()
+    save_data(jockeydb, "jockeydb_before_search_tmp")
+    
+    searched_jockeyID_set = set(jockeydb.jockeyID)
 
-    # debug initialize
-    # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    logging.disable(logging.DEBUG)
+    save_counter = 0 + start_count
+    jockeyID_list = jockeyID_list[save_counter:]
 
+    for jockeyID in jockeyID_list:
+        save_counter += 1
+
+        if jockeyID in searched_jockeyID_set:
+            if save_counter % 10 == 0:
+                save_data(jockeydb, "jockeydb")
+                logger.info("save jockeydb comp, save_counter:{}".format(save_counter))
+            continue
+
+        ## 騎手の年度別成績ページにアクセス
+        url = "https://db.netkeiba.com/jockey/result/{}/".format(jockeyID)
+        logger.info('access {}'.format(url))
+        go_page(driver, url)
+        logger.info('access {} comp'.format(url))
+
+        ## 騎手名と生年月日・所属を取得
+        jockey_header = driver.find_element(By.XPATH, "//*[@id='db_main_box']/div/div[1]")
+        name = jockey_header.find_element(By.TAG_NAME,"h1").text
+        common = jockey_header.find_element(By.TAG_NAME,"p").text
+
+        ## 騎手の年度別成績を取得．年ごとのデータを持ってくる．代表馬はidを取得する．
+        # 1985年以降のデータのみ取得する
+        YEAR_SINCE = 1985
+        result_tbl = driver.find_element(By.CLASS_NAME, "nk_tb_common.race_table_01")
+        result_rows = result_tbl.find_elements(By.TAG_NAME, "tr")
+        result_rows = result_rows[::-1] # 年度が昇順になるように順番を逆にする
+        year_result_list = []
+        for row in result_rows:
+            row_data = row.find_elements(By.TAG_NAME, "td")
+            # 年度の判定
+            try:
+                year = int(row_data[0].text)
+            except ValueError:
+                break
+            else:
+                if year < YEAR_SINCE:
+                    continue
+            # 内容をリストにする．ダート勝利数までint,収得賞金までfloat化する．
+            year_result = []
+            for i in range(len(row_data)):
+                if i<=19:
+                    val = row_data[i].text.replace(",","")
+                    if i<=15:
+                        year_result.append(int(val))
+                    else:
+                        year_result.append(float(val))
+                else:
+                    # 代表馬はidを取得する．ムリなら馬の名前をテキストで取得．
+                    try:
+                        horse_url_str = row_data[i].find_element(By.TAG_NAME,"a").get_attribute("href")
+                        horseID = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
+                    except:
+                        horseID = row_data[i].text
+                    year_result.append(horseID)
+            year_result_list.append(year_result)
+        
+        ## 騎手データの保存
+        jockeydb.appendJockey(jockeyID, name, common, year_result_list)
+        searched_jockeyID_set.add(jockeyID)
+        
+        # jockeydbを10回ごとに外部に出力
+        if save_counter % 10 == 0:
+            save_data(jockeydb, "jockeydb")
+            logger.info("save jockeydb comp, save_counter:{}".format(save_counter))
+    
+    save_data(jockeydb, "jockeydb")
+    remove_data("jockeydb_before_search_tmp")
+                
+
+if __name__ == '__main__':
     # load config
     config = configparser.ConfigParser()
     config.read('../private.ini')
     section = 'scraping'
 
     # ブラウザ起動
-    # 使用ブラウザ Chrome or FireFox
-    if(config.get(section, 'browser') == 'Chrome'):
-        # Chromeを起動 (エラーメッセージを表示しない)
-        logger.info('initialize chrome driver')
-        service = Service(executable_path=ChromeDriverManager().install())
-        ChromeOptions = webdriver.ChromeOptions()
-        ChromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
-        ChromeOptions.add_argument('-incognito') # シークレットモード
-        # ChromeOptions.add_argument('--headless') # ヘッドレスモード
-        driver = webdriver.Chrome(service=service, options=ChromeOptions)
-        logger.info('initialize chrome driver comp')
-    elif(config.get(section, 'browser') == 'FireFox'):
-        # Firefoxを起動
-        logger.info('initialize firefox driver')
-        FirefoxOptions = webdriver.FirefoxOptions()
-        driver = webdriver.Firefox()
-        logger.info('initialize firefox driver comp')
+    browser = config.get(section, 'browser')
+    driver = start_driver(browser)
     
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
 
-
+    """
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
@@ -427,3 +532,10 @@ if __name__ == "__main__":
     logger.info('save_horsedata comp')
 
     driver.close()
+    """
+
+    # 騎手データを取得してくる
+    logger.info('save_jockeydata')
+    jockeyID_list = ['00140'] #test用
+    save_jockeydata(driver, jockeyID_list)
+    logger.info('save_jockeydata comp')
