@@ -162,3 +162,11 @@ class HorseDB:
         wl.append(float(match.split("-")[1])) # 2nd
         wl.append(float(match.split("-")[2])) # 3rd
         return wl
+
+    def getBurdenWeight(self, horseid, raceid):
+        # horseid が raceid に出馬した時の斤量を返す
+        # 見つからなかった場合、60[kg]とする
+        for i in self.perform_contents[horseid]:
+            if i[1] == raceid:
+                return float(i[9])
+        return float(60)

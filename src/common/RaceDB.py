@@ -243,8 +243,8 @@ class RaceDB:
         # 頭数取得
         return len(self.horseIDs_race[index])
 
-    def getWeight(self, index):
-        # 斤量
+    def getHorseWeight(self, index):
+        # 馬の体重
         # 増減は考慮しない
         # ['454(+2)', '462(+4)', '470(0)', '434(-8)', '438(+4)', '472(-6)']
         fweight = []
