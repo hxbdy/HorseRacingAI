@@ -494,7 +494,7 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('../private.ini')
     section = 'scraping'
-
+    """
     # ブラウザ起動
     browser = config.get(section, 'browser')
     driver = start_driver(browser)
@@ -502,7 +502,7 @@ if __name__ == '__main__':
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
 
-    """
+    
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
 
@@ -532,10 +532,11 @@ if __name__ == '__main__':
     logger.info('save_horsedata comp')
 
     driver.close()
-    """
+    
 
     # 騎手データを取得してくる
     logger.info('save_jockeydata')
     jockeyID_list = ['00140'] #test用
     save_jockeydata(driver, jockeyID_list)
     logger.info('save_jockeydata comp')
+    """
