@@ -69,6 +69,52 @@ class HorseDB:
         logger.info("Self consistency check : PASS (length = {})".format(lengthMtr))
         return consisFlg
 
+    # checkが0の箇所を再確認し，修正可能なら修正する
+    def reconfirmCheck(self):
+        # checkが0の馬のindexを抽出
+        need_reconfirm_idx = []
+        for i in range(len(self.check)):
+            if self.check[i] == 0:
+                need_reconfirm_idx.append(i)
+        logger.info("{} horses need be reconfirmed.".format(len(self.check)-len(need_reconfirm_idx)))
+        logger.info("indices:")
+        logger.info(need_reconfirm_idx)
+
+        # 修正処理
+        idx_list = []
+        for idx in need_reconfirm_idx:
+            new_perform_contents = []
+            perform = self.perform_contents[idx]
+            for race_row in perform:
+                if race_row[7] == "除": #着順が"除"のレースを除外 (競走除外)
+                    continue
+                if race_row[7] == "取": #着順が"取"のレースを除外 (出生取消)
+                    continue
+                if race_row[7] == "": #着順が存在しないレースを除外 (開催延期?)
+                    continue
+                new_perform_contents.append(race_row)
+            self.perform_contents[idx] = new_perform_contents
+
+            race_prof = int(self.prof_contents[idx][-3][:self.prof_contents[idx][-3].find("戦")])
+            race_perform = len(new_perform_contents)
+            if race_prof == race_perform:
+                self.check[idx] = 1
+            
+            if race_prof > race_perform: #競走成績に記録されていないレースがある馬 (未解決)
+                idx_list.append(idx)
+        if idx_list != []:
+            logger.info("(prof > perform) indices:")
+            logger.info(idx_list)
+        logger.info("reconfirming end")
+
+        # 再度checkが0の馬の数を集計
+        count = 0
+        for i in range(len(self.check)):
+            if self.check[i] == 0:
+                count += 1
+        logger.info("{} horses remain.".format(count))
+        logger.debug("reconfimCheck comp")
+
     def printAllMethodIndex(self, index):
         logger.info("horseID => ")
         logger.info(self.horseID[index])
