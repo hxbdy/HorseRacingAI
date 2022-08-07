@@ -163,14 +163,30 @@ class RaceDB:
         # ndarray と list の違いがよくわかっていないので一応リストに変換しておく
         self.goal_time[index] = y.tolist()
 
-    def goalTimeConv2Sec(self, index):
+    def goalTimeConv2Sec(self, row):
+        # 秒に変換したタイムを返す
+        # row = '2:02.3'
+        min = float(row.split(':')[0])
+        sec = float(row.split(':')[1])
+        sec = min * 60 + sec
+        return sec
+
+    def getGoalTime(self, horseid, raceidx):
+        sec = 130.0
+        for i in range(len(self.horseIDs_race[raceidx])):
+            if self.horseIDs_race[raceidx][i] == horseid:
+                sec = self.goalTimeConv2Sec(self.goal_time[raceidx][i])
+                break
+        return sec
+
+    def goalTimeConv2SecList(self, index):
         # ex: ['2:02.3', '2:03.1', '2:03.4', '2:03.7', '2:03.9', '2:04.7', '2:04.9', '2:06.3']
         # ->  [122.3   , 123.1   , 123.4   , 123.7   , 123.9   , 124.7   , 124.9   , 126.3]
-        for gtime in range(len(self.goal_time[index])):
-            min = float(self.goal_time[index][gtime].split(':')[0])
-            sec = float(self.goal_time[index][gtime].split(':')[1])
-            # 秒に変換したタイムをリストに入れ直す
-            self.goal_time[index][gtime] = min * 60 + sec
+        timeList = []
+        for gtime in self.goal_time[index]:
+            sec = self.goalTimeConv2Sec(gtime)
+            timeList.append(sec)
+        return timeList
 
     def getRaceDate(self, index):
         # レース開催日を取り出す
@@ -181,6 +197,17 @@ class RaceDB:
         raceDateMon = int(raceDate.split("年")[1].split("月")[0])
         raceDateDay = int(raceDate.split("月")[1].split("日")[0])
         return date(raceDateYear, raceDateMon, raceDateDay)
+
+    def getMoneyList(self, index):
+        # 賞金リストを返す
+        moneyList = []
+        for m in self.money[index]:
+            if m == "":
+                fm = "0.0"
+            else:
+                fm = m.replace(",","")
+            moneyList.append(float(fm))
+        return moneyList
 
     def moneyNrm(self, index):
         # 賞金標準化
@@ -237,7 +264,7 @@ class RaceDB:
         sep1 = re.sub(r'\D', '', sep1)
         sep1 = sep1.replace(" ", "")
 
-        return sep1
+        return float(sep1)
 
     def getHorseNum(self, index):
         # 頭数取得
@@ -252,3 +279,16 @@ class RaceDB:
             weight = weight.split("(")[0]
             fweight.append(float(weight))
         return fweight
+
+    def getMarginList(self, raceidx):
+        # 着差を返す
+        # 1位の場合ゼロを返す
+        retList = []
+        for i in range(len(self.horseIDs_race[raceidx])):
+            if i == 0:
+                retList.append(0)
+            else:
+                fastPlc = self.goalTimeConv2Sec(self.goal_time[raceidx][i - 1])
+                secPlc  = self.goalTimeConv2Sec(self.goal_time[raceidx][i])
+                retList.append(secPlc - fastPlc)
+        return retList

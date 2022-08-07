@@ -81,3 +81,4 @@ main.pyで学習するとtrainedParamフォルダ以下に学習済みパラメ�
 
 ## 参考
 [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
+[海外競馬英和辞典　ＪＲＡ](https://www.jra.go.jp/keiba/overseas/yougo/index.html)

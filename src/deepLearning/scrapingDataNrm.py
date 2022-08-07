@@ -20,6 +20,9 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     #logging.disable(logging.DEBUG)
 
+    # pickle読み込み
+    logger.info("Database loading start ...")
+
     # レース情報読み込み
     with open("../../dst/scrapingResult/racedb.pickle", 'rb') as f:
             racedb = pickle.load(f)
@@ -27,47 +30,104 @@ if __name__ == "__main__":
     # 馬情報読み込み
     with open("../../dst/scrapingResult/horsedb.pickle", 'rb') as f:
             horsedb = pickle.load(f)
+
+    # G1-3情報読み込み
+    with open("../../dst/scrapingResult/raceGradedb.pickle", 'rb') as f:
+            gradedb = pickle.load(f)
     
-    # サンプルで出力するレースのインデックス
-    printIdx = 0
+    logger.info("Database loading complete")
 
-    # レースの情報一覧出力
-    racedb.printAllMethodIndex(printIdx)
+    # for race in range(len(racedb.raceID)):
+    for race in range(1):
+        logger.info("========================================")
+        logger.info("From RaceDB info =>")
+        logger.info("RaceID : {0}".format(racedb.raceID[race]))
 
-    # レースでのタイムをsecに変換する
-    racedb.goalTimeConv2Sec(printIdx)
+        # 学習リスト作成
+        racedbLearningList = []
 
-    # レースタイムを正規化
-    racedb.goalTimeNrm(printIdx)
+        # 天気取得
+        # ToDo : 数値化, 標準化
+        racedbLearningList.append(racedb.getWeather(race))
 
-    # レース開催日
-    d0 = racedb.getRaceDate(printIdx)
+        # コース状態取得
+        # ToDo : 数値化, 標準化
+        racedbLearningList.append(racedb.getCourseCondition(race))
 
-    # 出走馬の情報一覧出力
-    horseOldList = []
-    jockeyIDList = []
-    for horseID in racedb.horseIDs_race[printIdx]:
-        index = horsedb.getHorseInfo(horseID)
-        horsedb.printAllMethodIndex(index)
+        # 出走時刻取得
+        # ToDo : 数値化, 標準化
+        racedbLearningList.append(racedb.getRaceStartTime(race))
 
-        # 騎手出力
-        jokeyID = horsedb.getJockeyID(index, racedb.raceID[printIdx])
-        jockeyIDList.append(jokeyID)
+        # 距離取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.getCourseDistance(race))
 
-        # レース開催日の馬の年齢を計算
-        d1 = horsedb.getBirthDay(index)
-        dy = relativedelta(d0, d1)
+        # 頭数取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.getHorseNum(race))
 
-        # 月, 日 も小数点以下で表現した歳にする
-        # 小数点以下閏年未考慮
-        horseOldList.append(dy.years + (dy.months / 12.0) + (dy.days / 365.0))
+        # タイム取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.goalTimeConv2SecList(race))
 
-    # 1位賞金出力
-    racedb.moneyNrm(printIdx)
-    logger.debug(racedb.money[printIdx])
+        # 着差取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.getMarginList(race))
 
-    # 出場騎手参戦回数出力
-    logger.debug(jockeyIDList)
-    for jockey in jockeyIDList:
-        cnt = horsedb.countJockeyAppear(jockey)
-        logger.debug("Jockey ID {0} : count = {1}".format(jockey, cnt))
+        # 賞金取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.getMoneyList(race))
+
+        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [goalTime], [Margin], [Money]")
+        logger.info("racedbLearningList = {0}".format(racedbLearningList))
+
+        # レース開催日取得
+        d0 = racedb.getRaceDate(race)
+
+        # === horsedb問い合わせ ===
+        for horseID in racedb.horseIDs_race[race]:
+            logger.info("========================================")
+            logger.info("From HorseDB info =>")
+            
+            # 学習リスト作成
+            horsedbLearningList = []
+            
+            # horsedb へ horseID の情報は何番目に格納しているかを問い合わせる
+            # 以降horsedbへの問い合わせは index を使う
+            index = horsedb.getHorseInfo(horseID)
+            logger.info("horseID : {0} => index : {1}".format(horseID, index))
+            
+            # 生涯獲得金取得
+            # race時点での獲得賞金を取得
+            # horsedb.getTotalEarned(index)
+
+            # 通算成績取得[1st,2nd,3rd]
+            # race開催時点での獲得賞金を取得
+            # horsedb.getTotalWLRatio(index)
+
+            # 出走当時の年齢取得(d0 > d1)
+            # ToDo : 標準化
+            d1 = horsedb.getBirthDay(index)
+            age = horsedb.ageNrm(d0, d1)
+            horsedbLearningList.append(age)
+
+            # 着順取得
+            # すでに着順ソートされているため不要
+
+            # 斤量取得
+            # ToDo : 標準化
+            burdenWeight = horsedb.getBurdenWeight(index, racedb.raceID[race])
+            horsedbLearningList.append(burdenWeight)
+
+            # 枠番取得
+            # ToDo : 標準化
+            postPosition = horsedb.getPostPosition(index, racedb.raceID[race])
+            horsedbLearningList.append(postPosition)
+
+            # 騎手取得
+            # ToDo : 標準化
+            jockeyID = horsedb.getJockeyID(index, racedb.raceID[race])
+            horsedbLearningList.append(jockeyID)
+
+            logger.info("horsedbLearningList = [HorseAge, BurdenWeight, PostPosition, JockeyID]")
+            logger.info("horsedbLearningList = {0}".format(horsedbLearningList))
