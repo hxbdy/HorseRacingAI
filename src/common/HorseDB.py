@@ -191,6 +191,14 @@ class HorseDB:
                     if j[8] == jockeyID:
                         count += 1
         return count
+    
+    def enumAllJockeyID(self):
+        # jockeyIDのlistを返す．ただし，名前のままも存在する．
+        id_set = set()
+        for horse_perform in self.perform_contents:
+            for race_perform in horse_perform:
+                id_set.add(race_perform[8])
+        return list(id_set)
 
     def getTotalEarned(self, index):
         # 生涯獲得賞金
