@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from tkinter import BROWSE
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -14,6 +13,7 @@ import os
 import pickle
 import logging
 import sys
+import pathlib
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
@@ -23,20 +23,21 @@ logger.setLevel(logging.DEBUG)
 logging.disable(logging.DEBUG)
 
 # commonフォルダ内読み込みのため
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-logger.debug('current directory is changed to {}'.format(os.getcwd()))
-parentDir = [os.path.dirname(os.path.abspath('..')), os.path.abspath('..')]
-for dir_name in parentDir:
-    if dir_name not in sys.path:
-        sys.path.append(dir_name)
+scraping_dir = pathlib.Path(__file__).parent
+src_dir = scraping_dir.parent
+root_dir = src_dir.parent
+dir_lst = [scraping_dir, src_dir, root_dir]
+for dir_name in dir_lst:
+    if str(dir_name) not in sys.path:
+        sys.path.append(str(dir_name))
+
 
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
 from common.RaceGradeDB import RaceGradeDB
 from common.JockeyDB import JockeyDB
 
-OUTPUT_PATH = "../../dst/scrapingResult/"
-
+OUTPUT_PATH = str(root_dir) + "\\dst\\scrapingResult\\"
 
 """driverの操作"""
 def start_driver(browser):
