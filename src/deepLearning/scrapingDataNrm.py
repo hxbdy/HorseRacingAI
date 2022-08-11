@@ -12,6 +12,33 @@ parentDir = os.path.dirname(os.path.abspath(__file__))
 if parentDir not in sys.path:
     sys.path.append(parentDir)
 
+def nrmWeather(weather_string):
+    # 天気のone-hot表現(ただし晴は全て0として表現する)
+    # 出現する天気は6種類
+    weather_dict = {'晴':-1, '曇':0, '小雨':1, '雨':2, '小雪':3, '雪':4}
+    weather_onehot = [0] * 5
+    hot_idx = weather_dict[weather_string]
+    if hot_idx != -1:
+        weather_onehot[hot_idx] = 1
+    
+    return weather_onehot
+
+def nrmCourseCondition(condition_string):
+    # 馬場状態のone-hot表現(ただし良は全て0として表現する)
+    condition_dict = {'良':-1, '稍重':0, '重':1, '不良':2}
+    condition_onehot = [0] * 3
+    hot_idx = condition_dict[condition_string]
+    if hot_idx != -1:
+        condition_onehot[hot_idx] = 1
+
+    return condition_onehot
+
+def nrmRaceStartTime(start_time_string):
+    # 発送時刻の数値化 時*60 + 分
+    t = start_time_string.split(":")
+
+    return int(t[0])*60 + int(t[1])
+
 if __name__ == "__main__":
     # debug initialize
     # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
@@ -47,24 +74,36 @@ if __name__ == "__main__":
         racedbLearningList = []
 
         # 天気取得
-        # ToDo : 数値化, 標準化
-        racedbLearningList.append(racedb.getWeather(race))
+        # ToDo : 数値化, 標準化 -> onehot表現 5列使用
+        # (わりとどうでもよい変数だと思うので，1変数に圧縮してもよいと思う)
+        for i in nrmWeather(racedb.getWeather(race)):
+            racedbLearningList.append(i)
 
         # コース状態取得
-        # ToDo : 数値化, 標準化
-        racedbLearningList.append(racedb.getCourseCondition(race))
+        # ToDo : 数値化, 標準化 -> onehot表現 3列使用
+        # (1変数にしやすい変数であるが，onehotにして重みは学習に任せた方が良いと思う)
+        for i in nrmCourseCondition(racedb.getCourseCondition(race)):
+            racedbLearningList.append(i)
 
         # 出走時刻取得
-        # ToDo : 数値化, 標準化
-        racedbLearningList.append(racedb.getRaceStartTime(race))
+        # ToDo : 数値化, 標準化 -> 数値化
+        # (遅い時間ほど馬場が荒れていることを表現?)
+        racedbLearningList.append(nrmRaceStartTime(racedb.getRaceStartTime(race)))
 
         # 距離取得
-        # ToDo : 標準化
+        # ToDo : 標準化 -> racedb内で数値化済
         racedbLearningList.append(racedb.getCourseDistance(race))
 
         # 頭数取得
-        # ToDo : 標準化
+        # ToDo : 標準化 -> racedb内で数値化済
         racedbLearningList.append(racedb.getHorseNum(race))
+
+        # 賞金取得
+        # ToDo : 標準化
+        racedbLearningList.append(racedb.getMoneyList(race))
+
+        ### =====ここまでが入力?
+        ###      ここから下は結果(正解ラベル的な)?
 
         # タイム取得
         # ToDo : 標準化
@@ -74,9 +113,7 @@ if __name__ == "__main__":
         # ToDo : 標準化
         racedbLearningList.append(racedb.getMarginList(race))
 
-        # 賞金取得
-        # ToDo : 標準化
-        racedbLearningList.append(racedb.getMoneyList(race))
+
 
         logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [goalTime], [Margin], [Money]")
         logger.info("racedbLearningList = {0}".format(racedbLearningList))
