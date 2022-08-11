@@ -102,6 +102,10 @@ if __name__ == "__main__":
         # ToDo : 標準化
         racedbLearningList.append(racedb.getMoneyList(race))
 
+        # 賞金取得 その2 : 全レースの最高金額で割って正規化
+        # ToDo : 最高金額を取得して割る作業を追加
+        #racedbLearningList.append(racedb.getMoneyList2(race))
+
         ### =====ここまでが入力?
         ###      ここから下は結果(正解ラベル的な)?
 

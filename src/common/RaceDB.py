@@ -222,6 +222,19 @@ class RaceDB:
                 fm = self.money[index][m].replace(",","")
             self.money[index][m] = float(fm) / money1st
 
+    def getMoneyList2(self, index):
+        # 賞金リストを持ってくる．
+        # 空の要素はゼロyenにする
+        money_list = [0] * len(self.money[index])
+        for m in range(len(self.money[index])):
+            if self.money[index][m] == "":
+                fm = "0.0"
+            else:
+                fm = self.money[index][m].replace(",","")
+            self.money[index][m] = float(fm)
+        
+        return money_list
+
     def getWeather(self, index):
         # 天気取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
