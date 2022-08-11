@@ -59,8 +59,8 @@ if __name__ == "__main__":
             horsedb = pickle.load(f)
 
     # G1-3情報読み込み
-    with open("../../dst/scrapingResult/raceGradedb.pickle", 'rb') as f:
-            gradedb = pickle.load(f)
+    # with open("../../dst/scrapingResult/raceGradedb.pickle", 'rb') as f:
+        #gradedb = pickle.load(f)
     
     logger.info("Database loading complete")
 
@@ -110,8 +110,8 @@ if __name__ == "__main__":
         ###      ここから下は結果(正解ラベル的な)?
 
         # タイム取得
-        # ToDo : 標準化
-        racedbLearningList.append(racedb.goalTimeConv2SecList(race))
+        goalTimeRowList = racedb.goalTimeConv2SecList(race)
+        racedbLearningList.append(racedb.goalTimeNrm(goalTimeRowList))
 
         # 着差取得
         # ToDo : 標準化

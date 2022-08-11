@@ -141,12 +141,12 @@ class RaceDB:
             output += self.horseIDs_race[i]
         return output
         
-    def goalTimeNrm(self,index):
+    def goalTimeNrm(self, goalTimeRowList):
         # sigmoid で標準化．MUはハイパーパラメータ．
         # 計算式 : y = 1 / (1 + exp(x))
         # テキストではexp(-x)だが今回は値が小さい方が「良いタイム」のためexp(x)としてみた
         # 最大値 = 最下位のタイム
-        npGoalTime = np.array(self.goal_time[index])
+        npGoalTime = np.array(goalTimeRowList)
 
         ave = np.average(npGoalTime)
         MU = 50
@@ -161,7 +161,7 @@ class RaceDB:
             y = 1 / (1 + np.exp((npGoalTime - ave) / MU))
         
         # ndarray と list の違いがよくわかっていないので一応リストに変換しておく
-        self.goal_time[index] = y.tolist()
+        return y.tolist()
 
     def goalTimeConv2Sec(self, row):
         # 秒に変換したタイムを返す
