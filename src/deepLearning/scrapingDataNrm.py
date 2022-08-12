@@ -114,12 +114,10 @@ if __name__ == "__main__":
         racedbLearningList.append(racedb.goalTimeNrm(goalTimeRowList))
 
         # 着差取得
-        # ToDo : 標準化
-        racedbLearningList.append(racedb.getMarginList(race))
+        marginList = racedb.getMarginList(race)
+        racedbLearningList.append(racedb.marginListNrm(marginList))
 
-
-
-        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [goalTime], [Margin], [Money]")
+        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime], [Margin]")
         logger.info("racedbLearningList = {0}".format(racedbLearningList))
 
         # レース開催日取得
