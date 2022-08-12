@@ -61,8 +61,10 @@ if __name__ == "__main__":
     # G1-3情報読み込み
     # with open("../../dst/scrapingResult/raceGradedb.pickle", 'rb') as f:
         #gradedb = pickle.load(f)
-    
+
     logger.info("Database loading complete")
+
+    logger.debug("Max horse num largest ever : {}".format(racedb.getMaxHorseNumLargestEver()))
 
     # for race in range(len(racedb.raceID)):
     for race in range(1):
@@ -74,19 +76,19 @@ if __name__ == "__main__":
         racedbLearningList = []
 
         # 天気取得
-        # ToDo : 数値化, 標準化 -> onehot表現 5列使用
+        # onehot表現 5列使用
         # (わりとどうでもよい変数だと思うので，1変数に圧縮してもよいと思う)
         for i in nrmWeather(racedb.getWeather(race)):
             racedbLearningList.append(i)
 
         # コース状態取得
-        # ToDo : 数値化, 標準化 -> onehot表現 3列使用
+        # onehot表現 3列使用
         # (1変数にしやすい変数であるが，onehotにして重みは学習に任せた方が良いと思う)
         for i in nrmCourseCondition(racedb.getCourseCondition(race)):
             racedbLearningList.append(i)
 
         # 出走時刻取得
-        # ToDo : 数値化, 標準化 -> 数値化
+        # ToDo : 標準化
         # (遅い時間ほど馬場が荒れていることを表現?)
         racedbLearningList.append(nrmRaceStartTime(racedb.getRaceStartTime(race)))
 
@@ -100,7 +102,8 @@ if __name__ == "__main__":
 
         # 賞金取得
         # ToDo : 標準化
-        racedbLearningList.append(racedb.getMoneyList(race))
+        moneyList = racedb.getMoneyList(race)
+        racedbLearningList.append(racedb.moneyNrm(moneyList))
 
         # 賞金取得 その2 : 全レースの最高金額で割って正規化
         # ToDo : 最高金額を取得して割る作業を追加

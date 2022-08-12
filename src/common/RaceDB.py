@@ -209,18 +209,15 @@ class RaceDB:
             moneyList.append(float(fm))
         return moneyList
 
-    def moneyNrm(self, index):
+    def moneyNrm(self, moneyList):
         # 賞金標準化
-        # 空の要素はゼロyenにする
         # 1位賞金で割る
-        # 値が大きいため標準化の方法は色々あると思う
-        money1st = float(self.money[index][0].replace(",",""))
-        for m in range(len(self.money[index])):
-            if self.money[index][m] == "":
-                fm = "0.0"
-            else:
-                fm = self.money[index][m].replace(",","")
-            self.money[index][m] = float(fm) / money1st
+        # moneyList は float前提
+        money1st = moneyList[0]
+        moneyNrmList = []
+        for m in moneyList:
+            moneyNrmList.append(m / money1st)
+        return moneyNrmList
 
     def getMoneyList2(self, index):
         # 賞金リストを持ってくる．
@@ -338,3 +335,12 @@ class RaceDB:
             time += marginDict[margin]
             retList.append(time)
         return retList
+
+    def getMaxHorseNumLargestEver(self):
+        # 1つのレースに出場した最大の頭数を調べる
+        max =  0
+        for i in self.horseIDs_race:
+            horseNum = len(i)
+            if max < horseNum:
+                max = horseNum
+        return max
