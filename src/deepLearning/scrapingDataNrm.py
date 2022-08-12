@@ -12,6 +12,23 @@ parentDir = os.path.dirname(os.path.abspath(__file__))
 if parentDir not in sys.path:
     sys.path.append(parentDir)
 
+# 賞金リスト拡張
+# 指定サイズより小さい場合に限り拡張する
+# 拡張したサイズ分だけゼロをappendする
+def moneyNrmExp(nrmList):
+    None
+
+# ゴールタイムリスト拡張
+# 指定サイズより小さい場合に限り拡張する
+# 偏差値40の値程度でランダムに埋める
+def goalTimeNrmExp(nrmList):
+    None
+
+# 指定サイズより小さい場合に限り拡張する
+# 最下位にハナ差で連続してゴールすることにする
+def marginListNrmExp(nrmList):
+    None
+
 def nrmWeather(weather_string):
     # 天気のone-hot表現(ただし晴は全て0として表現する)
     # 出現する天気は6種類
