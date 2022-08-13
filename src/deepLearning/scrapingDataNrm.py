@@ -87,18 +87,51 @@ def nrmRaceStartTime(start_time_string):
 
 def nrmHorseAge(horseAgeList):
     # 馬年齢標準化
-    None
+    # 若いほうが強いのか, 年季があるほうが強いのか...
+    # ここでは年齢が上のほうを強いとしている
+    # 最高値ですべてを割る
+    nHorseAgeList = np.array(horseAgeList)
+    maxAge = np.max(nHorseAgeList)
+    nHorseAgeList = nHorseAgeList / maxAge
+    return nHorseAgeList.tolist()
 
 def nrmBurdenWeight(burdenWeightList):
     # 斤量標準化
-    None
+    # 最高値ですべてを割る
+    nburdenWeightList = np.array(burdenWeightList)
+    maxBurdenWeight = np.max(nburdenWeightList)
+    nburdenWeightList = nburdenWeightList / maxBurdenWeight
+    return nburdenWeightList.tolist()
 
 def nrmPostPosition(postPositionList):
     # 枠番標準化
-    None
+    # sigmoidで標準化
+    nPostPositionList = np.array(postPositionList)
+    nPostPositionList = 1/(1+np.exp(nPostPositionList))
+    return nPostPositionList.tolist()
 
 def nrmJockeyID(jockeyList):
     # 騎手標準化
+    # 最高値ですべてを割る
+    njockeyList = np.array(jockeyList)
+    maxJockey = np.max(njockeyList)
+    njockeyList = njockeyList / maxJockey
+    return njockeyList.tolist()
+
+def horseAgeListEx(horseAgeList):
+    # 年齢ダミーデータ挿入
+    None
+
+def burdenWeightListEx(burdenWeightList):
+    # 斤量ダミーデータ挿入
+    None
+
+def postPositionListEx(postPositionList):
+    # 枠番ダミーデータ挿入
+    None
+
+def jockeyListEx(jockeyList):
+    # 騎手ダミーデータ挿入
     None
 
 if __name__ == "__main__":
@@ -243,3 +276,18 @@ if __name__ == "__main__":
 
             logger.info("horsedbLearningList = [HorseAge, BurdenWeight, PostPosition, JockeyID]")
             logger.info("horsedbLearningList = [{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
+        
+        # 各リスト標準化
+        horseAgeList = nrmHorseAge(horseAgeList)
+        burdenWeightList = nrmBurdenWeight(burdenWeightList)
+        postPositionList = nrmPostPosition(postPositionList)
+        jockeyList = nrmJockeyID(jockeyList)
+
+        # ToDo : 各リストにダミーデータ挿入
+
+        # 各リスト確認
+        logger.info("========================================")
+        logger.info("horseAgeList = {}".format(horseAgeList))
+        logger.info("burdenWeightList = {}".format(burdenWeightList))
+        logger.info("postPositionList = {}".format(postPositionList))
+        logger.info("jockeyList = {}".format(jockeyList))
