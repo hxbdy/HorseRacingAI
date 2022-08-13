@@ -1,60 +1,95 @@
 import pickle
-import os
 import sys
-from pathlib import Path
+import pathlib
 import logging
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import numpy as np
 
 # commonフォルダ内読み込みのため
-sys.path.append(os.path.abspath(".."))
-parentDir = os.path.dirname(os.path.abspath(__file__))
-if parentDir not in sys.path:
-    sys.path.append(parentDir)
+deepLearning_dir = pathlib.Path(__file__).parent
+src_dir = deepLearning_dir.parent
+root_dir = src_dir.parent
+dir_lst = [deepLearning_dir, src_dir, root_dir]
+for dir_name in dir_lst:
+    if str(dir_name) not in sys.path:
+        sys.path.append(str(dir_name))
 
-# 賞金リスト拡張
-# 指定サイズより小さい場合に限り拡張する
-# 拡張したサイズ分だけゼロをappendする
-# nrmList : 拡張したいリスト
+from common.RaceDB import RaceDB
+
+## リストの指定サイズへの拡張
+# 指定サイズより小さい場合に限りダミーデータを作成して，それらで埋める
+# rowList : 拡張したいリスト
 # listSize : 希望のリスト要素数
-def moneyNrmExp(nrmList, listSize):
-    exSize = listSize - len(nrmList)
+def padMoneyNrm(rowList, listSize):
+    # 賞金リスト拡張
+    # ダミーデータ：0
+    exSize = listSize - len(rowList)
     if exSize > 0:
         for i in range(exSize):
-            nrmList.append(0)
-    return nrmList
+            rowList.append(0)
+    return rowList
 
-# ゴールタイムリスト拡張
-# 指定サイズより小さい場合に限り拡張する
-# 偏差値40の値程度でランダムに埋める
-# nrmList : 拡張したいリスト
-# listSize : 希望のリスト要素数
-def goalTimeNrmExp(nrmList, listSize):
-    exSize   = listSize - len(nrmList)
+def padGoalTimeNrm(rowList, listSize):
+    # ゴールタイムリスト拡張
+    # ダミーデータ：偏差値40程度のランダム値
+    exSize   = listSize - len(rowList)
     if exSize > 0:
-        nNrmList = np.array(nrmList)
+        nNrmList = np.array(rowList)
         sigma    = np.std(nNrmList)
         ave      = np.average(nNrmList)
         exRandList = np.random.uniform(-2*sigma, -sigma, exSize)
         exRandList += ave
         for ex in exRandList:
-            nrmList.append(ex)
-    return nrmList
+            rowList.append(ex)
+    return rowList
 
-# 指定サイズより小さい場合に限り拡張する
-# 最下位にハナ差で連続してゴールすることにする
-# nrmList : 拡張したいリスト
-# listSize : 希望のリスト要素数
-def marginListExp(rowList, listSize):
+def padMarginList(rowList, listSize):
+    # 着差リスト拡張
+    # ダミーデータ：最下位にハナ差で連続してゴールすることにする
+    HANA = 0.0125
     exSize   = listSize - len(rowList)
     lastMargin = rowList[-1]
     if exSize > 0:
         for i in range(exSize):
-            lastMargin += 0.0125
+            lastMargin += HANA
             rowList.append(lastMargin)
     return rowList
 
+def padHorseAgeList(rowList, listSize):
+    # 年齢リスト拡張
+    # ダミーデータ：平均値
+    mean_age = np.mean(rowList)
+    exSize = listSize - len(rowList)
+    if exSize > 0:
+        for i in range(exSize):
+            rowList.append(mean_age)
+    return rowList
+
+def padBurdenWeightList(rowList, listSize):
+    # 斤量リスト拡張
+    # ダミーデータ：平均値
+    mean_weight = np.mean(rowList)
+    exSize = listSize - len(rowList)
+    if exSize > 0:
+        for i in range(exSize):
+            rowList.append(mean_weight)
+    return rowList
+
+def padPostPositionList(rowList, listSize):
+    # 枠番リスト拡張
+    # ダミーデータ：listSizeに達するまで，1から順に追加．
+    exSize = listSize - len(rowList)
+    if exSize > 0:
+        for i in range(exSize):
+            rowList.append(i%8+1)
+    return rowList
+
+def padJockeyList(rowList, listSize):
+    # 騎手ダミーデータ挿入
+    None
+
+## 値の標準化
 def nrmWeather(weather_string):
     # 天気のone-hot表現(ただし晴は全て0として表現する)
     # 出現する天気は6種類
@@ -77,7 +112,7 @@ def nrmCourseCondition(condition_string):
     return condition_onehot
 
 def nrmRaceStartTime(start_time_string):
-    # 発送時刻の数値化 時*60 + 分
+    # 発走時刻の数値化(時*60 + 分)と標準化
     # 遅い時間ほど馬場が荒れていることを表現する
     t = start_time_string.split(":")
     min = float(t[0])*60 + float(t[1])
@@ -88,7 +123,6 @@ def nrmRaceStartTime(start_time_string):
 def nrmHorseAge(horseAgeList):
     # 馬年齢標準化
     # 若いほうが強いのか, 年季があるほうが強いのか...
-    # ここでは年齢が上のほうを強いとしている
     # 最高値ですべてを割る
     nHorseAgeList = np.array(horseAgeList)
     maxAge = np.max(nHorseAgeList)
@@ -102,6 +136,14 @@ def nrmBurdenWeight(burdenWeightList):
     maxBurdenWeight = np.max(nburdenWeightList)
     nburdenWeightList = nburdenWeightList / maxBurdenWeight
     return nburdenWeightList.tolist()
+
+def nrmBurdenWeightAbs(weight_list):
+    # 斤量の標準化
+    # 一律60で割る
+    SCALE_PARAMETER = 60
+    n_weight_list = np.array(weight_list)
+    n_weight_list = n_weight_list / SCALE_PARAMETER
+    return n_weight_list.tolist()
 
 def nrmPostPosition(postPositionList):
     # 枠番標準化
@@ -118,21 +160,48 @@ def nrmJockeyID(jockeyList):
     njockeyList = njockeyList / maxJockey
     return njockeyList.tolist()
 
-def horseAgeListEx(horseAgeList):
-    # 年齢ダミーデータ挿入
-    None
+def nrmGoalTime(goalTimeRowList):
+    # ゴールタイム標準化
+    # sigmoid で標準化．MUはハイパーパラメータ．
+    # 計算式 : y = 1 / (1 + exp(x))
+    # テキストではexp(-x)だが今回は値が小さい方が「良いタイム」のためexp(x)としてみた
+    # 最大値 = 最下位のタイム
+    npGoalTime = np.array(goalTimeRowList)
 
-def burdenWeightListEx(burdenWeightList):
-    # 斤量ダミーデータ挿入
-    None
+    ave = np.average(npGoalTime)
+    MU = 50
 
-def postPositionListEx(postPositionList):
-    # 枠番ダミーデータ挿入
-    None
+    # ゴールタイム調整方法を選択
+    METHOD = 3
+    if METHOD == 1:
+        y = 1 / (1 + np.exp(npGoalTime / ave))
+    elif METHOD == 2:
+        y = 1 / (1 + np.exp(npGoalTime / MU))
+    elif METHOD == 3:
+        y = 1 / (1 + np.exp((npGoalTime - ave) / MU))
+    
+    # ndarray と list の違いがよくわかっていないので一応リストに変換しておく
+    return y.tolist()
 
-def jockeyListEx(jockeyList):
-    # 騎手ダミーデータ挿入
-    None
+def nrmMoney(moneyList):
+    # 賞金標準化
+    # 1位賞金で割る
+    # moneyList は float前提
+    money1st = moneyList[0]
+    moneyNrmList = []
+    for m in moneyList:
+        moneyNrmList.append(m / money1st)
+    return moneyNrmList
+
+def nrmMarginList(marginList):
+    # 着差標準化
+    x = np.array(marginList)
+    ny = 1/(1+np.exp(-x))
+    y = ny.tolist()
+    # リストを逆順にする。元のリストを破壊するため注意。
+    # 戻り値はNoneであることも注意
+    y.reverse()
+    return y
 
 if __name__ == "__main__":
     # debug initialize
@@ -146,19 +215,19 @@ if __name__ == "__main__":
     logger.info("Database loading start ...")
 
     # レース情報読み込み
-    with open("../../dst/scrapingResult/racedb.pickle", 'rb') as f:
+    with open(str(root_dir) + "\\dst\\scrapingResult\\racedb.pickle", 'rb') as f:
             racedb = pickle.load(f)
 
     # 馬情報読み込み
-    with open("../../dst/scrapingResult/horsedb.pickle", 'rb') as f:
+    with open(str(root_dir) + "\\dst\\scrapingResult\\horsedb.pickle", 'rb') as f:
             horsedb = pickle.load(f)
 
     # G1-3情報読み込み
-    # with open("../../dst/scrapingResult/raceGradedb.pickle", 'rb') as f:
+    # with open(str(root_dir) + "\\dst\\scrapingResult\\raceGradedb.pickle", 'rb') as f:
         #gradedb = pickle.load(f)
 
     logger.info("Database loading complete")
-    
+
     # DBに一度のレースで出た馬の最大頭数を問い合わせる
     maxHorseNum = racedb.getMaxHorseNumLargestEver()
 
@@ -168,7 +237,25 @@ if __name__ == "__main__":
         logger.info("From RaceDB info =>")
         logger.info("https://db.netkeiba.com/race/{0}".format(racedb.raceID[race]))
 
-        # 学習リスト作成
+        ## 正解ラベルの作成
+        """
+        # タイム取得
+        # 標準化 -> ダミーデータ挿入
+        goalTimeRowList = racedb.goalTimeConv2SecList(race)
+        goalTimeNrmList = nrmGoalTime(goalTimeRowList)
+        goalTimeExpList = padGoalTimeNrm(goalTimeNrmList, maxHorseNum)
+        racedbLearningList.append(nrmGoalTime(goalTimeExpList))
+        """
+        # 着差取得
+        # ダミーデータ挿入 -> 標準化
+        # これを教師データtとする
+        marginList = racedb.getMarginList(race)
+        marginExpList = padMarginList(marginList, maxHorseNum)
+        teachList = nrmMarginList(marginExpList)
+        logger.info("t = {0}".format(teachList))
+
+
+        ## 学習リスト作成 (レースデータ)
         racedbLearningList = []
 
         # 天気取得
@@ -188,8 +275,9 @@ if __name__ == "__main__":
 
         # 距離取得
         # 最長距離で割って標準化
+        MAX_DISTANCE = 3600
         distance = float(racedb.getCourseDistance(race))
-        racedbLearningList.append(distance / 3600)
+        racedbLearningList.append(distance / MAX_DISTANCE)
 
         # 頭数取得
         # 最大の出馬数で割って標準化
@@ -199,34 +287,18 @@ if __name__ == "__main__":
         # 賞金取得
         # ダミーデータ挿入 -> 標準化
         moneyList = racedb.getMoneyList(race)
-        moneyExpList = moneyNrmExp(moneyList, maxHorseNum)
-        racedbLearningList.append(racedb.moneyNrm(moneyExpList))
+        moneyExpList = padMoneyNrm(moneyList, maxHorseNum)
+        racedbLearningList.append(nrmMoney(moneyExpList))
 
         # 賞金取得 その2 : 全レースの最高金額で割って正規化
         # ToDo : 最高金額を取得して割る作業を追加
         #racedbLearningList.append(racedb.getMoneyList2(race))
-
-        ### =====ここまでが入力?
-        ###      ここから下は結果(正解ラベル的な)?
-
-        # タイム取得
-        # 標準化 -> ダミーデータ挿入
-        goalTimeRowList = racedb.goalTimeConv2SecList(race)
-        goalTimeNrmList = racedb.goalTimeNrm(goalTimeRowList)
-        goalTimeExpList = goalTimeNrmExp(goalTimeNrmList, maxHorseNum)
-        racedbLearningList.append(racedb.goalTimeNrm(goalTimeExpList))
-
-        # 着差取得
-        # ダミーデータ挿入 -> 標準化
-        # これを教師データtとする
-        marginList = racedb.getMarginList(race)
-        marginExpList = marginListExp(marginList, maxHorseNum)
-        teachList = racedb.marginListNrm(marginExpList)
-
+        
         logger.info("X = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime]")
         logger.info("X = {0}".format(racedbLearningList))
-        logger.info("t = {0}".format(teachList))
+        
 
+        ## 学習リスト作成 (各馬のデータ)
         # レース開催日取得
         d0 = racedb.getRaceDate(race)
 
@@ -253,18 +325,15 @@ if __name__ == "__main__":
             # horsedb.getTotalWLRatio(index)
 
             # 出走当時の年齢取得(d0 > d1)
-            # ToDo : 標準化
             d1 = horsedb.getBirthDay(index)
             age = horsedb.ageConv2Day(d0, d1)
             horseAgeList.append(age)
 
             # 斤量取得
-            # ToDo : 標準化
             burdenWeight = horsedb.getBurdenWeight(index, racedb.raceID[race])
             burdenWeightList.append(burdenWeight)
 
             # 枠番取得
-            # ToDo : 標準化
             postPosition = horsedb.getPostPosition(index, racedb.raceID[race])
             postPositionList.append(postPosition)
 
@@ -277,13 +346,17 @@ if __name__ == "__main__":
             logger.info("horsedbLearningList = [HorseAge, BurdenWeight, PostPosition, JockeyID]")
             logger.info("horsedbLearningList = [{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
         
+        # 各リストにダミーデータを挿入
+        horseAgeList = padHorseAgeList(horseAgeList, maxHorseNum)
+        burdenWeightList = padBurdenWeightList(burdenWeightList, maxHorseNum)
+        postPositionList = padPostPositionList(postPositionList, maxHorseNum)
+        jockeyList = padJockeyList(jockeyList, maxHorseNum)
+        
         # 各リスト標準化
         horseAgeList = nrmHorseAge(horseAgeList)
-        burdenWeightList = nrmBurdenWeight(burdenWeightList)
+        burdenWeightList = nrmBurdenWeightAbs(burdenWeightList)
         postPositionList = nrmPostPosition(postPositionList)
         jockeyList = nrmJockeyID(jockeyList)
-
-        # ToDo : 各リストにダミーデータ挿入
 
         # 各リスト確認
         logger.info("========================================")
@@ -291,3 +364,6 @@ if __name__ == "__main__":
         logger.info("burdenWeightList = {}".format(burdenWeightList))
         logger.info("postPositionList = {}".format(postPositionList))
         logger.info("jockeyList = {}".format(jockeyList))
+
+        # 統合
+        learningList = [*racedbLearningList, *horseAgeList, *burdenWeight, *postPositionList, *jockeyList]
