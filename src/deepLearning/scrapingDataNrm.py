@@ -85,6 +85,22 @@ def nrmRaceStartTime(start_time_string):
     min /= 990 
     return min
 
+def nrmHorseAge(horseAgeList):
+    # 馬年齢標準化
+    None
+
+def nrmBurdenWeight(burdenWeightList):
+    # 斤量標準化
+    None
+
+def nrmPostPosition(postPositionList):
+    # 枠番標準化
+    None
+
+def nrmJockeyID(jockeyList):
+    # 騎手標準化
+    None
+
 if __name__ == "__main__":
     # debug initialize
     # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
@@ -174,20 +190,21 @@ if __name__ == "__main__":
         marginExpList = marginListExp(marginList, maxHorseNum)
         teachList = racedb.marginListNrm(marginExpList)
 
-        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime]")
-        logger.info("racedbLearningList = {0}".format(racedbLearningList))
-        logger.info("teachList = {0}".format(teachList))
+        logger.info("X = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime]")
+        logger.info("X = {0}".format(racedbLearningList))
+        logger.info("t = {0}".format(teachList))
 
         # レース開催日取得
         d0 = racedb.getRaceDate(race)
 
         # === horsedb問い合わせ ===
+        horseAgeList = []
+        burdenWeightList = []
+        postPositionList = []
+        jockeyList = []
         for horseID in racedb.horseIDs_race[race]:
             logger.info("========================================")
             logger.info("From HorseDB info =>")
-            
-            # 学習リスト作成
-            horsedbLearningList = []
             
             # horsedb へ horseID の情報は何番目に格納しているかを問い合わせる
             # 以降horsedbへの問い合わせは index を使う
@@ -206,25 +223,23 @@ if __name__ == "__main__":
             # ToDo : 標準化
             d1 = horsedb.getBirthDay(index)
             age = horsedb.ageNrm(d0, d1)
-            horsedbLearningList.append(age)
-
-            # 着順取得
-            # すでに着順ソートされているため不要
+            horseAgeList.append(age)
 
             # 斤量取得
             # ToDo : 標準化
             burdenWeight = horsedb.getBurdenWeight(index, racedb.raceID[race])
-            horsedbLearningList.append(burdenWeight)
+            burdenWeightList.append(burdenWeight)
 
             # 枠番取得
             # ToDo : 標準化
             postPosition = horsedb.getPostPosition(index, racedb.raceID[race])
-            horsedbLearningList.append(postPosition)
+            postPositionList.append(postPosition)
 
             # 騎手取得
             # ToDo : 標準化
             jockeyID = horsedb.getJockeyID(index, racedb.raceID[race])
-            horsedbLearningList.append(jockeyID)
+            cntJockey = horsedb.countJockeyAppear(jockeyID)
+            jockeyList.append(cntJockey)
 
             logger.info("horsedbLearningList = [HorseAge, BurdenWeight, PostPosition, JockeyID]")
-            logger.info("horsedbLearningList = {0}".format(horsedbLearningList))
+            logger.info("horsedbLearningList = [{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
