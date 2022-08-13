@@ -78,9 +78,12 @@ def nrmCourseCondition(condition_string):
 
 def nrmRaceStartTime(start_time_string):
     # 発送時刻の数値化 時*60 + 分
+    # 遅い時間ほど馬場が荒れていることを表現する
     t = start_time_string.split(":")
-
-    return int(t[0])*60 + int(t[1])
+    min = float(t[0])*60 + float(t[1])
+    # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
+    min /= 990 
+    return min
 
 if __name__ == "__main__":
     # debug initialize
@@ -106,6 +109,9 @@ if __name__ == "__main__":
         #gradedb = pickle.load(f)
 
     logger.info("Database loading complete")
+    
+    # DBに一度のレースで出た馬の最大頭数を問い合わせる
+    maxHorseNum = racedb.getMaxHorseNumLargestEver()
 
     # for race in range(len(racedb.raceID)):
     for race in range(1):
@@ -129,22 +135,22 @@ if __name__ == "__main__":
             racedbLearningList.append(i)
 
         # 出走時刻取得
-        # ToDo : 標準化
-        # (遅い時間ほど馬場が荒れていることを表現?)
         racedbLearningList.append(nrmRaceStartTime(racedb.getRaceStartTime(race)))
 
         # 距離取得
-        # ToDo : 標準化 -> racedb内で数値化済
-        racedbLearningList.append(racedb.getCourseDistance(race))
+        # 最長距離で割って標準化
+        distance = float(racedb.getCourseDistance(race))
+        racedbLearningList.append(distance / 3600)
 
         # 頭数取得
-        # ToDo : 標準化 -> racedb内で数値化済
-        racedbLearningList.append(racedb.getHorseNum(race))
+        # 最大の出馬数で割って標準化
+        horseNum = float(racedb.getHorseNum(race))
+        racedbLearningList.append(horseNum / maxHorseNum)
 
         # 賞金取得
         # ダミーデータ挿入 -> 標準化
         moneyList = racedb.getMoneyList(race)
-        moneyExpList = moneyNrmExp(moneyList, racedb.getMaxHorseNumLargestEver())
+        moneyExpList = moneyNrmExp(moneyList, maxHorseNum)
         racedbLearningList.append(racedb.moneyNrm(moneyExpList))
 
         # 賞金取得 その2 : 全レースの最高金額で割って正規化
@@ -158,17 +164,19 @@ if __name__ == "__main__":
         # 標準化 -> ダミーデータ挿入
         goalTimeRowList = racedb.goalTimeConv2SecList(race)
         goalTimeNrmList = racedb.goalTimeNrm(goalTimeRowList)
-        goalTimeExpList = goalTimeNrmExp(goalTimeNrmList, racedb.getMaxHorseNumLargestEver())
+        goalTimeExpList = goalTimeNrmExp(goalTimeNrmList, maxHorseNum)
         racedbLearningList.append(racedb.goalTimeNrm(goalTimeExpList))
 
         # 着差取得
         # ダミーデータ挿入 -> 標準化
+        # これを教師データtとする
         marginList = racedb.getMarginList(race)
-        marginExpList = marginListExp(marginList, racedb.getMaxHorseNumLargestEver())
-        racedbLearningList.append(racedb.marginListNrm(marginExpList))
+        marginExpList = marginListExp(marginList, maxHorseNum)
+        teachList = racedb.marginListNrm(marginExpList)
 
-        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime], [Margin]")
+        logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime]")
         logger.info("racedbLearningList = {0}".format(racedbLearningList))
+        logger.info("teachList = {0}".format(teachList))
 
         # レース開催日取得
         d0 = racedb.getRaceDate(race)
