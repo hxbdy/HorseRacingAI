@@ -140,28 +140,6 @@ class RaceDB:
         for i in range(len(self.horseIDs_race)):
             output += self.horseIDs_race[i]
         return output
-        
-    def goalTimeNrm(self, goalTimeRowList):
-        # sigmoid で標準化．MUはハイパーパラメータ．
-        # 計算式 : y = 1 / (1 + exp(x))
-        # テキストではexp(-x)だが今回は値が小さい方が「良いタイム」のためexp(x)としてみた
-        # 最大値 = 最下位のタイム
-        npGoalTime = np.array(goalTimeRowList)
-
-        ave = np.average(npGoalTime)
-        MU = 50
-
-        # ゴールタイム調整方法を選択
-        METHOD = 3
-        if METHOD == 1:
-            y = 1 / (1 + np.exp(npGoalTime / ave))
-        elif METHOD == 2:
-            y = 1 / (1 + np.exp(npGoalTime / MU))
-        elif METHOD == 3:
-            y = 1 / (1 + np.exp((npGoalTime - ave) / MU))
-        
-        # ndarray と list の違いがよくわかっていないので一応リストに変換しておく
-        return y.tolist()
 
     def goalTimeConv2Sec(self, row):
         # 秒に変換したタイムを返す
@@ -208,16 +186,6 @@ class RaceDB:
                 fm = m.replace(",","")
             moneyList.append(float(fm))
         return moneyList
-
-    def moneyNrm(self, moneyList):
-        # 賞金標準化
-        # 1位賞金で割る
-        # moneyList は float前提
-        money1st = moneyList[0]
-        moneyNrmList = []
-        for m in moneyList:
-            moneyNrmList.append(m / money1st)
-        return moneyNrmList
 
     def getMoneyList2(self, index):
         # 賞金リストを持ってくる．
@@ -289,15 +257,6 @@ class RaceDB:
             weight = weight.split("(")[0]
             fweight.append(float(weight))
         return fweight
-
-    def marginListNrm(self, marginList):
-        x = np.array(marginList)
-        ny = 1/(1+np.exp(-x))
-        y = ny.tolist()
-        # リストを逆順にする。元のリストを破壊するため注意。
-        # 戻り値はNoneであることも注意
-        y.reverse()
-        return y
 
     def getMarginList(self, raceidx):
         # 着差を返す
