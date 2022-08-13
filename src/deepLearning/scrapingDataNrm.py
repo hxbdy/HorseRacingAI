@@ -117,7 +117,7 @@ if __name__ == "__main__":
     for race in range(1):
         logger.info("========================================")
         logger.info("From RaceDB info =>")
-        logger.info("RaceID : {0}".format(racedb.raceID[race]))
+        logger.info("https://db.netkeiba.com/race/{0}".format(racedb.raceID[race]))
 
         # 学習リスト作成
         racedbLearningList = []
@@ -192,7 +192,7 @@ if __name__ == "__main__":
             # horsedb へ horseID の情報は何番目に格納しているかを問い合わせる
             # 以降horsedbへの問い合わせは index を使う
             index = horsedb.getHorseInfo(horseID)
-            logger.info("horseID : {0} => index : {1}".format(horseID, index))
+            logger.info("https://db.netkeiba.com/horse/{0} => index : {1}".format(horseID, index))
             
             # 生涯獲得金取得
             # race時点での獲得賞金を取得
