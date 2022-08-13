@@ -222,7 +222,7 @@ if __name__ == "__main__":
             # 出走当時の年齢取得(d0 > d1)
             # ToDo : 標準化
             d1 = horsedb.getBirthDay(index)
-            age = horsedb.ageNrm(d0, d1)
+            age = horsedb.ageConv2Day(d0, d1)
             horseAgeList.append(age)
 
             # 斤量取得

@@ -163,7 +163,7 @@ class HorseDB:
         birthDay = int(data.split("月")[1].split("日")[0])
         return date(birthYear, birthMon, birthDay)
 
-    def ageNrm(self, birthday, raceday):
+    def ageConv2Day(self, birthday, raceday):
         # レース開催日の馬の年齢を計算
         # 小数点以下閏年未考慮
         dy = relativedelta(birthday, raceday)
