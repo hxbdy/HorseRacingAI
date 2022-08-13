@@ -5,6 +5,7 @@ from pathlib import Path
 import logging
 from datetime import date
 from dateutil.relativedelta import relativedelta
+import numpy as np
 
 # commonフォルダ内読み込みのため
 sys.path.append(os.path.abspath(".."))
@@ -15,19 +16,44 @@ if parentDir not in sys.path:
 # 賞金リスト拡張
 # 指定サイズより小さい場合に限り拡張する
 # 拡張したサイズ分だけゼロをappendする
-def moneyNrmExp(nrmList):
-    None
+# nrmList : 拡張したいリスト
+# listSize : 希望のリスト要素数
+def moneyNrmExp(nrmList, listSize):
+    exSize = listSize - len(nrmList)
+    if exSize > 0:
+        for i in range(exSize):
+            nrmList.append(0)
+    return nrmList
 
 # ゴールタイムリスト拡張
 # 指定サイズより小さい場合に限り拡張する
 # 偏差値40の値程度でランダムに埋める
-def goalTimeNrmExp(nrmList):
-    None
+# nrmList : 拡張したいリスト
+# listSize : 希望のリスト要素数
+def goalTimeNrmExp(nrmList, listSize):
+    exSize   = listSize - len(nrmList)
+    if exSize > 0:
+        nNrmList = np.array(nrmList)
+        sigma    = np.std(nNrmList)
+        ave      = np.average(nNrmList)
+        exRandList = np.random.uniform(-2*sigma, -sigma, exSize)
+        exRandList += ave
+        for ex in exRandList:
+            nrmList.append(ex)
+    return nrmList
 
 # 指定サイズより小さい場合に限り拡張する
 # 最下位にハナ差で連続してゴールすることにする
-def marginListNrmExp(nrmList):
-    None
+# nrmList : 拡張したいリスト
+# listSize : 希望のリスト要素数
+def marginListExp(rowList, listSize):
+    exSize   = listSize - len(rowList)
+    lastMargin = rowList[-1]
+    if exSize > 0:
+        for i in range(exSize):
+            lastMargin += 0.0125
+            rowList.append(lastMargin)
+    return rowList
 
 def nrmWeather(weather_string):
     # 天気のone-hot表現(ただし晴は全て0として表現する)
@@ -81,8 +107,6 @@ if __name__ == "__main__":
 
     logger.info("Database loading complete")
 
-    logger.debug("Max horse num largest ever : {}".format(racedb.getMaxHorseNumLargestEver()))
-
     # for race in range(len(racedb.raceID)):
     for race in range(1):
         logger.info("========================================")
@@ -118,9 +142,10 @@ if __name__ == "__main__":
         racedbLearningList.append(racedb.getHorseNum(race))
 
         # 賞金取得
-        # ToDo : 標準化
+        # ダミーデータ挿入 -> 標準化
         moneyList = racedb.getMoneyList(race)
-        racedbLearningList.append(racedb.moneyNrm(moneyList))
+        moneyExpList = moneyNrmExp(moneyList, racedb.getMaxHorseNumLargestEver())
+        racedbLearningList.append(racedb.moneyNrm(moneyExpList))
 
         # 賞金取得 その2 : 全レースの最高金額で割って正規化
         # ToDo : 最高金額を取得して割る作業を追加
@@ -130,12 +155,17 @@ if __name__ == "__main__":
         ###      ここから下は結果(正解ラベル的な)?
 
         # タイム取得
+        # 標準化 -> ダミーデータ挿入
         goalTimeRowList = racedb.goalTimeConv2SecList(race)
-        racedbLearningList.append(racedb.goalTimeNrm(goalTimeRowList))
+        goalTimeNrmList = racedb.goalTimeNrm(goalTimeRowList)
+        goalTimeExpList = goalTimeNrmExp(goalTimeNrmList, racedb.getMaxHorseNumLargestEver())
+        racedbLearningList.append(racedb.goalTimeNrm(goalTimeExpList))
 
         # 着差取得
+        # ダミーデータ挿入 -> 標準化
         marginList = racedb.getMarginList(race)
-        racedbLearningList.append(racedb.marginListNrm(marginList))
+        marginExpList = marginListExp(marginList, racedb.getMaxHorseNumLargestEver())
+        racedbLearningList.append(racedb.marginListNrm(marginExpList))
 
         logger.info("racedbLearningList = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime], [Margin]")
         logger.info("racedbLearningList = {0}".format(racedbLearningList))
