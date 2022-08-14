@@ -5,6 +5,7 @@ import logging
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import numpy as np
+from iteration_utilities import deepflatten
 
 # commonフォルダ内読み込みのため
 deepLearning_dir = pathlib.Path(__file__).parent
@@ -87,7 +88,12 @@ def padPostPositionList(rowList, listSize):
 
 def padJockeyList(rowList, listSize):
     # 騎手ダミーデータ挿入
-    None
+    # ダミーデータ：出場回数50を追加．
+    exSize = listSize - len(rowList)
+    if exSize > 0:
+        for i in range(exSize):
+            rowList.append(50)
+    return rowList
 
 ## 値の標準化
 def nrmWeather(weather_string):
@@ -252,7 +258,7 @@ if __name__ == "__main__":
         marginList = racedb.getMarginList(race)
         marginExpList = padMarginList(marginList, maxHorseNum)
         teachList = nrmMarginList(marginExpList)
-        logger.info("t = {0}".format(teachList))
+        logger.info("t (len : {0})= {1}".format(len(teachList), teachList))
 
 
         ## 学習リスト作成 (レースデータ)
@@ -294,7 +300,7 @@ if __name__ == "__main__":
         # ToDo : 最高金額を取得して割る作業を追加
         #racedbLearningList.append(racedb.getMoneyList2(race))
         
-        logger.info("X = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money], [goalTime]")
+        logger.info("X = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money]")
         logger.info("X = {0}".format(racedbLearningList))
         
 
@@ -338,13 +344,12 @@ if __name__ == "__main__":
             postPositionList.append(postPosition)
 
             # 騎手取得
-            # ToDo : 標準化
             jockeyID = horsedb.getJockeyID(index, racedb.raceID[race])
             cntJockey = horsedb.countJockeyAppear(jockeyID)
             jockeyList.append(cntJockey)
 
-            logger.info("horsedbLearningList = [HorseAge, BurdenWeight, PostPosition, JockeyID]")
-            logger.info("horsedbLearningList = [{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
+            logger.info("[HorseAge, BurdenWeight, PostPosition, JockeyID]")
+            logger.info("[{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
         
         # 各リストにダミーデータを挿入
         horseAgeList = padHorseAgeList(horseAgeList, maxHorseNum)
@@ -359,11 +364,16 @@ if __name__ == "__main__":
         jockeyList = nrmJockeyID(jockeyList)
 
         # 各リスト確認
-        logger.info("========================================")
-        logger.info("horseAgeList = {}".format(horseAgeList))
-        logger.info("burdenWeightList = {}".format(burdenWeightList))
-        logger.info("postPositionList = {}".format(postPositionList))
-        logger.info("jockeyList = {}".format(jockeyList))
+        logger.debug("========================================")
+        logger.debug("horseAgeList(len : {0}) = {1}".format(len(horseAgeList), horseAgeList))
+        logger.debug("burdenWeightList(len : {0}) = {1}".format(len(burdenWeightList), burdenWeightList))
+        logger.debug("postPositionList(len : {0}) = {1}".format(len(postPositionList), postPositionList))
+        logger.debug("jockeyList(len : {0}) = {1}".format(len(jockeyList), jockeyList))
 
         # 統合
-        learningList = [*racedbLearningList, *horseAgeList, *burdenWeight, *postPositionList, *jockeyList]
+        learningList = [racedbLearningList, horseAgeList, burdenWeightList, postPositionList, jockeyList]
+        
+        # 一次元化
+        learningList = list(deepflatten(learningList))
+        logger.info("========================================")
+        logger.info("X (len : {0}) = {1}".format(len(learningList), learningList))
