@@ -215,10 +215,10 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logging.disable(logging.DEBUG)
+    logging.disable(logging.DEBUG)
 
     # pickle読み込み
-    logger.info("Database loading start ...")
+    logger.info("Database loading")
 
     # レース情報読み込み
     with open(str(root_dir) + "\\dst\\scrapingResult\\racedb.pickle", 'rb') as f:
@@ -238,10 +238,13 @@ if __name__ == "__main__":
     maxHorseNum = racedb.getMaxHorseNumLargestEver()
 
     # for race in range(len(racedb.raceID)):
+    totalRaceNum = len(racedb.raceID)
     for race in range(1):
+
         logger.info("========================================")
         logger.info("From RaceDB info =>")
         logger.info("https://db.netkeiba.com/race/{0}".format(racedb.raceID[race]))
+        logger.info("Generating input data : {0}/{1}".format(race+1, totalRaceNum))
 
         ## 正解ラベルの作成
         """
@@ -258,8 +261,6 @@ if __name__ == "__main__":
         marginList = racedb.getMarginList(race)
         marginExpList = padMarginList(marginList, maxHorseNum)
         teachList = nrmMarginList(marginExpList)
-        logger.info("t (len : {0})= {1}".format(len(teachList), teachList))
-
 
         ## 学習リスト作成 (レースデータ)
         racedbLearningList = []
@@ -300,9 +301,8 @@ if __name__ == "__main__":
         # ToDo : 最高金額を取得して割る作業を追加
         #racedbLearningList.append(racedb.getMoneyList2(race))
         
-        logger.info("X = Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money]")
-        logger.info("X = {0}".format(racedbLearningList))
-        
+        logger.debug("[Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money]]")
+        logger.debug(racedbLearningList)
 
         ## 学習リスト作成 (各馬のデータ)
         # レース開催日取得
@@ -314,13 +314,13 @@ if __name__ == "__main__":
         postPositionList = []
         jockeyList = []
         for horseID in racedb.horseIDs_race[race]:
-            logger.info("========================================")
-            logger.info("From HorseDB info =>")
+            logger.debug("========================================")
+            logger.debug("From HorseDB info =>")
             
             # horsedb へ horseID の情報は何番目に格納しているかを問い合わせる
             # 以降horsedbへの問い合わせは index を使う
             index = horsedb.getHorseInfo(horseID)
-            logger.info("https://db.netkeiba.com/horse/{0} => index : {1}".format(horseID, index))
+            logger.debug("https://db.netkeiba.com/horse/{0} => index : {1}".format(horseID, index))
             
             # 生涯獲得金取得
             # race時点での獲得賞金を取得
@@ -348,16 +348,19 @@ if __name__ == "__main__":
             cntJockey = horsedb.countJockeyAppear(jockeyID)
             jockeyList.append(cntJockey)
 
-            logger.info("[HorseAge, BurdenWeight, PostPosition, JockeyID]")
-            logger.info("[{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
+            logger.debug("[HorseAge, BurdenWeight, PostPosition, JockeyID]")
+            logger.debug("[{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
         
         # 各リストにダミーデータを挿入
+        logger.debug("========================================")
+        logger.debug("insert dummy data")
         horseAgeList = padHorseAgeList(horseAgeList, maxHorseNum)
         burdenWeightList = padBurdenWeightList(burdenWeightList, maxHorseNum)
         postPositionList = padPostPositionList(postPositionList, maxHorseNum)
         jockeyList = padJockeyList(jockeyList, maxHorseNum)
         
         # 各リスト標準化
+        logger.debug("normalize X data")
         horseAgeList = nrmHorseAge(horseAgeList)
         burdenWeightList = nrmBurdenWeightAbs(burdenWeightList)
         postPositionList = nrmPostPosition(postPositionList)
@@ -365,6 +368,10 @@ if __name__ == "__main__":
 
         # 各リスト確認
         logger.debug("========================================")
+        # 教師データt
+        logger.debug("t (len : {0})= {1}".format(len(teachList), teachList))
+        # 学習データX
+        logger.debug("racedbLearningList(len : {0}) = {1}".format(len(racedbLearningList), racedbLearningList))
         logger.debug("horseAgeList(len : {0}) = {1}".format(len(horseAgeList), horseAgeList))
         logger.debug("burdenWeightList(len : {0}) = {1}".format(len(burdenWeightList), burdenWeightList))
         logger.debug("postPositionList(len : {0}) = {1}".format(len(postPositionList), postPositionList))
@@ -375,5 +382,3 @@ if __name__ == "__main__":
         
         # 一次元化
         learningList = list(deepflatten(learningList))
-        logger.info("========================================")
-        logger.info("X (len : {0}) = {1}".format(len(learningList), learningList))
