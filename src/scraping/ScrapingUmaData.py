@@ -358,7 +358,7 @@ def save_horsedata(driver, horseID_list, start_count=0):
         # 競走成績は過去と現在で表示内容が違うため、列名を照合してデータを取得する。
         # TEXT_COL_NAMEとID_COL_NAME にある列のデータだけ取得する。
         # TEXT: 表示されている文字列を取得。ID: レースIDと騎手IDを取得(for文内も変更必要)。
-        TEXT_COL_NAME = ["日付", "頭数", "枠番", "馬番", "オッズ", "人気", "着順", "斤量","距離","馬場", "タイム", "着差", "賞金"]
+        TEXT_COL_NAME = ["日付","開催", "頭数", "枠番", "馬番", "オッズ", "人気", "着順", "斤量","距離","馬場", "タイム", "着差", "賞金"]
         ID_COL_NAME = ["レース名", "騎手"]
         perform_contents = []
         for row in range(1, len(perform_table)):
