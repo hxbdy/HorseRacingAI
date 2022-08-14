@@ -209,6 +209,28 @@ def nrmMarginList(marginList):
     y.reverse()
     return y
 
+OUTPUT_PATH = str(root_dir) + "\\dst\\learningList\\"
+
+"""pickleでデータを読み込み・保存"""
+def read_data(read_file_name):
+    """
+    learningListフォルダ内にpicle化したファイルを読み込む。
+    存在しない場合は文字列を返す．
+    """
+    try:
+        with open(OUTPUT_PATH + read_file_name + ".pickle", "rb") as f:
+            data = pickle.load(f)
+    except FileNotFoundError:
+        data = "FileNotFoundError"
+    return data
+
+def save_data(save_data, save_file_name):
+    """
+    learningListフォルダ内にpicle化したファイルを保存する。
+    """
+    with open(OUTPUT_PATH + save_file_name + ".pickle", 'wb') as f:
+        pickle.dump(save_data, f)
+
 if __name__ == "__main__":
     # debug initialize
     # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
@@ -236,10 +258,12 @@ if __name__ == "__main__":
 
     # DBに一度のレースで出た馬の最大頭数を問い合わせる
     maxHorseNum = racedb.getMaxHorseNumLargestEver()
-
-    # for race in range(len(racedb.raceID)):
+    
+    totalXList = []
+    totaltList = []
     totalRaceNum = len(racedb.raceID)
-    for race in range(1):
+
+    for race in range(len(racedb.raceID)):
 
         logger.info("========================================")
         logger.info("From RaceDB info =>")
@@ -382,3 +406,18 @@ if __name__ == "__main__":
         
         # 一次元化
         learningList = list(deepflatten(learningList))
+
+        # 保存用リストに追加
+        totalXList.append(learningList)
+        totaltList.append(teachList)
+
+    # 書き込み
+    logger.info("========================================")
+    
+    fn = "X"
+    logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
+    save_data(totalXList, fn)
+
+    fn = "t"
+    logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
+    save_data(totalXList, fn)
