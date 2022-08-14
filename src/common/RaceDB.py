@@ -291,7 +291,13 @@ class RaceDB:
         retList = []
         for i in range(len(self.horseIDs_race[raceidx])):
             margin = self.goal_dif[raceidx][i]
-            time += marginDict[margin]
+            # 'クビ+1/2' などの特殊な表記に対応する
+            if '+' in margin:
+                m = margin.split('+')
+                time += marginDict[m[0]]
+                time += marginDict[m[1]]
+            else:
+                time += marginDict[margin]
             retList.append(time)
         return retList
 
