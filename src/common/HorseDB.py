@@ -34,6 +34,11 @@ class HorseDB:
         self.perform_contents = []
         self.check = []
 
+        # 累計値
+        self.cum_perform = []
+        self.cum_num_wins = []
+        self.cum_money = []
+
     # 一貫性チェック
     # すべての要素の数は同じである必要がある
     def selfConsistencyCheck(self):
@@ -148,6 +153,7 @@ class HorseDB:
     def appendCheck(self, data):
         self.check.append(data)
 
+    # データの取得
     def getHorseInfo(self, searchID):
         for index in range(len(self.horseID)):
             if self.horseID[index] == searchID:
@@ -234,3 +240,61 @@ class HorseDB:
             if i[1] == raceid:
                 return float(i[3])
         return float(6)
+
+    # 累計値の計算
+    def calCumPerformance(self):
+        # 走破タイム・斤量などを考慮し，「強さ(performance)」を計算
+        # 各レースの結果から強さを計算し，その最大値を記録していく
+        # (外れ値を除くために，2番目の強さでもいいかもしれない．)
+        # ToDo: 競馬場と距離と馬場状態の効果を考慮するため，HorseDBが新しくなったらそれらを参照するようにする．
+        # performanceの計算式は暫定
+        self.cum_perform = []
+        for horse_perform in self.perform_contents:
+            max_performance_list = []
+            max_performance = -1000.0
+            for race_result in horse_perform:
+                course_effect = 1 #競馬場(コース形状)の効果
+                distance_effect = 1 #距離の効果
+                condition_effect = 1 #馬場状態の効果
+                goaltime = race_result[10]
+                try:
+                    goaltime_sec = float(goaltime.split(':')[0])*60 + float(goaltime.split(':')[1])
+                except:
+                    goaltime_sec = 240
+                try:
+                    burden_weight = float(race_result[9])
+                except:
+                    burden_weight = 0
+
+                performance = -goaltime_sec * course_effect * distance_effect * condition_effect + burden_weight
+                if performance > max_performance:
+                    max_performance = performance
+                max_performance_list.append(max_performance)
+            self.cum_perform.append(max_performance_list)
+    
+    def calCumNumOfWin(self):
+        # 累計勝利数を計算
+        self.cum_num_wins = []
+        for horse_perform in self.perform_contents:
+            cum_win_list = []
+            cum_win = 0
+            for race_result in horse_perform:
+                if race_result[7] == '1':
+                    cum_win += 1
+                cum_win_list.append(cum_win)
+            self.cum_num_wins.append(cum_win_list)
+    
+    def calCumMoney(self):
+        # 累計獲得賞金を計算
+        self.cum_money = []
+        for horse_perform in self.perform_contents:
+            cum_money_list = []
+            cum_money = 0.0
+            for race_result in horse_perform:
+                if race_result[12] == ' ':
+                    money = 0.0
+                else:
+                    money = float(race_result[12].replace(",",""))
+                cum_money += money
+                cum_money_list.append(cum_money)
+            self.cum_money.append(cum_money_list)
