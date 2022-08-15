@@ -1,29 +1,42 @@
 import TwoLayerNet
 import numpy as np
+import pickle
+import sys
+import pathlib
 
 # ハイパーパラメータ
-iters_num    = 50000
-lerning_rate = 0.01  # 勾配更新単位
+iters_num    = 1000000
+lerning_rate = 0.1  # 勾配更新単位
 batch_size   = 1     # 1度に学習するレース数
 
-# ダミー教師t生成
-# 合計で必ず1にする必要がある(偏微分の導出に影響する)
-t_data_dummy = np.array([0.5, 0.3, 0.1, 0.05, 0.03, 0.01, 0.005, 0.003, 0.001, 0.001])
+# commonフォルダ内読み込みのため
+deepLearning_dir = pathlib.Path(__file__).parent
+src_dir = deepLearning_dir.parent
+root_dir = src_dir.parent
+dir_lst = [deepLearning_dir, src_dir, root_dir]
+for dir_name in dir_lst:
+    if str(dir_name) not in sys.path:
+        sys.path.append(str(dir_name))
 
+with open(str(root_dir) + "\\dst\\learningList\\t.pickle", 'rb') as f:
+    tData = pickle.load(f)
 
-net = TwoLayerNet.TowLayerNet(160,3000,10)
+with open(str(root_dir) + "\\dst\\learningList\\x.pickle", 'rb') as f:
+    xData = pickle.load(f)
 
-x    = []
-t    = []
+net = TwoLayerNet.TowLayerNet(131,50,24)
+
 loss = []
 
 for i in range(iters_num):
 
-    # ダミー入力X 生成
-    x_data_dummy = np.random.rand(1, 160)
-    x = x_data_dummy
+    # 学習データ取り出し
+    batch = np.random.randint(0, 4326)
+    
+    x = np.array(xData[batch])
+    x = x.reshape([1, -1])
 
-    t = t_data_dummy
+    t = np.array(tData[batch])
 
     # 勾配計算
     grad = net.gradient(x,t)

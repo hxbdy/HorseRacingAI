@@ -1,5 +1,6 @@
 import pickle
 import sys
+import os
 import pathlib
 import logging
 from datetime import date
@@ -414,6 +415,9 @@ if __name__ == "__main__":
     # 書き込み
     logger.info("========================================")
     
+    # 保存先フォルダの存在確認
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+
     fn = "X"
     logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
     save_data(totalXList, fn)
