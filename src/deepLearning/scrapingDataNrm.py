@@ -420,4 +420,4 @@ if __name__ == "__main__":
 
     fn = "t"
     logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
-    save_data(totalXList, fn)
+    save_data(totaltList, fn)
