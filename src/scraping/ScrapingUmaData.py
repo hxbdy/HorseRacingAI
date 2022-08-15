@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from requests import get
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -31,7 +32,6 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
 from common.RaceGradeDB import RaceGradeDB
@@ -59,7 +59,8 @@ def start_driver(browser):
         # Firefoxを起動
         logger.info('initialize firefox driver')
         FirefoxOptions = webdriver.FirefoxOptions()
-        driver = webdriver.Firefox()
+        driver_path = str(scraping_dir) + "\\geckodriver.exe"
+        driver = webdriver.Firefox(executable_path=driver_path)
         logger.info('initialize firefox driver comp')
 
     return driver
@@ -406,6 +407,17 @@ def save_horsedata(driver, horseID_list, start_count=0):
         # 血統テーブルから過去の馬に遡ることになるが、その過去の馬のデータが無い場合どうするか
         # そもそも外国から参加してきた馬はどう処理するのか
 
+def get_jockeyID(horsedb):
+    # horsedbから騎手idを取得し、idになっていない値を除いたリストを返す。
+    row_jockeyid_list = horsedb.enumAllJockeyID()
+
+    # 一文字でも数字が入っている値のみをidとする
+    cleaned_jockeyid_list = []
+    for jockeyid in row_jockeyid_list:
+        if any(chr.isdigit() for chr in jockeyid):
+            cleaned_jockeyid_list.append(jockeyid)
+    return cleaned_jockeyid_list
+
 def save_jockeydata(driver, jockeyID_list, start_count=0):
     """
     騎手の年度別成績を取得する.
@@ -493,16 +505,15 @@ def save_jockeydata(driver, jockeyID_list, start_count=0):
 if __name__ == '__main__':
     # load config
     config = configparser.ConfigParser()
-    config.read('../private.ini')
+    config.read(str(src_dir) + '\\private.ini')
     section = 'scraping'
-    """
+    
     # ブラウザ起動
     browser = config.get(section, 'browser')
     driver = start_driver(browser)
     
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
-
     
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
@@ -510,7 +521,7 @@ if __name__ == '__main__':
     # raceIDを取得してくる
     # データを取得する開始年と終了年
     START_YEAR = 1986
-    END_YEAR = 1987
+    END_YEAR = 2021
     RACE_CLASS_LIST =["check_grade_1", "check_grade_2", "check_grade_3"]
     logger.info('save_raceID')
     save_raceID(driver, list(range(START_YEAR,END_YEAR+1)), RACE_CLASS_LIST)
@@ -531,13 +542,20 @@ if __name__ == '__main__':
     #horseID_list = ["1983104089"] #test用
     save_horsedata(driver, horseID_list)
     logger.info('save_horsedata comp')
-
-    driver.close()
     
+    """ # 調整中
+    # 騎手idリストを作成し保存
+    logger.info('get_jockeid')
+    horsedb = read_data("horsedb")
+    jockeyID_list = get_jockeyID(horsedb)
+    print(jockeyID_list)
+    logger.info('get_jockeyid comp')
 
     # 騎手データを取得してくる
     logger.info('save_jockeydata')
-    jockeyID_list = ['00140'] #test用
+    #jockeyID_list = ['00140'] #test用
     save_jockeydata(driver, jockeyID_list)
     logger.info('save_jockeydata comp')
     """
+    driver.close()
+    
