@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from requests import get
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -517,7 +516,7 @@ if __name__ == '__main__':
     
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
-
+    """
     # raceIDを取得してくる
     # データを取得する開始年と終了年
     START_YEAR = 1986
@@ -548,7 +547,7 @@ if __name__ == '__main__':
     logger.info('get_jockeid')
     horsedb = read_data("horsedb")
     jockeyID_list = get_jockeyID(horsedb)
-    print(jockeyID_list)
+    save_data(jockeyID_list, "jockeyID_list")
     logger.info('get_jockeyid comp')
 
     # 騎手データを取得してくる
@@ -556,6 +555,6 @@ if __name__ == '__main__':
     #jockeyID_list = ['00140'] #test用
     save_jockeydata(driver, jockeyID_list)
     logger.info('save_jockeydata comp')
-    """
+    
     driver.close()
     
