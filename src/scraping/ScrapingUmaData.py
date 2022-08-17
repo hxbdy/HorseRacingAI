@@ -541,6 +541,10 @@ if __name__ == '__main__':
     #horseID_list = ["1983104089"] #test用
     save_horsedata(driver, horseID_list)
     logger.info('save_horsedata comp')
+    # 欠損データを一部修正
+    horsedb = read_data("horsedb")
+    horsedb.reconfirmCheck()
+    save_data(horsedb, "horsedb")
     
     """ # 調整中
     # 騎手idリストを作成し保存
