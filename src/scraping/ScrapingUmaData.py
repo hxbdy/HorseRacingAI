@@ -38,6 +38,10 @@ from common.JockeyDB import JockeyDB
 
 OUTPUT_PATH = str(root_dir) + "\\dst\\scrapingResult\\"
 
+# load config
+config = configparser.ConfigParser()
+config.read(str(src_dir) + '\\private.ini')
+
 """driverの操作"""
 def start_driver(browser):
     """
@@ -498,12 +502,8 @@ def save_jockeydata(driver, jockeyID_list, start_count=0):
                 
 
 if __name__ == '__main__':
-    # load config
-    config = configparser.ConfigParser()
-    config.read(str(src_dir) + '\\private.ini')
-    section = 'scraping'
-    
     # ブラウザ起動
+    section = 'scraping'
     browser = config.get(section, 'browser')
     driver = start_driver(browser)
     
@@ -543,6 +543,7 @@ if __name__ == '__main__':
     save_data(horsedb, "horsedb")
     
     """ # 調整中
+    """
     # 騎手idリストを作成し保存
     logger.info('get_jockeid')
     horsedb = read_data("horsedb")
@@ -557,4 +558,4 @@ if __name__ == '__main__':
     logger.info('save_jockeydata comp')
     
     driver.close()
-    
+    """
