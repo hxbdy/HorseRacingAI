@@ -134,24 +134,14 @@ class HorseDB:
         logger.info("check => ")
         logger.info(self.check[index])
 
-    # 各パラメータセッタ
-    def appendHorseID(self, data):
-        self.horseID.append(data)
-
-    def appendCommon(self, data):
-        self.common.append(data)
-    
-    def appendProfContents(self, data):
-        self.prof_contents.append(data)
-
-    def appendBloodList(self, data):
-        self.blood_list.append(data)
-    
-    def appendPerformContents(self, data):
-        self.perform_contents.append(data)
-    
-    def appendCheck(self, data):
-        self.check.append(data)
+    # 各パラメータセッタ    
+    def appendData(self, horseID, common, prof_contents, blood_list, perform_contents, check):
+        self.horseID.append(horseID)
+        self.common.append(common)
+        self.prof_contents.append(prof_contents)
+        self.blood_list.append(blood_list)
+        self.perform_contents.append(perform_contents)
+        self.check.append(check)
 
     # データの取得
     def getHorseInfo(self, searchID):

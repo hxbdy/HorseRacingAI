@@ -298,12 +298,10 @@ def save_horsedata(driver, horseID_list, start_count=0):
         logger.info('access {}'.format(horse_url))
         go_page(driver, horse_url)
         logger.info('access {} comp'.format(horse_url))
-        horsedb.appendHorseID(horseID)
 
         ## 馬名，英名，抹消/現役，牡牝，毛の色
         # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
         horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
-        horsedb.appendCommon(horse_title)
 
         ## プロフィールテーブルの取得
         logger.info('get profile table')
@@ -331,7 +329,6 @@ def save_horsedata(driver, horseID_list, start_count=0):
             # 競走成績テーブルが全て取得できているか確認するため、出走数を取得しておく
             if row_name[row] == "通算成績":
                 num_entry_race = int(prof_contents[row][:prof_contents[row].find("戦")])
-        horsedb.appendProfContents(prof_contents)
 
         ## 血統テーブルの取得
         logger.info('get blood table')
@@ -343,7 +340,6 @@ def save_horsedata(driver, horseID_list, start_count=0):
             blood_horse_url_str = blood_table[i].get_attribute("href")
             blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
             blood_list.append(blood_horseID)
-        horsedb.appendBloodList(blood_list)
 
         ## 競走成績テーブルの取得
         logger.info('get result table')
@@ -382,14 +378,14 @@ def save_horsedata(driver, horseID_list, start_count=0):
                             perform_contents_row.append(perform_table_row[col].text)
                         break
             perform_contents.append(perform_contents_row)
-        horsedb.appendPerformContents(perform_contents)
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_table) -1:
             check = 1 # OK
         else:
             check = 0 # データ欠損アリ (prof_tableとperform_tableで一致しない)
-        horsedb.appendCheck(check)
+
+        horsedb.appendData(horseID, horse_title, prof_contents, blood_list, perform_contents, check)
 
         ## searched_horseID_setの更新と保存処理
         searched_horseID_set.add(horseID)
