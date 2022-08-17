@@ -70,7 +70,22 @@ class TowLayerNet:
         y = self.softmax(a2)
 
         # backward
-        dy = (y - t) / batch_num
+        print("y=", y)
+
+        # L = softmax(crossentropyerror(x))
+        # 偏微分L
+        # pL = (y - t)
+
+        # L = softmax(meansquarederror(x))
+        # 偏微分L
+        pL = -y * (y -1) * (y - t)
+        #print(y)
+        #print(t)
+        
+        #print("===========================")
+
+        dy = pL / batch_num
+        #print("b2 = ",np.sum(dy, axis=0))
         grads['W2'] = np.dot(z1.T, dy)
         grads['b2'] = np.sum(dy, axis=0)
 
