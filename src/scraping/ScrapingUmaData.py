@@ -194,51 +194,57 @@ def save_raceID(driver, yearlist, race_grade_list=["check_grade_1"]):
     # raceGradedbを外部に出力
     save_data(raceGradedb, "raceGradedb")
 
-def save_racedata(driver, raceID_list):
+def save_racedata(driver, raceID_list, dbname, start_count=0):
     """
     horseIDを取得する & race情報を得る。
     [入力] driver: webdriver
     [入力] raceID_list: 調べるraceIDのリスト
+    [入力] dbname: データベースの名前
+    [入力] start_count: raceID_listの何番目から探索するか
+    (前回がエラーで停止した場合，最後にセーブしたときのsave_counterを入力すると速く開始できる)
     """
     # racedbを読み込む．存在しない場合は新たに作る．
-    racedb = read_data("racedb")
+    racedb = read_data(str(dbname))
     if racedb == "FileNotFoundError":
         racedb = RaceDB()
 
+    # 既にracedb内に存在するraceIDを記録する集合
+    searched_raceID_set = set(racedb.raceID)
+
     # 定期的なデータセーブのためのループ回数カウンター
-    save_counter = 0
+    save_counter = 0 + start_count
+    raceID_list = raceID_list[save_counter:]
 
     for raceID in raceID_list:
         save_counter += 1
+
+        if raceID in searched_raceID_set:
+            # racedbを10回ごとに外部に出力
+            if save_counter % 10 == 0:
+                save_data(racedb, dbname)
+                logger.info("save racedb comp, save_counter:{}".format(save_counter))
+            continue
 
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
         logger.info('access {}'.format(race_url))
         go_page(driver, race_url)
 
-        racedb.appendRaceID(raceID)
 
-        ## horseIDの取得とhorseID_setへの追加
+        ## horseIDの取得
         horse_column_html = driver.find_elements(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody/tr/td[4]")
         horseIDs_race = []
         for i in range(len(horse_column_html)):
             horse_url_str = horse_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
             horseID = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
             horseIDs_race.append(horseID)
-        horseID_set |= set(horseIDs_race)
-        racedb.appendHorseIDsRace(horseIDs_race)
 
 
         ## race情報の取得・整形と保存 (払い戻しの情報は含まず)
         # レース名、レースデータ1(天候など)、レースデータ2(日付など)  <未補正 文字列>
         race_name = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/h1").text
-        racedb.appendRaceName(race_name)
-
         race_data1 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/p/diary_snap_cut/span").text
-        racedb.appendRaceData1(race_data1)
-
         race_data2 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/p").text
-        racedb.appendRaceData2(race_data2)
 
         # テーブルデータ
         race_table_data = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody")
@@ -253,28 +259,29 @@ def save_racedata(driver, raceID_list):
             goal_dif.append(race_table_row[8].text)
             horse_weight.append(race_table_row[14].text)
             money.append(race_table_row[-1].text)
-        racedb.appendGoalTime(goal_time)
-        racedb.appendGoalDiff(goal_dif)
-        racedb.appendHorseWeight(horse_weight)
-        racedb.appendMoney(money)
         
+
+        racedb.appendData(raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money)
+        # searched_raceID_setの更新と保存処理
+        searched_raceID_set.add(raceID)
         # racedbを10回ごとに外部に出力
         if save_counter % 10 == 0:
-            save_data(racedb, "racedb")
+            save_data(racedb, dbname)
             logger.info("save racedb comp, save_counter:{}".format(save_counter))
 
-    save_data(racedb, "racedb")
+    save_data(racedb, dbname)
 
-def save_horsedata(driver, horseID_list, start_count=0):
+def save_horsedata(driver, horseID_list, dbname, start_count=0):
     """
     馬のデータを取得して保存する
     [入力] horseID_list: 調べるhorseIDのリスト
+    [入力] dbname: データベースの名前
     [入力] start_count: horseID_listの何番目から探索するか
     (前回がエラーで停止した場合，最後にセーブしたときのsave_counterを入力すると速く開始できる)
     """
 
     # horsedbを読み込む．存在しない場合は新たに作る．
-    horsedb = read_data("horsedb")
+    horsedb = read_data(dbname)
     if horsedb == "FileNotFoundError":
         horsedb = HorseDB()
     # 開始前のhorsedbは念のため一次保存しておく
@@ -293,7 +300,7 @@ def save_horsedata(driver, horseID_list, start_count=0):
         if horseID in searched_horseID_set:
             # horsedbを10回ごとに外部に出力
             if save_counter % 10 == 0:
-                save_data(horsedb, "horsedb")
+                save_data(horsedb, dbname)
                 logger.info("save horsedb comp, save_counter:{}".format(save_counter))
             continue
 
@@ -395,10 +402,10 @@ def save_horsedata(driver, horseID_list, start_count=0):
         searched_horseID_set.add(horseID)
         # horsedbを10回ごとに外部に出力
         if save_counter % 10 == 0:
-            save_data(horsedb, "horsedb")
+            save_data(horsedb, dbname)
             logger.info("save horsedb comp, save_counter:{}".format(save_counter))
 
-    save_data(horsedb, "horsedb")
+    save_data(horsedb, dbname)
     remove_data("horsedb_before_search_tmp")
 
         ## 以下保留事項
@@ -502,6 +509,7 @@ def save_jockeydata(driver, jockeyID_list, start_count=0):
                 
 
 if __name__ == '__main__':
+    """
     # ブラウザ起動
     section = 'scraping'
     browser = config.get(section, 'browser')
@@ -512,7 +520,7 @@ if __name__ == '__main__':
     
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
-    """
+    
     # raceIDを取得してくる
     # データを取得する開始年と終了年
     START_YEAR = 1986
@@ -527,7 +535,7 @@ if __name__ == '__main__':
     raceGradedb = read_data("raceGradedb")
     raceID_list = raceGradedb.getRaceIDList()
     #raceID_list = ["198606050810"] #test用
-    save_racedata(driver, raceID_list)
+    save_racedata(driver, raceID_list, "racedb")
     logger.info('save_racedata comp')
 
     # 馬データを取得してくる
@@ -535,7 +543,7 @@ if __name__ == '__main__':
     racedb = read_data("racedb")
     horseID_list = racedb.getHorseIDList()
     #horseID_list = ["1983104089"] #test用
-    save_horsedata(driver, horseID_list)
+    save_horsedata(driver, horseID_list, "horsedb")
     logger.info('save_horsedata comp')
     # 欠損データを一部修正
     horsedb = read_data("horsedb")
