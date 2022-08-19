@@ -106,33 +106,17 @@ class RaceDB:
         logger.info("money => ")
         logger.info(self.money[index])
 
-    # 各パラメータセッタ
-    def appendRaceID(self, data):
-        self.raceID.append(data)
-
-    def appendRaceName(self, data):
-        self.race_name.append(data)
-
-    def appendRaceData1(self, data):
-        self.race_data1.append(data)
-
-    def appendRaceData2(self, data):
-        self.race_data2.append(data)
-
-    def appendHorseIDsRace(self, data):
-        self.horseIDs_race.append(data)
-
-    def appendGoalTime(self, data):
-        self.goal_time.append(data)
-
-    def appendGoalDiff(self, data):
-        self.goal_dif.append(data)
-
-    def appendHorseWeight(self, data):
-        self.horse_weight.append(data)
-
-    def appendMoney(self, data):
-        self.money.append(data)
+    # パラメータセッタ
+    def appendData(self, raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money):
+        self.raceID.append(raceID)
+        self.race_name.append(race_name)
+        self.race_data1.append(race_data1)
+        self.race_data2.append(race_data2)
+        self.horseIDs_race.append(horseIDs_race)
+        self.goal_time.append(goal_time)
+        self.goal_dif.append(goal_dif)
+        self.horse_weight.append(horse_weight)
+        self.money.append(money)
 
     # horseIDs_raceを1次元配列に直して出力
     def getHorseIDList(self):
@@ -141,11 +125,11 @@ class RaceDB:
             output += self.horseIDs_race[i]
         return output
 
-    def goalTimeConv2Sec(self, row):
+    def goalTimeConv2Sec(self, raw):
         # 秒に変換したタイムを返す
         # row = '2:02.3'
-        min = float(row.split(':')[0])
-        sec = float(row.split(':')[1])
+        min = float(raw.split(':')[0])
+        sec = float(raw.split(':')[1])
         sec = min * 60 + sec
         return sec
 
@@ -200,6 +184,33 @@ class RaceDB:
         
         return money_list
 
+    def getRaceGrade(self, index):
+        # G1, G2, G3, 無印(OP) を判定
+        # 障害競走は J.G1, J.G2, J.G3で返す
+        name = self.race_name[index]
+        if "(G3)" in name:
+            return "G3"
+        elif "(G2)" in name:
+            return "G2"
+        elif "(G1)" in name:
+            return "G1"
+        elif "(J.G3)" in name:
+            return "J.G3"
+        elif "(J.G2)" in name:
+            return "J.G2"
+        elif "(J.G1)" in name:
+            return "J.G1"
+        else:
+            return "OP"
+
+    def getTrack(self, index):
+        # 芝・ダート・障害のいずれか
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = self.race_data1[index].split("/")[0]
+        # 芝右1600m 
+        sep1 = sep1[0] 
+        return sep1 # 芝・ダ・障のいずれか
+
     def getWeather(self, index):
         # 天気取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
@@ -243,6 +254,15 @@ class RaceDB:
         sep1 = sep1.replace(" ", "")
 
         return float(sep1)
+
+    def getCourseLocation(self, index):
+        # 競馬場を取得 (例: 中山)
+        # 競馬場名が2文字の場合のみ対応
+        # race_data2 => '1986年6月29日 1回札幌8日目 4歳以上オープン  (混)(ハンデ)'
+        sep1 = self.race_data2[index].split(" ")[1]
+        # 1回札幌8日目
+        sep1 = sep1[sep1.find("回")+1 : sep1.find("回")+3]
+        return sep1
 
     def getHorseNum(self, index):
         # 頭数取得
@@ -291,7 +311,13 @@ class RaceDB:
         retList = []
         for i in range(len(self.horseIDs_race[raceidx])):
             margin = self.goal_dif[raceidx][i]
-            time += marginDict[margin]
+            # 'クビ+1/2' などの特殊な表記に対応する
+            if '+' in margin:
+                m = margin.split('+')
+                time += marginDict[m[0]]
+                time += marginDict[m[1]]
+            else:
+                time += marginDict[margin]
             retList.append(time)
         return retList
 

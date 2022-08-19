@@ -1,75 +1,28 @@
 # HorseRacingAI
 
-やるぞ～～  
-2022年有馬記念に間に合わせたい。
+# Flow
+|概要| 実行ファイル | 出力ファイル   |
+| ---- | ---- |---- |
+|1. [netkeiba.com](https://www.netkeiba.com/)　からレース情報と出走する馬の情報をスクレイピングする。|./src/scraping/scrapingUmaData.py	|./dst/scrapingResult/raceGradedb.pickle, racedb.pickle, horsedb.pickle|
+|2. 1.で取得した情報を標準化する|./src/deepLearning/scrapingDataNrm.py|./dst/learningList/t.pickle, x.pickle|
+|3. ディープラーニングで学習する|./src/deepLearning/deepLearningMain.py|./dst/trainedParam/gradientb1.txt, gradientb2.txt, gradientW1.txt, gradientW2.txt|
+|4. 3.情報で推定する(未実装)|-| - |
+# private.iniについて
+srcフォルダ直下に private.ini を作成して以下を記入して保存してください。  
+メールとパスワードはネット競馬にログインするために使用します。
 
-## 競走馬データスクレイピング
-持ってくるデータ
+```txt:whatprivate.ini
+[scraping]
+browser = Chrome or FireFox
+mail = hogehoge@mail.com
+pass = password
+```
 
-| 変数名 |  内容  |
-| ---- | ---- |
-|    |日付	|
-|    |開催	|
-|    |天気|
-|    |R|
-|    |頭数|
-|    |枠番|
-|    |馬番|
-|    |オッズ|
-|    |人気|
-|    |着順|
-|    |騎手|
-|    |斤量|
-|    |距離|
-|    |馬場|
-|    |タイム|
-|    |着差|
-|    |勝ち馬(2着馬)|
-|    |賞金|
-||XXX|
-
-## 入力データX
-| 変数名 |  内容  |
-| ---- | ---- |
-|    |日付	|
-|    |開催	|
-|    |天気|
-|    |R|
-|    |頭数|
-|    |枠番|
-|    |馬番|
-|    |オッズ|
-|    |人気|
-|    |騎手|
-|    |斤量|
-|    |距離|
-|    |馬場|
-|    |賞金総額|
-||パパ因子|
-||ママ因子|
-
-## パパ、ママ因子継承について
-獲得賞金、勝率とか計算する
-
-## 教師データ
-2020年までのデータで学習する。
-2021年のデータで推論する。
-
-## コーディングルール
-1. 関数 : camel notation (ex: sampleFunc())
-2. クラス : upper camel case (ex: SampleClass())
-3. 変数 : snake case (ex: sample_tmp)
-
-## 学習済みパラメータについて
-main.pyで学習するとtrainedParamフォルダ以下に学習済みパラメータを保存する。  
-学習済みパラメータを使った推論を行う場合、これらをロードする。  
-
-## caonda env
+## conda env
 * Python 3.8.13
 * cuda 11.7.0
 * cupy 8.3.0
 * selenium 4.2.0
-
 
 ## conda installation
 1. [Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)

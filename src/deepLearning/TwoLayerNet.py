@@ -1,7 +1,18 @@
 import numpy as np
 import os
 import sys
+import pathlib
 
+# commonフォルダ内読み込みのため
+deepLearning_dir = pathlib.Path(__file__).parent
+src_dir = deepLearning_dir.parent
+root_dir = src_dir.parent
+dir_lst = [deepLearning_dir, src_dir, root_dir]
+for dir_name in dir_lst:
+    if str(dir_name) not in sys.path:
+        sys.path.append(str(dir_name))
+
+OUTPUT_PATH = str(root_dir) + "\\dst\\traindParam\\"
 class TowLayerNet:
     def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
         self.params={}
@@ -39,6 +50,9 @@ class TowLayerNet:
             y=y.reshape(1,y.size)
         batch_size=y.shape[0]
         return -np.sum(t*np.log(y+delta))/batch_size
+
+    def meanSquaredError(self, y, t):
+        return 0.5 * np.sum((y-t)**2)
 
     def gradient(self, x, t):
         '''偏微分'''
@@ -83,7 +97,11 @@ class TowLayerNet:
 
     def loss(self,x,t):
         y=self.predict(x)
-        return self.crossEntropyError(y,t)
+        # 損失関数
+        # クロスエントロピー誤差
+        # self.crossEntropyError(y, t)
+        # 二乗和誤差
+        return self.meanSquaredError(y,t)
 
     def loadTest(self,path,data_max):
         '''
@@ -106,7 +124,9 @@ class TowLayerNet:
         '''
         勾配をテキストに保存する
         '''
-        path_w='../trainedParam/gradient'+par+'.txt'
+        # 保存先フォルダの存在確認
+        os.makedirs(OUTPUT_PATH, exist_ok=True)
+        path_w=OUTPUT_PATH+par+'.txt'
         f=open(path_w,mode='w')
         it = np.nditer(self.params[par], flags=['multi_index'], op_flags=['readwrite'])
         while not it.finished:
@@ -117,7 +137,9 @@ class TowLayerNet:
         f.close()
 
     def saveLoss(self,loss):
-        path_w='../trainedParam/loss.txt'
+        # 保存先フォルダの存在確認
+        os.makedirs(OUTPUT_PATH, exist_ok=True)
+        path_w=OUTPUT_PATH+'loss.txt'
         f=open(path_w,mode='w')
         for i in loss:
             f.write(str(i)+"\n")
@@ -127,7 +149,9 @@ class TowLayerNet:
         '''
         勾配を読みこむ
         '''
-        path_r='../trainedParam/gradient'+par+'.txt'
+        # 保存先フォルダの存在確認
+        os.makedirs(OUTPUT_PATH, exist_ok=True)
+        path_r=OUTPUT_PATH+par+'.txt'
         with open(path_r) as f:
             l = f.readlines()
 

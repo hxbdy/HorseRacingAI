@@ -31,13 +31,16 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
 from common.RaceGradeDB import RaceGradeDB
 from common.JockeyDB import JockeyDB
 
 OUTPUT_PATH = str(root_dir) + "\\dst\\scrapingResult\\"
+
+# load config
+config = configparser.ConfigParser()
+config.read(str(src_dir) + '\\private.ini')
 
 """driverの操作"""
 def start_driver(browser):
@@ -191,51 +194,57 @@ def save_raceID(driver, yearlist, race_grade_list=["check_grade_1"]):
     # raceGradedbを外部に出力
     save_data(raceGradedb, "raceGradedb")
 
-def save_racedata(driver, raceID_list):
+def save_racedata(driver, raceID_list, dbname, start_count=0):
     """
     horseIDを取得する & race情報を得る。
     [入力] driver: webdriver
     [入力] raceID_list: 調べるraceIDのリスト
+    [入力] dbname: データベースの名前
+    [入力] start_count: raceID_listの何番目から探索するか
+    (前回がエラーで停止した場合，最後にセーブしたときのsave_counterを入力すると速く開始できる)
     """
     # racedbを読み込む．存在しない場合は新たに作る．
-    racedb = read_data("racedb")
+    racedb = read_data(str(dbname))
     if racedb == "FileNotFoundError":
         racedb = RaceDB()
 
+    # 既にracedb内に存在するraceIDを記録する集合
+    searched_raceID_set = set(racedb.raceID)
+
     # 定期的なデータセーブのためのループ回数カウンター
-    save_counter = 0
+    save_counter = 0 + start_count
+    raceID_list = raceID_list[save_counter:]
 
     for raceID in raceID_list:
         save_counter += 1
+
+        if raceID in searched_raceID_set:
+            # racedbを10回ごとに外部に出力
+            if save_counter % 10 == 0:
+                save_data(racedb, dbname)
+                logger.info("save racedb comp, save_counter:{}".format(save_counter))
+            continue
 
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
         logger.info('access {}'.format(race_url))
         go_page(driver, race_url)
 
-        racedb.appendRaceID(raceID)
 
-        ## horseIDの取得とhorseID_setへの追加
+        ## horseIDの取得
         horse_column_html = driver.find_elements(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody/tr/td[4]")
         horseIDs_race = []
         for i in range(len(horse_column_html)):
             horse_url_str = horse_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
             horseID = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
             horseIDs_race.append(horseID)
-        horseID_set |= set(horseIDs_race)
-        racedb.appendHorseIDsRace(horseIDs_race)
 
 
         ## race情報の取得・整形と保存 (払い戻しの情報は含まず)
         # レース名、レースデータ1(天候など)、レースデータ2(日付など)  <未補正 文字列>
         race_name = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/h1").text
-        racedb.appendRaceName(race_name)
-
         race_data1 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/p/diary_snap_cut/span").text
-        racedb.appendRaceData1(race_data1)
-
         race_data2 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/p").text
-        racedb.appendRaceData2(race_data2)
 
         # テーブルデータ
         race_table_data = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody")
@@ -250,28 +259,29 @@ def save_racedata(driver, raceID_list):
             goal_dif.append(race_table_row[8].text)
             horse_weight.append(race_table_row[14].text)
             money.append(race_table_row[-1].text)
-        racedb.appendGoalTime(goal_time)
-        racedb.appendGoalDiff(goal_dif)
-        racedb.appendHorseWeight(horse_weight)
-        racedb.appendMoney(money)
         
+
+        racedb.appendData(raceID, race_name, race_data1, race_data2, horseIDs_race, goal_time, goal_dif, horse_weight, money)
+        # searched_raceID_setの更新と保存処理
+        searched_raceID_set.add(raceID)
         # racedbを10回ごとに外部に出力
         if save_counter % 10 == 0:
-            save_data(racedb, "racedb")
+            save_data(racedb, dbname)
             logger.info("save racedb comp, save_counter:{}".format(save_counter))
 
-    save_data(racedb, "racedb")
+    save_data(racedb, dbname)
 
-def save_horsedata(driver, horseID_list, start_count=0):
+def save_horsedata(driver, horseID_list, dbname, start_count=0):
     """
     馬のデータを取得して保存する
     [入力] horseID_list: 調べるhorseIDのリスト
+    [入力] dbname: データベースの名前
     [入力] start_count: horseID_listの何番目から探索するか
     (前回がエラーで停止した場合，最後にセーブしたときのsave_counterを入力すると速く開始できる)
     """
 
     # horsedbを読み込む．存在しない場合は新たに作る．
-    horsedb = read_data("horsedb")
+    horsedb = read_data(dbname)
     if horsedb == "FileNotFoundError":
         horsedb = HorseDB()
     # 開始前のhorsedbは念のため一次保存しておく
@@ -290,7 +300,7 @@ def save_horsedata(driver, horseID_list, start_count=0):
         if horseID in searched_horseID_set:
             # horsedbを10回ごとに外部に出力
             if save_counter % 10 == 0:
-                save_data(horsedb, "horsedb")
+                save_data(horsedb, dbname)
                 logger.info("save horsedb comp, save_counter:{}".format(save_counter))
             continue
 
@@ -299,12 +309,10 @@ def save_horsedata(driver, horseID_list, start_count=0):
         logger.info('access {}'.format(horse_url))
         go_page(driver, horse_url)
         logger.info('access {} comp'.format(horse_url))
-        horsedb.appendHorseID(horseID)
 
         ## 馬名，英名，抹消/現役，牡牝，毛の色
         # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
         horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
-        horsedb.appendCommon(horse_title)
 
         ## プロフィールテーブルの取得
         logger.info('get profile table')
@@ -332,7 +340,6 @@ def save_horsedata(driver, horseID_list, start_count=0):
             # 競走成績テーブルが全て取得できているか確認するため、出走数を取得しておく
             if row_name[row] == "通算成績":
                 num_entry_race = int(prof_contents[row][:prof_contents[row].find("戦")])
-        horsedb.appendProfContents(prof_contents)
 
         ## 血統テーブルの取得
         logger.info('get blood table')
@@ -344,7 +351,6 @@ def save_horsedata(driver, horseID_list, start_count=0):
             blood_horse_url_str = blood_table[i].get_attribute("href")
             blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
             blood_list.append(blood_horseID)
-        horsedb.appendBloodList(blood_list)
 
         ## 競走成績テーブルの取得
         logger.info('get result table')
@@ -383,29 +389,40 @@ def save_horsedata(driver, horseID_list, start_count=0):
                             perform_contents_row.append(perform_table_row[col].text)
                         break
             perform_contents.append(perform_contents_row)
-        horsedb.appendPerformContents(perform_contents)
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_table) -1:
             check = 1 # OK
         else:
             check = 0 # データ欠損アリ (prof_tableとperform_tableで一致しない)
-        horsedb.appendCheck(check)
+
+        horsedb.appendData(horseID, horse_title, prof_contents, blood_list, perform_contents, check)
 
         ## searched_horseID_setの更新と保存処理
         searched_horseID_set.add(horseID)
         # horsedbを10回ごとに外部に出力
         if save_counter % 10 == 0:
-            save_data(horsedb, "horsedb")
+            save_data(horsedb, dbname)
             logger.info("save horsedb comp, save_counter:{}".format(save_counter))
 
-    save_data(horsedb, "horsedb")
+    save_data(horsedb, dbname)
     remove_data("horsedb_before_search_tmp")
 
         ## 以下保留事項
         # 血統を評価する際に、horseIDs_allから辿れない馬(収集期間内にG1,G2,G3に出場経験のない馬)のhorseIDをどこかに保存しておく
         # 血統テーブルから過去の馬に遡ることになるが、その過去の馬のデータが無い場合どうするか
         # そもそも外国から参加してきた馬はどう処理するのか
+
+def get_jockeyID(horsedb):
+    # horsedbから騎手idを取得し、idになっていない値を除いたリストを返す。
+    row_jockeyid_list = horsedb.enumAllJockeyID()
+
+    # 一文字でも数字が入っている値のみをidとする
+    cleaned_jockeyid_list = []
+    for jockeyid in row_jockeyid_list:
+        if any(chr.isdigit() for chr in jockeyid):
+            cleaned_jockeyid_list.append(jockeyid)
+    return cleaned_jockeyid_list
 
 def save_jockeydata(driver, jockeyID_list, start_count=0):
     """
@@ -492,26 +509,23 @@ def save_jockeydata(driver, jockeyID_list, start_count=0):
                 
 
 if __name__ == '__main__':
-    # load config
-    config = configparser.ConfigParser()
-    config.read(str(src_dir) + '\\private.ini')
-    section = 'scraping'
+
     """
     # ブラウザ起動
+    section = 'scraping'
     browser = config.get(section, 'browser')
     driver = start_driver(browser)
     
     # 保存先フォルダの存在確認
     os.makedirs(OUTPUT_PATH, exist_ok=True)
-
     
     # netkeibaにログイン
     login(driver, config.get(section, 'mail'), config.get(section, 'pass'))
-
+    
     # raceIDを取得してくる
     # データを取得する開始年と終了年
     START_YEAR = 1986
-    END_YEAR = 1987
+    END_YEAR = 2021
     RACE_CLASS_LIST =["check_grade_1", "check_grade_2", "check_grade_3"]
     logger.info('save_raceID')
     save_raceID(driver, list(range(START_YEAR,END_YEAR+1)), RACE_CLASS_LIST)
@@ -522,7 +536,7 @@ if __name__ == '__main__':
     raceGradedb = read_data("raceGradedb")
     raceID_list = raceGradedb.getRaceIDList()
     #raceID_list = ["198606050810"] #test用
-    save_racedata(driver, raceID_list)
+    save_racedata(driver, raceID_list, "racedb")
     logger.info('save_racedata comp')
 
     # 馬データを取得してくる
@@ -530,15 +544,27 @@ if __name__ == '__main__':
     racedb = read_data("racedb")
     horseID_list = racedb.getHorseIDList()
     #horseID_list = ["1983104089"] #test用
-    save_horsedata(driver, horseID_list)
+    save_horsedata(driver, horseID_list, "horsedb")
     logger.info('save_horsedata comp')
-
-    driver.close()
+    # 欠損データを一部修正
+    horsedb = read_data("horsedb")
+    horsedb.reconfirmCheck()
+    save_data(horsedb, "horsedb")
     
+    """ # 調整中
+    """
+    # 騎手idリストを作成し保存
+    logger.info('get_jockeid')
+    horsedb = read_data("horsedb")
+    jockeyID_list = get_jockeyID(horsedb)
+    save_data(jockeyID_list, "jockeyID_list")
+    logger.info('get_jockeyid comp')
 
     # 騎手データを取得してくる
     logger.info('save_jockeydata')
-    jockeyID_list = ['00140'] #test用
+    #jockeyID_list = ['00140'] #test用
     save_jockeydata(driver, jockeyID_list)
     logger.info('save_jockeydata comp')
+    
+    driver.close()
     """
