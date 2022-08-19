@@ -92,10 +92,10 @@ def save_raceID(driver, yearlist, race_grade_list=["check_grade_4"]):
     # raceGradedbを外部に出力
     sud.save_data(raceGradedb, "raceGradedbOP")
 
-def make_data_set(racedb):
-    # 3着馬の走破タイム，レースのデータ(距離，馬場状態，ﾀﾞｰﾄ芝障害，競馬場, グレード)をリストにする
-    # [raceID, goaltime(秒), dist, cond, track, loc, grade]
-    # cond, type, course, gradeはカテゴリデータ
+def make_data_set(racedb, start_year, end_year):
+    # 重賞を除くOP戦3着馬の走破タイム，レースのデータ(距離，馬場状態，ﾀﾞｰﾄ芝障害，競馬場, グレード)をリストにする
+    # [raceID, goaltime(秒), dist, cond, track, loc]
+    # cond, type, courseはカテゴリデータ
     # おいっす～
     cond_dict = {'良':1, '稍重':2, '重':3, '不良':4}
     track_dict = {'芝':1, 'ダ': 2, '障':3}
@@ -103,17 +103,23 @@ def make_data_set(racedb):
     grade_dict = {'G1':1, 'G2':2, 'G3':3, 'OP':4, 'J.G1':1, 'J.G2':2, 'J.G3':3}
 
     data_list = []
-    data_list.append(["raceID", "goaltime", "dist", "cond", "track", "loc", "grade"]) #1行目は列名
+    data_list.append(["raceID", "goaltime", "dist", "cond", "track", "loc"]) #1行目は列名
     for i in range(len(racedb)):
+        # start_yearとend_yearの間の期間内でなければリストに入れない
+        if int(racedb.raceID[i][0:4]) < start_year or int(racedb.raceID[i][0:4]) > end_year:
+            continue
+        # 重賞レースは含まない
+        if grade_dict[racedb.getRaceGrade(i)] != 4:
+            continue
+
         raceID = racedb.raceID[i]
         goaltime = racedb.goalTimeConv2Sec(racedb.goal_time[i])
         dist = racedb.getCourseDistance(i)
         cond = cond_dict[racedb.getCourseCondition(i)]
         track = track_dict[racedb.getTrack(i)]
         loc = loc_dict[racedb.getCourseLocation(i)]
-        grade = grade_dict[racedb.getRaceGrade(i)]
         
-        data_race = [raceID, goaltime, dist, cond, track, loc, grade]
+        data_race = [raceID, goaltime, dist, cond, track, loc]
         data_list.append(data_race)
     
     return data_list
@@ -148,7 +154,10 @@ if __name__ == '__main__':
 
     # データの整形と出力
     racedb = sud.read_data("racedbOP")
-    data = make_data_set(racedb)
+    # 重賞を除くOPクラスレースの2010年から2020年までの10年分のデータを使用
+    START_YEAR = 2010
+    END_YEAR = 2020
+    data = make_data_set(racedb, START_YEAR, END_YEAR)
     with open(str(pp_dir) + "\\dataSet.csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerows(data)
