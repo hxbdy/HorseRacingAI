@@ -230,22 +230,37 @@ class HorseDB:
             if i[1] == raceid:
                 return float(i[3])
         return float(6)
+    
+
+    def getStandardTime(self, distance, condition, track, location):
+        # レースコースの状態に依存する基準タイム(秒)を計算して返す
+        # performancePredictionで予測した係数・定数を下の辞書の値に入れる．
+        dis_coef = 1.0
+        cond_dict = {'良':1, '稍重':2, '重':3, '不良':4}
+        track_dict = {'芝':1, 'ダ': 2, '障':3}
+        loc_dict = {'札幌':1, '函館':2, '福島':3, '新潟':4, '東京':5, '中山':6, '中京':7, '京都':8, '阪神':9, '小倉':10}
+        
+        std_time = dis_coef*distance + cond_dict[condition] + track_dict[track] + loc_dict[location]
+        return std_time
+
+    def getPerformance(self, standard_time, goal_time, weight, grade):
+        # 走破タイム・斤量などを考慮し，「強さ(performance)」を計算
+        # 以下のeffectの値，計算式は適当
+        weight_effect = 1+ (55 - weight)/1000
+        grade_effect_dict = {'G1':1.14, 'G2':1.12, 'G3':1.10, 'OP':1.0, 'J.G1':1.0, 'J.G2':1.0, 'J.G3':1.0}
+        perform = (standard_time - goal_time*weight_effect) * grade_effect_dict[grade]
+        return perform
 
     # 累計値の計算
     def calCumPerformance(self):
-        # 走破タイム・斤量などを考慮し，「強さ(performance)」を計算
-        # 各レースの結果から強さを計算し，その最大値を記録していく
+        # 各レースの結果から強さ(performance)を計算し，その最大値を記録していく
         # (外れ値を除くために，2番目の強さでもいいかもしれない．)
         # ToDo: 競馬場と距離と馬場状態の効果を考慮するため，HorseDBが新しくなったらそれらを参照するようにする．
-        # performanceの計算式は暫定
         self.cum_perform = []
         for horse_perform in self.perform_contents:
             max_performance_list = []
             max_performance = -1000.0
             for race_result in horse_perform:
-                course_effect = 1 #競馬場(コース形状)の効果
-                distance_effect = 1 #距離の効果
-                condition_effect = 1 #馬場状態の効果
                 goaltime = race_result[10]
                 try:
                     goaltime_sec = float(goaltime.split(':')[0])*60 + float(goaltime.split(':')[1])
@@ -256,7 +271,9 @@ class HorseDB:
                 except:
                     burden_weight = 0
 
-                performance = -goaltime_sec * course_effect * distance_effect * condition_effect + burden_weight
+                standard_time = self.getStandardTime(distance, conditon, track, location)
+                performance = self.getPerformance(standard_time, goaltime_sec, burden_weight, grade)
+
                 if performance > max_performance:
                     max_performance = performance
                 max_performance_list.append(max_performance)
