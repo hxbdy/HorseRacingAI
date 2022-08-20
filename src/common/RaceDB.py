@@ -203,6 +203,13 @@ class RaceDB:
         else:
             return "OP"
 
+    def raceID2raceidx(self, raceID):
+        # raceidからこのdb内の何番目に位置するかを返す
+        for i in range(len(self.raceID)):
+            if self.raceID[i] == str(raceID):
+                return i
+        return "Not Found"
+
     def getTrack(self, index):
         # 芝・ダート・障害のいずれか
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
