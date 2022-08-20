@@ -253,27 +253,6 @@ class HorseDB:
                 continue
             return race[12]
 
-    # 以下は必ずしもHorseDB内に定義されていなくてもよい(暫定)
-    def getStandardTime(self, distance, condition, track, location):
-        # レースコースの状態に依存する基準タイム(秒)を計算して返す
-        # performancePredictionで予測した係数・定数を下の辞書の値に入れる．
-        # loc_dictのOは中央競馬10か所以外の場合の値．10か所の平均値を取って作成する．
-        dis_coef = 1.0
-        cond_dict = {'良':1, '稍重':2, '重':3, '不良':4}
-        track_dict = {'芝':1, 'ダ': 2, '障':3}
-        loc_dict = {'札幌':1, '函館':2, '福島':3, '新潟':4, '東京':5, '中山':6, '中京':7, '京都':8, '阪神':9, '小倉':10, 'O':123}
-        
-        std_time = dis_coef*distance + cond_dict[condition] + track_dict[track] + loc_dict[location]
-        return std_time
-
-    def getPerformance(self, standard_time, goal_time, weight, grade):
-        # 走破タイム・斤量などを考慮し，「強さ(performance)」を計算
-        # 以下のeffectの値，計算式は適当
-        weight_effect = 1+ (55 - weight)/1000
-        grade_effect_dict = {'G1':1.14, 'G2':1.12, 'G3':1.10, 'OP':1.0, 'J.G1':1.0, 'J.G2':1.0, 'J.G3':1.0}
-        perform = (standard_time - goal_time*weight_effect) * grade_effect_dict[grade]
-        return perform
-
     def getLastPerformIndex(self, horseidx, point_date):
         # 指定されたpoint_dateの直前に出走したレースは，perform_contentsの何番目か
         # point_dateはdateで入力
@@ -284,71 +263,3 @@ class HorseDB:
             perform_day = int(horse_perform[idx][0].split("/")[2])
             if point_date > date(perform_year, perform_mon, perform_day):
                 return idx
-
-    # 累計値の計算
-    def calCumPerformance(self):
-        # 各レースの結果から強さ(performance)を計算し，その最大値を記録していく
-        # (外れ値を除くために，2番目の強さでもいいかもしれない．)
-        # ToDo: 競馬場と距離と馬場状態の効果を考慮するため，HorseDBが新しくなったらそれらを参照するようにする．
-        loc_list = ['札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉']
-        self.cum_perform = []
-        for horse_idx in range(len(self.perform_contents)):
-            horse_perform = self.perform_contents[horse_idx] 
-            max_performance_list = []
-            max_performance = -1000.0
-            horse_perform.reverse()
-            for race_idx in range(len(horse_perform)):
-                race_result = horse_perform[race_idx]
-                goaltime = race_result[10]
-                try:
-                    goaltime_sec = float(goaltime.split(':')[0])*60 + float(goaltime.split(':')[1])
-                except:
-                    goaltime_sec = 240
-                try:
-                    burden_weight = float(race_result[9])
-                except:
-                    burden_weight = 40
-                condition = self.getCourseCondition(horse_idx, race_result[2])
-                location = self.getCourseLocation(horse_idx, race_result[2])
-                if location not in loc_list:
-                    location = "O"
-                                    
-                standard_time = self.getStandardTime(distance, condition, track, location)
-                performance = self.getPerformance(standard_time, goaltime_sec, burden_weight, grade)
-
-                if performance > max_performance:
-                    max_performance = performance
-                max_performance_list.append(max_performance)
-            max_performance_list.reverse()
-            self.cum_perform.append(max_performance_list)
-    
-    def calCumNumOfWin(self):
-        # 累計勝利数を計算
-        self.cum_num_wins = []
-        for horse_perform in self.perform_contents:
-            cum_win_list = []
-            cum_win = 0
-            horse_perform.reverse()
-            for race_result in horse_perform:
-                if race_result[7] == '1':
-                    cum_win += 1
-                cum_win_list.append(cum_win)
-            cum_win_list.reverse()
-            self.cum_num_wins.append(cum_win_list)
-    
-    def calCumMoney(self):
-        # 累計獲得賞金を計算
-        self.cum_money = []
-        for horse_perform in self.perform_contents:
-            cum_money_list = []
-            cum_money = 0.0
-            horse_perform.reverse()
-            for race_result in horse_perform:
-                if race_result[12] == ' ':
-                    money = 0.0
-                else:
-                    money = float(race_result[12].replace(",",""))
-                cum_money += money
-                cum_money_list.append(cum_money)
-            cum_money_list.reverse()
-            self.cum_money.append(cum_money_list)
