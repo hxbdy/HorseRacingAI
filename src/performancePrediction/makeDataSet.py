@@ -93,32 +93,36 @@ def save_raceID(driver, yearlist, race_grade_list=["check_grade_4"]):
     sud.save_data(raceGradedb, "raceGradedbOP")
 
 def make_data_set(racedb, start_year, end_year):
-    # 重賞を除くOP戦3着馬の走破タイム，レースのデータ(距離，馬場状態，ﾀﾞｰﾄ芝障害，競馬場, グレード)をリストにする
+    # 重賞を除くOP戦3着馬の走破タイム，レースのデータ(距離，馬場状態，ﾀﾞｰﾄ芝，競馬場, グレード)をリストにする
+    # 障害競走は除く
     # [raceID, goaltime(秒), dist, cond, track, loc]
     # cond, type, courseはカテゴリデータ
     # おいっす～
-    cond_dict = {'良':1, '稍重':2, '重':3, '不良':4}
+    TARGET_RANK=3
+    cond_dict = {'良':1, '稍重':2, '重':3, '不良':4, '良ダート':1, '稍重ダート':2, '重ダート':3, '不良ダート':4} #後半は障害競走のみで使用
     track_dict = {'芝':1, 'ダ': 2, '障':3}
     loc_dict = {'札幌':1, '函館':2, '福島':3, '新潟':4, '東京':5, '中山':6, '中京':7, '京都':8, '阪神':9, '小倉':10}
     grade_dict = {'G1':1, 'G2':2, 'G3':3, 'OP':4, 'J.G1':1, 'J.G2':2, 'J.G3':3}
 
     data_list = []
     data_list.append(["raceID", "goaltime", "dist", "cond", "track", "loc"]) #1行目は列名
-    for i in range(len(racedb)):
+    for i in range(len(racedb.raceID)):
         # start_yearとend_yearの間の期間内でなければリストに入れない
         if int(racedb.raceID[i][0:4]) < start_year or int(racedb.raceID[i][0:4]) > end_year:
             continue
         # 重賞レースは含まない
         if grade_dict[racedb.getRaceGrade(i)] != 4:
             continue
-
+        # 障害競走を除く
+        if track_dict[racedb.getTrack(i)] == 3:
+            continue
         raceID = racedb.raceID[i]
-        goaltime = racedb.goalTimeConv2Sec(racedb.goal_time[i])
+        goaltime = racedb.goalTimeConv2Sec(racedb.goal_time[i][TARGET_RANK-1])
         dist = racedb.getCourseDistance(i)
         cond = cond_dict[racedb.getCourseCondition(i)]
         track = track_dict[racedb.getTrack(i)]
         loc = loc_dict[racedb.getCourseLocation(i)]
-        
+
         data_race = [raceID, goaltime, dist, cond, track, loc]
         data_list.append(data_race)
     
@@ -127,6 +131,7 @@ def make_data_set(racedb, start_year, end_year):
 
 
 if __name__ == '__main__':
+    """
     section = 'scraping'
     browser = sud.config.get(section, 'browser')
     driver = sud.start_driver(browser)
@@ -136,10 +141,10 @@ if __name__ == '__main__':
     
     # netkeibaにログイン
     sud.login(driver, sud.config.get(section, 'mail'), sud.config.get(section, 'pass'))
-
+    
     # OPクラスのレースデータを取得し，racedbOP.pickleに保存する
-    START_YEAR = 1986
-    END_YEAR = 2021
+    START_YEAR = 2010
+    END_YEAR = 2020
     RACE_CLASS_LIST =["check_grade_4"]
     logger.info('save_raceID')
     save_raceID(driver, range(START_YEAR,END_YEAR+1), RACE_CLASS_LIST)
@@ -151,14 +156,14 @@ if __name__ == '__main__':
     logger.info('save_racedata comp')
 
     driver.close()
-
+    """
     # データの整形と出力
     racedb = sud.read_data("racedbOP")
     # 重賞を除くOPクラスレースの2010年から2020年までの10年分のデータを使用
     START_YEAR = 2010
     END_YEAR = 2020
     data = make_data_set(racedb, START_YEAR, END_YEAR)
-    with open(str(pp_dir) + "\\dataSet.csv", 'w') as f:
+    with open(str(pp_dir) + "\\dataSet.csv", 'w', newline="") as f:
         writer = csv.writer(f)
         writer.writerows(data)
 
