@@ -4,9 +4,6 @@ import os
 import pathlib
 import logging
 import re
-from datetime import date
-from dateutil.relativedelta import relativedelta
-import numpy as np
 from iteration_utilities import deepflatten
 
 # commonフォルダ内読み込みのため
@@ -18,12 +15,19 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-from common.RaceDB import RaceDB
-from common.RaceGradeDB import RaceGradeDB
 from common.normalization import *
 from common.padding import *
+from common.getFromDB import *
+from common.fix import *
 
 loc_list = ['札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉']
+
+# 学習データテーブルのインデックス定義
+STRUCT_LIST = 0
+STRUCT_GET  = 1
+STRUCT_FIX  = 2
+STRUCT_PAD  = 3
+STRUCT_NRM  = 4
 
 ## 馬の強さを計算
 def getStandardTime(distance, condition, track, location):
@@ -180,7 +184,6 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     #logging.disable(logging.DEBUG)
 
-    # pickle読み込み
     logger.info("Database loading")
 
     # レース情報読み込み
@@ -191,44 +194,49 @@ if __name__ == "__main__":
     with open(str(root_dir) + "\\dst\\scrapingResult\\horsedb.pickle", 'rb') as f:
             horsedb = pickle.load(f)
 
-    # G1-3情報読み込み
-    # with open(str(root_dir) + "\\dst\\scrapingResult\\raceGradedb.pickle", 'rb') as f:
-        #gradedb = pickle.load(f)
-
     logger.info("Database loading complete")
+
+    ## 学習リスト作成
+    totalXList = []
+    totaltList = []
+    racedbLearningList = []
+    horseAgeList = []
+    burdenWeightList = []
+    postPositionList = []
+    jockeyList = []
+
+    FlowTbl = [
+        [horseAgeList    , getBirthDayList    , fixBirthDayList    , padHorseAgeList    , nrmHorseAge],
+        [burdenWeightList, getBurdenWeightList, fixBurdenWeightList, padBurdenWeightList, nrmBurdenWeightAbs],
+        [postPositionList, getPostPositionList, fixPostPositionList, padPostPositionList, nrmPostPosition],
+        [jockeyList      , getJockeyIDList    , fixJockeyIDList    , padJockeyList      , nrmJockeyID]
+    ]
 
     # DBに一度のレースで出た馬の最大頭数を問い合わせる
     maxHorseNum = racedb.getMaxHorseNumLargestEver()
-    
-    totalXList = []
-    totaltList = []
+    # 総レース数取得
     totalRaceNum = len(racedb.raceID)
 
-    for race in range(len(racedb.raceID)):
+    for race in range(totalRaceNum):
 
         logger.info("========================================")
         logger.info("From RaceDB info =>")
         logger.info("https://db.netkeiba.com/race/{0}".format(racedb.raceID[race]))
         logger.info("Generating input data : {0}/{1}".format(race+1, totalRaceNum))
 
-        ## 正解ラベルの作成
-        """
-        # タイム取得
-        # 標準化 -> ダミーデータ挿入
-        goalTimeRowList = racedb.goalTimeConv2SecList(race)
-        goalTimeNrmList = nrmGoalTime(goalTimeRowList)
-        goalTimeExpList = padGoalTimeNrm(goalTimeNrmList, maxHorseNum)
-        racedbLearningList.append(nrmGoalTime(goalTimeExpList))
-        """
+        ## 正解ラベルtの作成
         # 着差取得
         # ダミーデータ挿入 -> 標準化
-        # これを教師データtとする
         marginList = racedb.getMarginList(race)
         marginExpList = padMarginList(marginList, maxHorseNum)
         teachList = nrmMarginList(marginExpList)
 
-        ## 学習リスト作成 (レースデータ)
+        ## 学習リストクリア
         racedbLearningList = []
+        horseAgeList = []
+        burdenWeightList = []
+        postPositionList = []
+        jockeyList = []
 
         # 天気取得
         # onehot表現 5列使用
@@ -265,82 +273,37 @@ if __name__ == "__main__":
         # 賞金取得 その2 : 全レースの最高金額で割って正規化
         # ToDo : 最高金額を取得して割る作業を追加
         #racedbLearningList.append(racedb.getMoneyList2(race))
-        
-        logger.debug("[Weather, CourseCondition, RaceStartTime, CourseDistance, HorseNum, [Money]]")
-        logger.debug(racedbLearningList)
 
         ## 学習リスト作成 (各馬のデータ)
         # レース開催日取得
         d0 = racedb.getRaceDate(race)
-
-        # === horsedb問い合わせ ===
-        horseAgeList = []
-        burdenWeightList = []
-        postPositionList = []
-        jockeyList = []
-        for horseID in racedb.horseIDs_race[race]:
+        
+        for func in FlowTbl:
             logger.debug("========================================")
-            logger.debug("From HorseDB info =>")
-            
-            # horsedb へ horseID の情報は何番目に格納しているかを問い合わせる
-            # 以降horsedbへの問い合わせは index を使う
-            index = horsedb.getHorseInfo(horseID)
-            logger.debug("https://db.netkeiba.com/horse/{0} => index : {1}".format(horseID, index))
-            
-            # 生涯獲得金取得
-            # race時点での獲得賞金を取得
-            # horsedb.getTotalEarned(index)
+            # 対象データをDBから取得
+            logger.debug("get")
+            args = []
+            args.append((func[STRUCT_GET])(racedb.raceID[race]))
 
-            # 通算成績取得[1st,2nd,3rd]
-            # race開催時点での獲得賞金を取得
-            # horsedb.getTotalWLRatio(index)
+            # 調整に必要なデータがあるならここで追加する
+            if func[STRUCT_GET] == getBirthDayList:
+                args.append(d0)
 
-            # 出走当時の年齢取得(d0 > d1)
-            d1 = horsedb.getBirthDay(index)
-            age = horsedb.ageConv2Day(d0, d1)
-            horseAgeList.append(age)
+            # 要素を調整
+            logger.debug("fix")
+            func[STRUCT_LIST] = (func[STRUCT_FIX])(args)
 
-            # 斤量取得
-            burdenWeight = horsedb.getBurdenWeight(index, racedb.raceID[race])
-            burdenWeightList.append(burdenWeight)
-
-            # 枠番取得
-            postPosition = horsedb.getPostPosition(index, racedb.raceID[race])
-            postPositionList.append(postPosition)
-
-            # 騎手取得
-            jockeyID = horsedb.getJockeyID(index, racedb.raceID[race])
-            cntJockey = horsedb.countJockeyAppear(jockeyID)
-            jockeyList.append(cntJockey)
-
-            logger.debug("[HorseAge, BurdenWeight, PostPosition, JockeyID]")
-            logger.debug("[{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
-
-        STRUCT_LIST = 0
-        STRUCT_PAD  = 1
-        STRUCT_NRM  = 2
-        PadNrmStruct = [
-            [horseAgeList    , padHorseAgeList    , nrmHorseAge],
-            [burdenWeightList, padBurdenWeightList, nrmBurdenWeightAbs],
-            [postPositionList, padPostPositionList, nrmPostPosition],
-            [jockeyList      , padJockeyList      , nrmJockeyID]
-        ]
-
-        # 各リストにダミーデータを挿入
-        logger.debug("========================================")
-        logger.debug("padding and normalize start")
-        for func in PadNrmStruct:
             # ダミーデータを挿入
+            logger.debug("pad")
             func[STRUCT_LIST] = (func[STRUCT_PAD])(func[STRUCT_LIST], maxHorseNum)
+
             # 標準化
+            logger.debug("nrm")
             func[STRUCT_LIST] = (func[STRUCT_NRM])(func[STRUCT_LIST])
-        logger.debug("padding and normalize end")
 
         # 各リスト確認
         logger.debug("========================================")
-        # 教師データt
         logger.debug("t (len : {0})= {1}".format(len(teachList), teachList))
-        # 学習データX
         logger.debug("racedbLearningList(len : {0}) = {1}".format(len(racedbLearningList), racedbLearningList))
         logger.debug("horseAgeList(len : {0}) = {1}".format(len(horseAgeList), horseAgeList))
         logger.debug("burdenWeightList(len : {0}) = {1}".format(len(burdenWeightList), burdenWeightList))
