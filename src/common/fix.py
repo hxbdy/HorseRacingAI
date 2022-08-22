@@ -21,3 +21,6 @@ def fixJockeyIDList(args):
     for i in range(len(jockeyIDList)):
         jockeyIDList[i] = getJockeyCnt(jockeyIDList[i])
     return jockeyIDList
+
+def fixWeatherList(args):
+    return args[0]

@@ -76,3 +76,6 @@ def padJockeyList(rowList, listSize):
         for i in range(exSize):
             rowList.append(50)
     return rowList
+
+def padWeatherList(rowList, listSize):
+    return rowList

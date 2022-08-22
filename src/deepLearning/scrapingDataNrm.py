@@ -199,13 +199,15 @@ if __name__ == "__main__":
     ## 学習リスト作成
     totalXList = []
     totaltList = []
-    racedbLearningList = []
+    racedbLearningList = [] # ToDo : FlowTbl に追加する
+    weatherList = []
     horseAgeList = []
     burdenWeightList = []
     postPositionList = []
     jockeyList = []
 
     FlowTbl = [
+        [weatherList     , getWeather         , fixWeatherList     , padWeatherList     , nrmWeather],
         [horseAgeList    , getBirthDayList    , fixBirthDayList    , padHorseAgeList    , nrmHorseAge],
         [burdenWeightList, getBurdenWeightList, fixBurdenWeightList, padBurdenWeightList, nrmBurdenWeightAbs],
         [postPositionList, getPostPositionList, fixPostPositionList, padPostPositionList, nrmPostPosition],
@@ -232,17 +234,12 @@ if __name__ == "__main__":
         teachList = nrmMarginList(marginExpList)
 
         ## 学習リストクリア
-        racedbLearningList = []
-        horseAgeList = []
-        burdenWeightList = []
-        postPositionList = []
-        jockeyList = []
-
-        # 天気取得
-        # onehot表現 5列使用
-        # (わりとどうでもよい変数だと思うので，1変数に圧縮してもよいと思う)
-        for i in nrmWeather(racedb.getWeather(race)):
-            racedbLearningList.append(i)
+        racedbLearningList.clear()
+        weatherList.clear()
+        horseAgeList.clear()
+        burdenWeightList.clear()
+        postPositionList.clear()
+        jockeyList.clear()
 
         # コース状態取得
         # onehot表現 3列使用
@@ -279,9 +276,7 @@ if __name__ == "__main__":
         d0 = racedb.getRaceDate(race)
         
         for func in FlowTbl:
-            logger.debug("========================================")
             # 対象データをDBから取得
-            logger.debug("get")
             args = []
             args.append((func[STRUCT_GET])(racedb.raceID[race]))
 
@@ -290,28 +285,26 @@ if __name__ == "__main__":
                 args.append(d0)
 
             # 要素を調整
-            logger.debug("fix")
             func[STRUCT_LIST] = (func[STRUCT_FIX])(args)
 
             # ダミーデータを挿入
-            logger.debug("pad")
             func[STRUCT_LIST] = (func[STRUCT_PAD])(func[STRUCT_LIST], maxHorseNum)
 
             # 標準化
-            logger.debug("nrm")
             func[STRUCT_LIST] = (func[STRUCT_NRM])(func[STRUCT_LIST])
 
         # 各リスト確認
         logger.debug("========================================")
         logger.debug("t (len : {0})= {1}".format(len(teachList), teachList))
         logger.debug("racedbLearningList(len : {0}) = {1}".format(len(racedbLearningList), racedbLearningList))
-        logger.debug("horseAgeList(len : {0}) = {1}".format(len(horseAgeList), horseAgeList))
-        logger.debug("burdenWeightList(len : {0}) = {1}".format(len(burdenWeightList), burdenWeightList))
-        logger.debug("postPositionList(len : {0}) = {1}".format(len(postPositionList), postPositionList))
-        logger.debug("jockeyList(len : {0}) = {1}".format(len(jockeyList), jockeyList))
+        logger.debug("weatherList(len : {0}) = {1}".format(len(FlowTbl[0][STRUCT_LIST]), FlowTbl[0][STRUCT_LIST]))
+        logger.debug("horseAgeList(len : {0}) = {1}".format(len(FlowTbl[1][STRUCT_LIST]), FlowTbl[1][STRUCT_LIST]))
+        logger.debug("burdenWeightList(len : {0}) = {1}".format(len(FlowTbl[2][STRUCT_LIST]), FlowTbl[2][STRUCT_LIST]))
+        logger.debug("postPositionList(len : {0}) = {1}".format(len(FlowTbl[3][STRUCT_LIST]), FlowTbl[3][STRUCT_LIST]))
+        logger.debug("jockeyList(len : {0}) = {1}".format(len(FlowTbl[4][STRUCT_LIST]), FlowTbl[4][STRUCT_LIST]))
 
         # 統合
-        learningList = [racedbLearningList, horseAgeList, burdenWeightList, postPositionList, jockeyList]
+        learningList = [FlowTbl[0][STRUCT_LIST], racedbLearningList, FlowTbl[1][STRUCT_LIST], FlowTbl[2][STRUCT_LIST], FlowTbl[3][STRUCT_LIST], FlowTbl[4][STRUCT_LIST]]
         
         # 一次元化
         learningList = list(deepflatten(learningList))

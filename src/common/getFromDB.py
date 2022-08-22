@@ -52,3 +52,12 @@ def getBirthDayList(race_id):
         d1 = date(birthYear, birthMon, birthDay)
         bdList.append(d1)
     return bdList
+
+def getWeather(race_id):
+    raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
+    sep1 = raceData1List[0].split(":")[1]
+    #  晴 / 芝 
+    sep1 = sep1.split("/")[0]
+    # 晴 
+    sep1 = sep1.replace(" ", "")
+    return sep1
