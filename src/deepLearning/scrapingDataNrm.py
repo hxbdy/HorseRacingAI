@@ -178,7 +178,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logging.disable(logging.DEBUG)
+    #logging.disable(logging.DEBUG)
 
     # pickle読み込み
     logger.info("Database loading")
@@ -315,21 +315,26 @@ if __name__ == "__main__":
 
             logger.debug("[HorseAge, BurdenWeight, PostPosition, JockeyID]")
             logger.debug("[{0}, {1}, {2}, {3}]".format(horseAgeList[-1], burdenWeightList[-1], postPositionList[-1], jockeyList[-1]))
-        
+
+        STRUCT_LIST = 0
+        STRUCT_PAD  = 1
+        STRUCT_NRM  = 2
+        PadNrmStruct = [
+            [horseAgeList    , padHorseAgeList    , nrmHorseAge],
+            [burdenWeightList, padBurdenWeightList, nrmBurdenWeightAbs],
+            [postPositionList, padPostPositionList, nrmPostPosition],
+            [jockeyList      , padJockeyList      , nrmJockeyID]
+        ]
+
         # 各リストにダミーデータを挿入
         logger.debug("========================================")
-        logger.debug("insert dummy data")
-        horseAgeList = padHorseAgeList(horseAgeList, maxHorseNum)
-        burdenWeightList = padBurdenWeightList(burdenWeightList, maxHorseNum)
-        postPositionList = padPostPositionList(postPositionList, maxHorseNum)
-        jockeyList = padJockeyList(jockeyList, maxHorseNum)
-        
-        # 各リスト標準化
-        logger.debug("normalize X data")
-        horseAgeList = nrmHorseAge(horseAgeList)
-        burdenWeightList = nrmBurdenWeightAbs(burdenWeightList)
-        postPositionList = nrmPostPosition(postPositionList)
-        jockeyList = nrmJockeyID(jockeyList)
+        logger.debug("padding and normalize start")
+        for func in PadNrmStruct:
+            # ダミーデータを挿入
+            func[STRUCT_LIST] = (func[STRUCT_PAD])(func[STRUCT_LIST], maxHorseNum)
+            # 標準化
+            func[STRUCT_LIST] = (func[STRUCT_NRM])(func[STRUCT_LIST])
+        logger.debug("padding and normalize end")
 
         # 各リスト確認
         logger.debug("========================================")

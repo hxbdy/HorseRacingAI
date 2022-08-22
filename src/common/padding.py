@@ -76,13 +76,3 @@ def padJockeyList(rowList, listSize):
         for i in range(exSize):
             rowList.append(50)
     return rowList
-
-PadFuncTbl = {
-    "padMoneyNrm"         : padMoneyNrm,
-    "padGoalTimeNrm" : padGoalTimeNrm,
-    "padMarginList" : padMarginList,
-    "padHorseAgeList" : padHorseAgeList,
-    "padBurdenWeightList" : padBurdenWeightList,
-    "padPostPositionList" : padPostPositionList,
-    "padJockeyList" : padJockeyList
-}

@@ -113,16 +113,3 @@ def nrmMarginList(marginList):
     # 戻り値はNoneであることも注意
     y.reverse()
     return y
-
-NrmFuncTbl = {
-    "nrmWeather"         : nrmWeather,
-    "nrmCourseCondition" : nrmCourseCondition,
-    "nrmRaceStartTime"   : nrmRaceStartTime,
-    "nrmHorseAge"        : nrmHorseAge,
-    "nrmBurdenWeight"    : nrmBurdenWeight,
-    "nrmPostPosition"    : nrmPostPosition,
-    "nrmJockeyID"        : nrmJockeyID,
-    "nrmGoalTime"        : nrmGoalTime,
-    "nrmMoney"           : nrmMoney,
-    "nrmMarginList"      : nrmMarginList
-}
