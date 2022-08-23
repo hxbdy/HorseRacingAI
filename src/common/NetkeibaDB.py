@@ -22,10 +22,12 @@ logger.setLevel(logging.DEBUG)
 
 class NetkeibaDB:
     def __init__(self):
+        logger.info("Database loading")
         self.dbpath = str(root_dir) + '\\dst\\netkeibaDB\\netkeiba.db'
         self.conn = sqlite3.connect(self.dbpath)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
+        logger.info("Database loading complete")
 
     def __del__(self):
         # データベースへのコネクションを閉じる
@@ -54,10 +56,13 @@ class NetkeibaDB:
         return self.cur.fetchone()[0]
 
     def getRecordDataFromTbl(self, table_name, col_name, data):
-        # 指定テーブルから列と値が一致する行をタプルで返す
+        # 指定テーブルから列と値が一致する行をリストで返す
         sql = "SELECT * FROM " + table_name + " WHERE " + col_name + " =?;"
         self.cur.execute(sql, [data])
-        return self.cur.fetchall()
+        retList = []
+        for i in self.cur.fetchall():
+            retList.append(i[0])
+        return retList
 
     def getColDataFromTbl(self, table_name, col_target, col_hint, data):
         # 指定テーブルから列と値が一致する行をリストで返す
@@ -74,3 +79,13 @@ class NetkeibaDB:
         sql = "SELECT COUNT(" + col_name + "=? OR NULL) FROM " + table_name + ";"
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
+
+    def getDistinctCol(self, table_name, col_name):
+        # 指定列のデータを全て取得しリストで返す
+        # ただし重複データは1つになる
+        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + ";"
+        self.cur.execute(sql)
+        retList = []
+        for i in self.cur.fetchall():
+            retList.append(i[0])
+        return retList

@@ -25,11 +25,13 @@ def nrmCourseCondition(condition_string):
 def nrmRaceStartTime(start_time_string):
     # 発走時刻の数値化(時*60 + 分)と標準化
     # 遅い時間ほど馬場が荒れていることを表現する
-    t = start_time_string.split(":")
-    min = float(t[0])*60 + float(t[1])
-    # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
-    min /= 990 
-    return min
+    minList = []
+    for i in start_time_string:
+        t = i.split(":")
+        min = float(t[0])*60 + float(t[1])
+        # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
+        minList.append(min / 990 )
+    return minList
 
 def nrmHorseAge(horseAgeList):
     # 馬年齢標準化
@@ -113,3 +115,17 @@ def nrmMarginList(marginList):
     # 戻り値はNoneであることも注意
     y.reverse()
     return y
+
+def nrmCourseDistanceList(cdList):
+    # 最長距離で割って標準化
+    MAX_DISTANCE = 3600.0
+    npcdList = np.array(cdList)
+    npcdList = npcdList / MAX_DISTANCE
+    return npcdList.tolist()
+
+def nrmHorseNumList(hnList):
+    # 最大出走馬数で割って標準化
+    MAX_HORSE_NUM = 24.0
+    npcdList = np.array(hnList)
+    npcdList = npcdList / MAX_HORSE_NUM
+    return npcdList.tolist()

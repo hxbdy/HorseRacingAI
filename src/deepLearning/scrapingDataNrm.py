@@ -182,103 +182,71 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logging.disable(logging.DEBUG)
+    logging.disable(logging.DEBUG)
 
-    logger.info("Database loading")
-
-    # レース情報読み込み
-    with open(str(root_dir) + "\\dst\\scrapingResult\\racedb.pickle", 'rb') as f:
-            racedb = pickle.load(f)
-
-    # 馬情報読み込み
-    with open(str(root_dir) + "\\dst\\scrapingResult\\horsedb.pickle", 'rb') as f:
-            horsedb = pickle.load(f)
-
-    logger.info("Database loading complete")
-
-    ## 学習リスト作成
+    # 学習リスト作成
     totalXList = []
     totaltList = []
-    racedbLearningList = [] # ToDo : FlowTbl に追加する
+
+    # レース毎のデータ保管リスト
+    marginList = []
+    moneyList = []
+    horseNumList = []
+    courseDistanceList = []
+    raceStartTimeList = []
+    courseConditionList = []
     weatherList = []
     horseAgeList = []
     burdenWeightList = []
     postPositionList = []
     jockeyList = []
 
-    FlowTbl = [
-        [weatherList     , getWeather         , fixWeatherList     , padWeatherList     , nrmWeather],
-        [horseAgeList    , getBirthDayList    , fixBirthDayList    , padHorseAgeList    , nrmHorseAge],
-        [burdenWeightList, getBurdenWeightList, fixBurdenWeightList, padBurdenWeightList, nrmBurdenWeightAbs],
-        [postPositionList, getPostPositionList, fixPostPositionList, padPostPositionList, nrmPostPosition],
-        [jockeyList      , getJockeyIDList    , fixJockeyIDList    , padJockeyList      , nrmJockeyID]
-    ]
+    # 一度のレースで出た馬の最大頭数
+    maxHorseNum = 24
 
-    # DBに一度のレースで出た馬の最大頭数を問い合わせる
-    maxHorseNum = racedb.getMaxHorseNumLargestEver()
     # 総レース数取得
-    totalRaceNum = len(racedb.raceID)
+    totalRaceList = getTotalRaceList()
+    totalRaceNum  = len(getTotalRaceList())
 
-    for race in range(totalRaceNum):
+    # 進捗確認カウンタ
+    comp_cnt = 1
+
+    for race in totalRaceList:
 
         logger.info("========================================")
-        logger.info("From RaceDB info =>")
-        logger.info("https://db.netkeiba.com/race/{0}".format(racedb.raceID[race]))
-        logger.info("Generating input data : {0}/{1}".format(race+1, totalRaceNum))
+        logger.info("From netkeiba.db info =>")
+        logger.info("https://db.netkeiba.com/race/{0}".format(race))
+        logger.info("progress : {0} / {1}".format(comp_cnt, totalRaceNum))
+        comp_cnt += 1
 
-        ## 正解ラベルtの作成
-        # 着差取得
-        # ダミーデータ挿入 -> 標準化
-        marginList = racedb.getMarginList(race)
-        marginExpList = padMarginList(marginList, maxHorseNum)
-        teachList = nrmMarginList(marginExpList)
+        # 取得するデータ一覧
+        FlowTbl = [
+            # 正解ラベルt
+            [marginList         , getMarginList        , fixMarginList         , padMarginList         , nrmMarginList], 
+            # 教師データX
+            [moneyList          , getMoneyList         , fixMoneyList          , padMoneyNrm           , nrmMoney],
+            [horseNumList       , getHorseNumList      , fixHorseNumList       , padHorseNumList       , nrmHorseNumList],
+            [courseConditionList, getCourseCondition   , fixCourseConditionList, padCourseConditionList, nrmCourseCondition],
+            [courseDistanceList , getCourseDistanceList, fixCourseDistanceList , padCourseDistanceList , nrmCourseDistanceList],
+            [raceStartTimeList  , getRaceStartTimeList , fixRaceStartTimeList  , padRaceStartTimeList  , nrmRaceStartTime],
+            [weatherList        , getWeather           , fixWeatherList        , padWeatherList        , nrmWeather],
+            [horseAgeList       , getBirthDayList      , fixBirthDayList       , padHorseAgeList       , nrmHorseAge],
+            [burdenWeightList   , getBurdenWeightList  , fixBurdenWeightList   , padBurdenWeightList   , nrmBurdenWeightAbs],
+            [postPositionList   , getPostPositionList  , fixPostPositionList   , padPostPositionList   , nrmPostPosition],
+            [jockeyList         , getJockeyIDList      , fixJockeyIDList       , padJockeyList         , nrmJockeyID]
+        ]
 
-        ## 学習リストクリア
-        racedbLearningList.clear()
-        weatherList.clear()
-        horseAgeList.clear()
-        burdenWeightList.clear()
-        postPositionList.clear()
-        jockeyList.clear()
+        # 学習リストクリア
+        for tbl in FlowTbl:
+            tbl[STRUCT_LIST].clear()
 
-        # コース状態取得
-        # onehot表現 3列使用
-        # (1変数にしやすい変数であるが，onehotにして重みは学習に任せた方が良いと思う)
-        for i in nrmCourseCondition(racedb.getCourseCondition(race)):
-            racedbLearningList.append(i)
-
-        # 出走時刻取得
-        racedbLearningList.append(nrmRaceStartTime(racedb.getRaceStartTime(race)))
-
-        # 距離取得
-        # 最長距離で割って標準化
-        MAX_DISTANCE = 3600
-        distance = float(racedb.getCourseDistance(race))
-        racedbLearningList.append(distance / MAX_DISTANCE)
-
-        # 頭数取得
-        # 最大の出馬数で割って標準化
-        horseNum = float(racedb.getHorseNum(race))
-        racedbLearningList.append(horseNum / maxHorseNum)
-
-        # 賞金取得
-        # ダミーデータ挿入 -> 標準化
-        moneyList = racedb.getMoneyList(race)
-        moneyExpList = padMoneyNrm(moneyList, maxHorseNum)
-        racedbLearningList.append(nrmMoney(moneyExpList))
-
-        # 賞金取得 その2 : 全レースの最高金額で割って正規化
-        # ToDo : 最高金額を取得して割る作業を追加
-        #racedbLearningList.append(racedb.getMoneyList2(race))
-
-        ## 学習リスト作成 (各馬のデータ)
         # レース開催日取得
-        d0 = racedb.getRaceDate(race)
+        d0 = getRaceDateList(race)
         
         for func in FlowTbl:
             # 対象データをDBから取得
             args = []
-            args.append((func[STRUCT_GET])(racedb.raceID[race]))
+            args.append((func[STRUCT_GET])(race))
 
             # 調整に必要なデータがあるならここで追加する
             if func[STRUCT_GET] == getBirthDayList:
@@ -295,23 +263,28 @@ if __name__ == "__main__":
 
         # 各リスト確認
         logger.debug("========================================")
-        logger.debug("t (len : {0})= {1}".format(len(teachList), teachList))
-        logger.debug("racedbLearningList(len : {0}) = {1}".format(len(racedbLearningList), racedbLearningList))
-        logger.debug("weatherList(len : {0}) = {1}".format(len(FlowTbl[0][STRUCT_LIST]), FlowTbl[0][STRUCT_LIST]))
-        logger.debug("horseAgeList(len : {0}) = {1}".format(len(FlowTbl[1][STRUCT_LIST]), FlowTbl[1][STRUCT_LIST]))
-        logger.debug("burdenWeightList(len : {0}) = {1}".format(len(FlowTbl[2][STRUCT_LIST]), FlowTbl[2][STRUCT_LIST]))
-        logger.debug("postPositionList(len : {0}) = {1}".format(len(FlowTbl[3][STRUCT_LIST]), FlowTbl[3][STRUCT_LIST]))
-        logger.debug("jockeyList(len : {0}) = {1}".format(len(FlowTbl[4][STRUCT_LIST]), FlowTbl[4][STRUCT_LIST]))
+        logger.debug("t                   (len : {0}) = {1}".format(len(FlowTbl[0][STRUCT_LIST]) , FlowTbl[0][STRUCT_LIST]))
+        logger.debug("moneyList           (len : {0}) = {1}".format(len(FlowTbl[1][STRUCT_LIST]) , FlowTbl[1][STRUCT_LIST]))
+        logger.debug("horseNumList        (len : {0}) = {1}".format(len(FlowTbl[2][STRUCT_LIST]) , FlowTbl[2][STRUCT_LIST]))
+        logger.debug("courseConditionList (len : {0}) = {1}".format(len(FlowTbl[3][STRUCT_LIST]) , FlowTbl[3][STRUCT_LIST]))
+        logger.debug("courseDistanceList  (len : {0}) = {1}".format(len(FlowTbl[4][STRUCT_LIST]) , FlowTbl[4][STRUCT_LIST]))
+        logger.debug("raceStartTimeList   (len : {0}) = {1}".format(len(FlowTbl[5][STRUCT_LIST]) , FlowTbl[5][STRUCT_LIST]))
+        logger.debug("weatherList         (len : {0}) = {1}".format(len(FlowTbl[6][STRUCT_LIST]) , FlowTbl[6][STRUCT_LIST]))
+        logger.debug("horseAgeList        (len : {0}) = {1}".format(len(FlowTbl[7][STRUCT_LIST]) , FlowTbl[7][STRUCT_LIST]))
+        logger.debug("burdenWeightList    (len : {0}) = {1}".format(len(FlowTbl[8][STRUCT_LIST]) , FlowTbl[8][STRUCT_LIST]))
+        logger.debug("postPositionList    (len : {0}) = {1}".format(len(FlowTbl[9][STRUCT_LIST]) , FlowTbl[9][STRUCT_LIST]))
+        logger.debug("jockeyList          (len : {0}) = {1}".format(len(FlowTbl[10][STRUCT_LIST]), FlowTbl[10][STRUCT_LIST]))
 
-        # 統合
-        learningList = [FlowTbl[0][STRUCT_LIST], racedbLearningList, FlowTbl[1][STRUCT_LIST], FlowTbl[2][STRUCT_LIST], FlowTbl[3][STRUCT_LIST], FlowTbl[4][STRUCT_LIST]]
-        
-        # 一次元化
+        # 教師リストのみ取り出し
+        t = FlowTbl.pop(0)
+
+        # FlowTbl の1列目(リスト)のみ取り出して一次元化
+        learningList = [row[0] for row in FlowTbl]
         learningList = list(deepflatten(learningList))
 
         # 保存用リストに追加
         totalXList.append(learningList)
-        totaltList.append(teachList)
+        totaltList.append(t)
 
     # 書き込み
     logger.info("========================================")

@@ -79,3 +79,15 @@ def padJockeyList(rowList, listSize):
 
 def padWeatherList(rowList, listSize):
     return rowList
+
+def padCourseConditionList(rowList, listSize):
+    return rowList
+
+def padRaceStartTimeList(rowList, listSize):
+    return rowList
+
+def padCourseDistanceList(rowList, listSize):
+    return rowList
+
+def padHorseNumList(rowList, listSize):
+    return rowList

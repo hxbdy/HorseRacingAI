@@ -1,10 +1,7 @@
-import os
 import sys
-import logging
-import sqlite3
 import pathlib
 from datetime import date
-from dateutil.relativedelta import relativedelta
+import re
 
 # commonフォルダ内読み込みのため
 deepLearning_dir = pathlib.Path(__file__).parent
@@ -61,3 +58,69 @@ def getWeather(race_id):
     # 晴 
     sep1 = sep1.replace(" ", "")
     return sep1
+
+def getCourseCondition(race_id):
+    raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
+    # コース状態取得
+    # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+    sep1 = raceData1List[0].split(":")[2]
+    #  良 / 発走 
+    sep1 = sep1.split("/")[0]
+    # 良
+    sep1 = sep1.replace(" ", "")
+    return sep1
+
+def getRaceStartTimeList(race_id):
+    raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
+    # 出走時刻取得
+    # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+    sep1 = raceData1List[0].split("/")[3]
+    #  発走 : 15:35
+    sep1 = sep1.split(" : ")[1]
+    #  15:35
+    sep1 = sep1.replace(" ", "")
+    # 他と統一するためリストにする
+    return [sep1]
+
+def getCourseDistanceList(race_id):
+    raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
+    # 距離取得
+    # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+    sep1 = raceData1List[0].split(":")[0]
+    # 芝右1600m
+    # 数字以外を削除
+    sep1 = re.sub(r'\D', '', sep1)
+    sep1 = sep1.replace(" ", "")
+    # 他と統一するためリストにする
+    return [float(sep1)]
+
+def getMoneyList(race_id):
+    prizeList = db.getColDataFromTbl("race_result", "prize", "race_id", race_id)
+    for i in range(len(prizeList)):
+        prizeList[i] = str(prizeList[i])
+    return prizeList
+
+def getHorseNumList(race_id):
+    # 他と統一するためリストにする
+    return [db.getRowCnt("race_result", "race_id", race_id)]
+
+def getMarginList(race_id):
+    marginList = db.getColDataFromTbl("race_result", "margin", "race_id", race_id)
+    for i in range(len(marginList)):
+        marginList[i] = str(marginList[i])
+    return marginList
+
+def getTotalRaceList():
+    totalRaceList = db.getDistinctCol("race_result", "race_id")
+    return totalRaceList
+
+def getRaceDateList(race_id):
+    # レース開催日を取り出す
+    # 以下の前提で計算する
+    # race_data2 にレース開催日が含まれていること
+    raceDate = db.getColDataFromTbl("race_result", "race_data2", "race_id", race_id)
+    raceDate = raceDate[0]
+    raceDateYear = int(raceDate.split("年")[0])
+    raceDateMon = int(raceDate.split("年")[1].split("月")[0])
+    raceDateDay = int(raceDate.split("月")[1].split("日")[0])
+    return date(raceDateYear, raceDateMon, raceDateDay)
