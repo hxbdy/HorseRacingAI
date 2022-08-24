@@ -13,13 +13,7 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-# debug initialize
-# LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-#logging.disable(logging.DEBUG)
-
+from common.debug import *
 class NetkeibaDB:
     def __init__(self):
         logger.info("Database loading")
