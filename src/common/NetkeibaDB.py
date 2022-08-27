@@ -83,3 +83,13 @@ class NetkeibaDB:
         for i in self.cur.fetchall():
             retList.append(i[0])
         return retList
+
+    def getMulCol(self, table_name, target_col_list, col_hint, data):
+        # 指定テーブルから複数の指定列を取り出したレコードを返す
+        sql = "SELECT " + ','.join(target_col_list) + " FROM " + table_name + " WHERE " + col_hint + " =?;"
+        self.cur.execute(sql, [data])
+        retList = []
+        for i in self.cur.fetchall():
+            retList.append(i)
+        return retList
+    

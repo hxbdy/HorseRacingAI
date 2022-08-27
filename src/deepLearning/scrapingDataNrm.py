@@ -21,107 +21,12 @@ from common.padding import *
 from common.getFromDB import *
 from common.fix import *
 
-loc_list = ['札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉']
-
 # 学習データテーブルのインデックス定義
 STRUCT_LIST = 0
 STRUCT_GET  = 1
 STRUCT_FIX  = 2
 STRUCT_PAD  = 3
 STRUCT_NRM  = 4
-
-## 馬の強さを計算
-def getStandardTime(distance, condition, track, location):
-    # レースコースの状態に依存する基準タイム(秒)を計算して返す
-    # performancePredictionで予測した係数・定数を下の辞書の値に入れる．
-    # loc_dictのOtherは中央競馬10か所以外の場合の値．10か所の平均値を取って作成する．
-    dis_coef = 0.066433
-    intercept = -9.6875
-    cond_dict = {'良':-0.3145, '稍重':0.1566, '重':0.1802, '不良':-0.0223}
-    track_dict = {'芝':-1.2514, 'ダ': 1.2514}
-    loc_dict = {'札幌':1.1699, '函館':0.3113, '福島':-0.3205, '新潟':-0.2800, '東京':-0.8914,\
-         '中山':0.2234, '中京':0.1815, '京都':-0.1556, '阪神':-0.4378, '小倉':0.1994, 'Other':0}
-    
-    std_time = dis_coef*distance + cond_dict[condition] + track_dict[track] + loc_dict[location] + intercept
-    return std_time
-
-def getPerformance(standard_time, goal_time, weight, grade):
-    # 走破タイム・斤量などを考慮し，「強さ(performance)」を計算
-    # 以下のeffectの値，計算式は適当
-    weight_effect = 1+ (55 - weight)/1000
-    grade_effect_dict = {'G1':1.14, 'G2':1.12, 'G3':1.10, 'OP':1.0, 'J.G1':1.0, 'J.G2':1.0, 'J.G3':1.0}
-    perform = (10 + standard_time - goal_time*weight_effect) * grade_effect_dict[grade]
-    return perform
-
-# 累計値の計算
-# ToDo : mainで一度呼ぶ。結果をXに追加する
-def calCumPerformance(horsedb):
-    # 各レースの結果から強さ(performance)を計算し，その最大値を記録していく
-    # (外れ値を除くために，2番目の強さでもいいかもしれない．)
-    rgdb = read_data("raceGradedb")
-
-    horsedb.cum_perform = []
-    for horse_idx in range(len(horsedb.perform_contents)):
-        horse_perform = horsedb.perform_contents[horse_idx] 
-        max_performance_list = []
-        max_performance = -1000.0
-        horse_perform.reverse()
-        for race_idx in range(len(horse_perform)):
-            race_result = horse_perform[race_idx]
-            # ゴールタイムを取得
-            goaltime = race_result[10]
-            try:
-                goaltime_sec = float(goaltime.split(':')[0])*60 + float(goaltime.split(':')[1])
-            except:
-                goaltime_sec = 240
-            # 斤量を取得
-            try:
-                burden_weight = float(race_result[9])
-            except:
-                burden_weight = 40
-            # 馬場状態と競馬場を取得
-            condition = horsedb.getCourseCondition(horse_idx, race_result[2])
-            location = horsedb.getCourseLocation(horse_idx, race_result[2])
-            if location not in loc_list:
-                location = "Other"
-            # 芝かダートか
-            if race_result[11][0] == "芝":
-                track = "芝"
-            elif race_result[11][0] == "ダ":
-                track = "ダ"
-            else:
-                track = "E"
-            # コースの距離
-            dis_str = race_result[11]
-            try:
-                distance = float(re.sub(r'\D', '', dis_str).replace(" ", ""))
-            except:
-                distance = "E"
-            # レースのグレード (G1,G2,G3,OP)
-            # 日本の中央競馬以外のレースは全てOP扱いになる
-            try:
-                raceid = race_result[2]
-                race_year = int(race_result[0][0:4])
-                grade = "OP"
-                for i in range(len(rgdb.raceID_list)):
-                    if race_year != int(rgdb.raceID_list_year[i]):
-                        continue
-                    if raceid in rgdb.raceID_list[i]:
-                        grade = "G" + rgdb.raceID_list_grade[i]
-            except:
-                grade = "E"
-                
-
-            # 計算不能な場合を除いてperformanceを計算
-            if track != "E" and distance != "E" and grade != "E":
-                standard_time = horsedb.getStandardTime(distance, condition, track, location)
-                performance = horsedb.getPerformance(standard_time, goaltime_sec, burden_weight, grade)
-
-            if performance > max_performance:
-                max_performance = performance
-            max_performance_list.append(max_performance)
-        max_performance_list.reverse()
-        horsedb.cum_perform.append(max_performance_list)
 
 def calCumNumOfWin(horsedb):
     # 累計勝利数を計算
@@ -195,6 +100,7 @@ if __name__ == "__main__":
     burdenWeightList = []
     postPositionList = []
     jockeyList = []
+    cumPerformList = []
 
     # 一度のレースで出た馬の最大頭数
     maxHorseNum = 24
@@ -228,7 +134,8 @@ if __name__ == "__main__":
             [horseAgeList       , getBirthDayList      , fixBirthDayList       , padHorseAgeList       , nrmHorseAge],
             [burdenWeightList   , getBurdenWeightList  , fixBurdenWeightList   , padBurdenWeightList   , nrmBurdenWeightAbs],
             [postPositionList   , getPostPositionList  , fixPostPositionList   , padPostPositionList   , nrmPostPosition],
-            [jockeyList         , getJockeyIDList      , fixJockeyIDList       , padJockeyList         , nrmJockeyID]
+            [jockeyList         , getJockeyIDList      , fixJockeyIDList       , padJockeyList         , nrmJockeyID],
+            [cumPerformList     , getCumPerformList    , fixCumPerformList     , padCumPerformList     , nrmCumPerformList]
         ]
 
         # 学習リストクリア
@@ -269,6 +176,7 @@ if __name__ == "__main__":
         logger.debug("burdenWeightList    (len : {0}) = {1}".format(len(FlowTbl[8][STRUCT_LIST]) , FlowTbl[8][STRUCT_LIST]))
         logger.debug("postPositionList    (len : {0}) = {1}".format(len(FlowTbl[9][STRUCT_LIST]) , FlowTbl[9][STRUCT_LIST]))
         logger.debug("jockeyList          (len : {0}) = {1}".format(len(FlowTbl[10][STRUCT_LIST]), FlowTbl[10][STRUCT_LIST]))
+        logger.debug("cumPerformList      (len : {0}) = {1}".format(len(FlowTbl[11][STRUCT_LIST]), FlowTbl[11][STRUCT_LIST]))
 
         # 教師リストのみ取り出し
         t = FlowTbl.pop(0)

@@ -129,3 +129,7 @@ def nrmHorseNumList(hnList):
     npcdList = np.array(hnList)
     npcdList = npcdList / MAX_HORSE_NUM
     return npcdList.tolist()
+
+def nrmCumPerformList(cpList):
+    return cpList
+    

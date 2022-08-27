@@ -91,3 +91,11 @@ def padCourseDistanceList(rowList, listSize):
 
 def padHorseNumList(rowList, listSize):
     return rowList
+
+def padCumPerformList(rowList, listSize):
+    exSize = listSize - len(rowList)
+    if exSize > 0:
+        for i in range(exSize):
+            rowList.append(0)
+    return rowList
+    
