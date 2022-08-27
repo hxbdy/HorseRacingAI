@@ -14,9 +14,9 @@ cur = conn.cursor()
 cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, check_flg)')
 
 # race_info テーブル作成
-# horseID(PRIMARY KEY), raceID(PRIMARY KEY), "日付", "開催", 頭数, 枠番, 馬番, オッズ, 人気, 着順, 騎手id, 斤量, "距離", "馬場", "タイム", 着差, 賞金
+# horseID(PRIMARY KEY), raceID(PRIMARY KEY), "日付", "開催", 頭数, 枠番, 馬番, オッズ, 人気, 着順, 騎手id, 斤量, "距離", "馬場", "タイム", 着差, 賞金, レースグレード
 # 例:('1982101018', '198701010209', '1987/06/14', '1札幌2', 13, 1, 1, 1.4, 1, 1, '00540', 59, 'ダ1800', '良', '1:50.8', -0.2, 1,600.0)
-cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, prize, PRIMARY KEY(horse_id, race_id))')
+cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, prize, grade, PRIMARY KEY(horse_id, race_id))')
 
 # race_result テーブル作成
 # [horseID,固定[raceID, race_name, race_data1, race_data2,]  goal_time, goal_dif, horse_weight, money]

@@ -14,6 +14,14 @@ class RaceGradeDB:
         self.raceID_list_year.append(year)
         self.raceID_list_grade.append(grade)
 
+    def getGrade(self, race_id):
+        # raceID_list は競馬場とグレードごとにネストされている？[[G1,札幌],[G2,札幌]...]
+        for i in range(len(self.raceID_list)):
+            for j in self.raceID_list[i]:
+                if j == race_id:
+                    return self.raceID_list_grade[i]
+        return "-1"
+
     # raceID_listを1次元配列に直して出力
     def getRaceIDList(self):
         output = []

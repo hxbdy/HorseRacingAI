@@ -19,6 +19,7 @@ for dir_name in dir_lst:
 
 from common.HorseDB import HorseDB
 from common.RaceDB import RaceDB
+from common.RaceGradeDB import RaceGradeDB
 
 def insert_horse_prof_table(dbname, horsedb):
     logger.info("INSERT INTO horse_prof VALUES start")
@@ -60,14 +61,14 @@ def insert_horse_prof_table(dbname, horsedb):
 
     logger.info("INSERT INTO horse_prof VALUES end")
 
-def insert_race_info_table(dbname, horsedb):
+def insert_race_info_table(dbname, horsedb, rgdb):
     logger.info("INSERT INTO race_info VALUES start")
 
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
 
     # race_info テーブルの列数
-    TABLE_SIZE = 17
+    TABLE_SIZE = 18
     place_holder = ','.join(['?'] * TABLE_SIZE)
     # horsedb.perform_contents 上のレースIDインデックス
     RACE_ID_IDX = 2
@@ -79,7 +80,7 @@ def insert_race_info_table(dbname, horsedb):
             # レースIDを先頭へ移動
             race_id = j[RACE_ID_IDX]
             j.pop(RACE_ID_IDX)
-            record = [horsedb.horseID[i], race_id, *j]
+            record = [horsedb.horseID[i], race_id, *j, rgdb.getGrade(race_id)]
 
             logger.debug("INSERT INTO race_info VALUES {0}".format(record))
 
@@ -138,9 +139,13 @@ if __name__ == "__main__":
     with open(str(root_dir) + "\\dst\\scrapingResult\\horsedb.pickle", 'rb') as f:
             horsedb = pickle.load(f)
 
+    # レースグレード情報読み込み
+    with open(str(root_dir) + "\\dst\\scrapingResult\\raceGradedb.pickle", 'rb') as f:
+            rgdb = pickle.load(f)
+
     logger.info("Pickle Database loading complete")
 
     dbname = '.\\dst\\netkeibaDB\\netkeiba.db'
     insert_horse_prof_table(dbname, horsedb)
-    insert_race_info_table(dbname, horsedb)
+    insert_race_info_table(dbname, horsedb, rgdb)
     insert_race_result_table(dbname, racedb)
