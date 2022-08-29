@@ -131,5 +131,6 @@ def nrmHorseNumList(hnList):
     return npcdList.tolist()
 
 def nrmCumPerformList(cpList):
+    # シグモイドで標準化?
     return cpList
     

@@ -125,14 +125,18 @@ def getRaceDateList(race_id):
     raceDateDay = int(raceDate.split("月")[1].split("日")[0])
     return date(raceDateYear, raceDateMon, raceDateDay)
 
+def getParamForCalcPerform(horse_list):
+    col = ["horse_id", "venue", "time", "burden_weight", "course_condition", "distance", "grade"]
+    horse_info_list = []
+    for horse in horse_list:
+        # horse のcolレコードを取得
+        race = db.getMulCol("race_info", col, "horse_id", horse)
+        horse_info_list.append(race)
+    return horse_info_list
+
 def getCumPerformList(race_id):
     # race_id に出場した馬のリストを取得
     # 各馬の以下情報を取得、fixでパフォーマンスを計算する
-    col = ["horse_id", "venue", "time", "burden_weight", "course_condition", "distance", "grade"]
     horse_list = db.getRecordDataFromTbl("race_info", "race_id", race_id)
-    horse_info_list = []
-    for horse in horse_list:
-        # horse の全てのレコードを取得
-        race = db.getMulCol("race_info", col, "horse_id", horse)
-        horse_info_list.append(race)
+    horse_info_list = getParamForCalcPerform(horse_list)
     return horse_info_list
