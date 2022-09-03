@@ -12,9 +12,7 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-from common.NetkeibaDB import *
-
-db = NetkeibaDB()
+from common.NetkeibaDB import db
 
 def getCourseCondition(race_id):
     raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)

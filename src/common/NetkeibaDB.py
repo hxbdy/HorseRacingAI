@@ -14,6 +14,7 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 from common.debug import *
+
 class NetkeibaDB:
     def __init__(self):
         logger.info("Database loading")
@@ -94,3 +95,4 @@ class NetkeibaDB:
             retList.append(i)
         return retList
     
+db = NetkeibaDB()

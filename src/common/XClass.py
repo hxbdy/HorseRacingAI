@@ -13,14 +13,11 @@ import numpy as np
 import copy
 
 from debug import *
-from getFromDB import *
-from NetkeibaDB import *
+from getFromDB import * # db ハンドラはここで定義済み
 
 common_dir = pathlib.Path(__file__).parent
 src_dir = common_dir.parent
 root_dir = src_dir.parent
-
-db = NetkeibaDB()
 
 class XClass:
     # 全インスタンス共通の変数
