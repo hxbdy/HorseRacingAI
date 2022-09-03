@@ -325,7 +325,7 @@ class HorseAgeClass(XClass):
 
     def adj(self, d0):
         if self.race_id == '0':
-            print("ERROR : SET race_id")
+            logger.critical("ERROR : SET race_id")
         else:
             self.xList = self.get()
             self.xList = HorseAgeClass.fix(self, d0)
@@ -651,6 +651,7 @@ class MarginClass(XClass):
     def adj(self):
         return XClass.adj(self)
 
+# 学習用入力データX, 教師データt を管理する
 class MgrClass:
     def __init__(self, year, XclassTbl, tclassTbl):
         self.XclassTbl = XclassTbl
@@ -706,7 +707,6 @@ class MgrClass:
                 elif func in self.tclassTbl:
                     self.t.append(instance.adj())
 
-    # 
     def getTotalList(self):
         # 進捗確認カウンタ
         comp_cnt = 1

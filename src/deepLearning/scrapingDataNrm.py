@@ -1,3 +1,7 @@
+# AI 学習用データの作成
+# DB からデータを標準化し、学習データX と 教師データt の対となるリストを作成する
+# 出力先 ./dst/learningList/X.pickle, t.pickle
+
 import pickle
 import sys
 import os
@@ -18,37 +22,6 @@ for dir_name in dir_lst:
 import common.debug
 from common.getFromDB import *
 from common.XClass import *
-
-def calCumNumOfWin(horsedb):
-    # 累計勝利数を計算
-    horsedb.cum_num_wins = []
-    for horse_perform in horsedb.perform_contents:
-        cum_win_list = []
-        cum_win = 0
-        horse_perform.reverse()
-        for race_result in horse_perform:
-            if race_result[8] == '1':
-                cum_win += 1
-            cum_win_list.append(cum_win)
-        cum_win_list.reverse()
-        horsedb.cum_num_wins.append(cum_win_list)
-
-def calCumMoney(horsedb):
-    # 累計獲得賞金を計算
-    horsedb.cum_money = []
-    for horse_perform in horsedb.perform_contents:
-        cum_money_list = []
-        cum_money = 0.0
-        horse_perform.reverse()
-        for race_result in horse_perform:
-            if race_result[15] == ' ':
-                money = 0.0
-            else:
-                money = float(race_result[15].replace(",",""))
-            cum_money += money
-            cum_money_list.append(cum_money)
-        cum_money_list.reverse()
-        horsedb.cum_money.append(cum_money_list)
 
 if __name__ == "__main__":
 
@@ -71,6 +44,7 @@ if __name__ == "__main__":
         MarginClass
     ]
 
+    # <= year のレースから取得する
     year = 1986
     totalList = MgrClass(year, XTbl, tTbl)
     train_x, train_t = totalList.getTotalList()

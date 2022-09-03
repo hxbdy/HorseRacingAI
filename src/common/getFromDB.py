@@ -46,4 +46,34 @@ def getRaceDate(race_id):
     raceDateMon = int(raceDate.split("年")[1].split("月")[0])
     raceDateDay = int(raceDate.split("月")[1].split("日")[0])
     return date(raceDateYear, raceDateMon, raceDateDay)
-    
+
+#def calCumNumOfWin(horsedb):
+    # 累計勝利数を計算
+    # horsedb.cum_num_wins = []
+    # for horse_perform in horsedb.perform_contents:
+    #     cum_win_list = []
+    #     cum_win = 0
+    #     horse_perform.reverse()
+    #     for race_result in horse_perform:
+    #         if race_result[8] == '1':
+    #             cum_win += 1
+    #         cum_win_list.append(cum_win)
+    #     cum_win_list.reverse()
+    #     horsedb.cum_num_wins.append(cum_win_list)
+
+#def calCumMoney(horsedb):
+    # 累計獲得賞金を計算
+    # horsedb.cum_money = []
+    # for horse_perform in horsedb.perform_contents:
+    #     cum_money_list = []
+    #     cum_money = 0.0
+    #     horse_perform.reverse()
+    #     for race_result in horse_perform:
+    #         if race_result[15] == ' ':
+    #             money = 0.0
+    #         else:
+    #             money = float(race_result[15].replace(",",""))
+    #         cum_money += money
+    #         cum_money_list.append(cum_money)
+    #     cum_money_list.reverse()
+    #     horsedb.cum_money.append(cum_money_list)

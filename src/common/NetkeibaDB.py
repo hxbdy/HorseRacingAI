@@ -79,7 +79,6 @@ class NetkeibaDB:
         # ただし重複データは1つになる
         # upper は文字列としてDBから検索する
         sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE " + col_name + " <= \""+ upper +"\";"
-        print(sql)
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():
