@@ -12,22 +12,27 @@ from dateutil.relativedelta import relativedelta
 import numpy as np
 
 from debug import *
+from getFromDB import *
 from NetkeibaDB import *
+
+common_dir = pathlib.Path(__file__).parent
+src_dir = common_dir.parent
+root_dir = src_dir.parent
 
 db = NetkeibaDB()
 
 class XClass:
-    def __init__(self, maxPadSize = 24):
-        print("XClass calles")
+    # 全インスタンス共通の変数
+    race_id = '0'
+    pad_size = 24
+
+    def __init__(self):
         self.xList = []
-        self.padSize = maxPadSize
-        self.race_id = '0'
-    
-    def set(self, race_id):
-        self.race_id = race_id
+        
+    def set(self, target_race_id):
+        XClass.race_id = target_race_id
 
     def get(self):
-        print("this???????????")
         return self.xList
 
     def fix(self):
@@ -40,17 +45,13 @@ class XClass:
         return self.xList
 
     def adj(self):
-        if self.race_id == '0':
-            print("ERROR : SET race_id")
+        if XClass.race_id == '0':
+            logger.critical("race_id == 0 !!")
         else:
             self.xList = self.get()
-            print("get = ", self.xList)
             self.xList = self.fix()
-            print("fix = ", self.xList)
             self.xList = self.pad()
-            print("pad = ", self.xList)
             self.xList = self.nrm()
-            print("nrm = ", self.xList)
         return self.xList
 
 class MoneyClass(XClass):
@@ -61,7 +62,6 @@ class MoneyClass(XClass):
         super().set(race_id)
 
     def get(self):
-        print("MoneyClass get called")
         prizeList = db.getColDataFromTbl("race_result", "prize", "race_id", self.race_id)
         for i in range(len(prizeList)):
             prizeList[i] = str(prizeList[i])
@@ -109,7 +109,6 @@ class HorseNumClass(XClass):
         super().set(race_id)
 
     def get(self):
-        print("HorseNumClass get")
         self.xList = [db.getRowCnt("race_result", "race_id", self.race_id)]
 
     def fix(self):
@@ -121,11 +120,10 @@ class HorseNumClass(XClass):
     def nrm(self):
         # 最大出走馬数で割って標準化
         npcdList = np.array(self.xList)
-        npcdList = npcdList / self.padSize
+        npcdList = npcdList / XClass.pad_size
         self.xList = npcdList.tolist()
 
     def adj(self):
-        print("HorseNumClass")
         self.get()
         self.fix()
         self.pad()
@@ -154,7 +152,7 @@ class CourseConditionClass(XClass):
         return XClass.fix(self)
 
     def pad(self):
-        return XClass.pad()
+        return XClass.pad(self)
 
     def nrm(self):
         # 馬場状態のone-hot表現(ただし良は全て0として表現する)
@@ -191,7 +189,7 @@ class CourseDistanceClass(XClass):
         return XClass.fix(self)
 
     def pad(self):
-        return XClass.pad()
+        return XClass.pad(self)
 
     def nrm(self):
         # 最長距離で割って標準化
@@ -226,7 +224,7 @@ class RaceStartTimeClass(XClass):
         return XClass.fix(self)
 
     def pad(self):
-        return XClass.pad()
+        return XClass.pad(self)
 
     def nrm(self):
         # 発走時刻の数値化(時*60 + 分)と標準化
@@ -262,7 +260,7 @@ class WeatherClass(XClass):
         return XClass.fix(self)
 
     def pad(self):
-        return XClass.pad()
+        return XClass.pad(self)
 
     def nrm(self):
         # 天気のone-hot表現(ただし晴は全て0として表現する)
@@ -309,7 +307,7 @@ class HorseAgeClass(XClass):
         # 年齢リスト拡張
         # ダミーデータ：平均値
         mean_age = np.mean(self.xList)
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(mean_age)
@@ -354,7 +352,7 @@ class BurdenWeightClass(XClass):
         # 斤量リスト拡張
         # ダミーデータ：平均値
         mean_weight = np.mean(self.xList)
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(mean_weight)
@@ -390,7 +388,7 @@ class PostPositionClass(XClass):
     def pad(self):
         # 枠番リスト拡張
         # ダミーデータ：listSizeに達するまで，1から順に追加．
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(i%8+1)
@@ -430,7 +428,7 @@ class JockeyClass(XClass):
     def pad(self):
         # 騎手ダミーデータ挿入
         # ダミーデータ：出場回数50を追加．
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(50)
@@ -559,14 +557,14 @@ class CumPerformClass(XClass):
         return max_performance_list
 
     def pad(self):
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(0)
         return self.xList
 
     def nrm(self):
-        return XClass.nrm()
+        return XClass.nrm(self)
 
     def adj(self):
         return XClass.adj(self)
@@ -665,54 +663,75 @@ XTbl = [
     CumPerformClass
 ]
 
-class MgrClass(
-    HorseNumClass, CourseConditionClass, CourseDistanceClass, RaceStartTimeClass, WeatherClass,
-    HorseAgeClass, BurdenWeightClass, PostPositionClass, JockeyClass, CumPerformClass
-    ):
+class MgrClass:
     def __init__(self):
-        super().__init__()
         self.x = []
+        self.race_date = 0
 
     def set(self, race_id):
-        super().set(race_id)
+        XClass.race_id = race_id
+        d0 = getRaceDate(race_id)
+        self.race_date = d0
 
-    def adj(self, race_date):
+    def get(self):
+        logger.debug("X = ", self.x)
+        return list(deepflatten(self.x))
+
+    def adj(self):
         for func in XTbl:
-            print(func)
+            # インスタンスを作るとその数だけXClassインスタンスも作られてしまう。
+            # XClassインスタンスは一つだけにできないか
             instance = func()
             if func == HorseAgeClass:
-                self.x.append(instance.adj(race_date))
+                if self.race_date == 0:
+                    logger.critical("race_date == 0 !!")
+                else:
+                    self.x.append(instance.adj(self.race_date))
             else:
                 self.x.append(instance.adj())
 
-    def get(self):
-        return list(deepflatten(self.x))
-
-class TMgrClass():
-    def __init__(self):
-        self.margin = MarginClass()
-        self.funcList = [
-            self.margin
-        ]
-
-    def set(self, race_id):
-        for func in self.funcList:
-            func.set(race_id)
-
-    def adj(self):
-        for func in self.funcList:
-            func.adj()
-
-    def get(self):
-        x = []
-        for func in self.funcList:
-            x.append(func.xList)
-        return list(deepflatten(x))
-
-
 if __name__ == "__main__":
-    x = MgrClass()
-    race_id = "198606050810"
-    x.set(race_id)
-    x.adj(date(2022,1,1))
-    print(x.get())
+
+    totalXList = []
+    totaltList = []
+
+    # 総レース数取得
+    totalRaceList = getTotalRaceList(2020)
+    totalRaceNum  = len(totalRaceList)
+
+    # 進捗確認カウンタ
+    comp_cnt = 1
+
+    for race_id in totalRaceList:
+
+        logger.info("========================================")
+        logger.info("https://db.netkeiba.com/race/{0}".format(race_id))
+        logger.info("progress : {0} / {1}".format(comp_cnt, totalRaceNum))
+
+        comp_cnt += 1
+
+        # 生成
+        x = MgrClass()
+        # レース開催日取得 
+        x.set(race_id)
+        x.adj()
+        totalXList.append(x.get())
+        # 破棄
+        del x
+
+    # 書き込み
+    logger.info("========================================")
+    OUTPUT_PATH = str(root_dir) + "\\dst\\learningList\\"
+    
+    # 保存先フォルダの存在確認
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+
+    fn = "X"
+    logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
+    with open(OUTPUT_PATH + fn + ".pickle", 'wb') as f:
+        pickle.dump(totalXList, f)
+
+    fn = "t"
+    logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
+    with open(OUTPUT_PATH + fn + ".pickle", 'wb') as f:
+        pickle.dump(totaltList, f)

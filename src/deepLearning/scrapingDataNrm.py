@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     # 総レース数取得
     totalRaceList = getTotalRaceList()
-    totalRaceNum  = len(getTotalRaceList())
+    totalRaceNum  = len(totalRaceList)
 
     # 進捗確認カウンタ
     comp_cnt = 1
@@ -143,7 +143,7 @@ if __name__ == "__main__":
             tbl[STRUCT_LIST].clear()
 
         # レース開催日取得
-        d0 = getRaceDateList(race)
+        d0 = getRaceDate(race)
         
         for func in FlowTbl:
             # 対象データをDBから取得

@@ -110,11 +110,16 @@ def getMarginList(race_id):
         marginList[i] = str(marginList[i])
     return marginList
 
-def getTotalRaceList():
-    totalRaceList = db.getDistinctCol("race_result", "race_id")
+def getTotalRaceList(year = "999999999999"):
+    # yearを含む年のレースまでを全て取得する
+    # デフォルトでは全てのレースを取得する
+    # DB上のrace_idの上4桁は開催年前提
+    if year != "999999999999":
+        year = str(year) + "99999999"
+    totalRaceList = db.getDistinctCol("race_result", "race_id", year)
     return totalRaceList
 
-def getRaceDateList(race_id):
+def getRaceDate(race_id):
     # レース開催日を取り出す
     # 以下の前提で計算する
     # race_data2 にレース開催日が含まれていること

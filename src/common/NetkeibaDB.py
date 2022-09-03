@@ -74,10 +74,12 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
-    def getDistinctCol(self, table_name, col_name):
+    def getDistinctCol(self, table_name, col_name, upper):
         # 指定列のデータを全て取得しリストで返す
         # ただし重複データは1つになる
-        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + ";"
+        # upper は文字列としてDBから検索する
+        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE " + col_name + " <= \""+ upper +"\";"
+        print(sql)
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():
