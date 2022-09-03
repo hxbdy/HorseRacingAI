@@ -44,9 +44,10 @@ if __name__ == "__main__":
         MarginClass
     ]
 
-    # <= year のレースから取得する
-    year = 1986
-    totalList = MgrClass(year, XTbl, tTbl)
+    # start_year <= data <= end_year のレースから取得する
+    start_year = 1986
+    end_year   = 1986
+    totalList = MgrClass(start_year, end_year, XTbl, tTbl)
     train_x, train_t = totalList.getTotalList()
 
     # 書き込み

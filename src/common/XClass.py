@@ -650,7 +650,7 @@ class MarginClass(XClass):
 
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
-    def __init__(self, year, XclassTbl, tclassTbl):
+    def __init__(self, start_year, end_year, XclassTbl, tclassTbl):
         self.XclassTbl = XclassTbl
         self.tclassTbl = tclassTbl
 
@@ -665,7 +665,7 @@ class MgrClass:
         self.race_date = 0
 
         # yearまでの総 race_id, レース数取得 (year年含む)
-        self.totalRaceList = getTotalRaceList(year)
+        self.totalRaceList = getTotalRaceList(start_year, end_year)
         self.totalRaceNum  = len(self.totalRaceList)
 
     # race_id と 開催日 をクラスで保持する

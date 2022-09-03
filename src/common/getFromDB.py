@@ -12,7 +12,8 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-from common.NetkeibaDB import db
+from NetkeibaDB import db
+from debug import *
 
 def getCourseCondition(race_id):
     raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
@@ -25,13 +26,19 @@ def getCourseCondition(race_id):
     sep1 = sep1.replace(" ", "")
     return sep1
 
-def getTotalRaceList(year = "999999999999"):
+def getTotalRaceList(start_year = 0, end_year = 9999):
     # yearを含む年のレースまでを全て取得する
     # デフォルトでは全てのレースを取得する
     # DB上のrace_idの上4桁は開催年前提
-    if year != "999999999999":
-        year = str(year) + "99999999"
-    totalRaceList = db.getDistinctCol("race_result", "race_id", year)
+    if len(str(start_year)) != 4:
+        logger.critical("len(str(start_year)) != 4")
+        start_year = "0000"
+    if len(str(end_year)) != 4:
+        logger.critical("len(str(end_year)) != 4")
+        end_year = "9999"
+    start_year = str(start_year) + "00000000"
+    end_year   = str(end_year)   + "99999999"
+    totalRaceList = db.getDistinctCol("race_result", "race_id", start_year, end_year)
     return totalRaceList
 
 def getRaceDate(race_id):
