@@ -10,6 +10,7 @@ from iteration_utilities import deepflatten
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import numpy as np
+import copy
 
 from debug import *
 from getFromDB import *
@@ -629,7 +630,7 @@ class MarginClass(XClass):
         # 着差リスト拡張
         # ダミーデータ：最下位にハナ差で連続してゴールすることにする
         HANA = 0.0125
-        exSize   = self.padSize - len(self.xList)
+        exSize   = self.pad_size - len(self.xList)
         lastMargin = self.xList[-1]
         if exSize > 0:
             for i in range(exSize):
@@ -650,74 +651,113 @@ class MarginClass(XClass):
     def adj(self):
         return XClass.adj(self)
 
-XTbl = [
-    HorseNumClass,
-    CourseConditionClass,
-    CourseDistanceClass,
-    RaceStartTimeClass,
-    WeatherClass,
-    HorseAgeClass,
-    BurdenWeightClass,
-    PostPositionClass,
-    JockeyClass,
-    CumPerformClass
-]
-
 class MgrClass:
-    def __init__(self):
+    def __init__(self, year, XclassTbl, tclassTbl):
+        self.XclassTbl = XclassTbl
+        self.tclassTbl = tclassTbl
+
+        # セットされた race_id の標準化結果の一時保持リスト
         self.x = []
+        self.t = []
+        
+        # year までの全標準化結果保持リスト
+        self.totalXList = []
+        self.totaltList = []
+
         self.race_date = 0
 
+        # yearまでの総 race_id, レース数取得 (year年含む)
+        self.totalRaceList = getTotalRaceList(year)
+        self.totalRaceNum  = len(self.totalRaceList)
+
+    # race_id と 開催日 をクラスで保持する
+    # DB 検索条件と開催時点での各馬の年齢計算に使用する
     def set(self, race_id):
         XClass.race_id = race_id
         d0 = getRaceDate(race_id)
         self.race_date = d0
 
+    # 標準化を行ったリストを1次元化して返す
     def get(self):
-        logger.debug("X = ", self.x)
-        return list(deepflatten(self.x))
+        logger.debug("X = {0}".format(self.x))
+        logger.debug("t = {0}".format(self.t))
+        return list(deepflatten(self.x)), list(deepflatten(self.t))
 
+    # 各要素(天気, 賞金, etc...) を標準化まで行う
+    # XTble で用意されたクラスごとに標準化を順に実行する
+    # DB から取得する get() -> 数値化やsplitなど整形する fix() -> 要素数を統一する pad() -> データのレンジを統一する nrm())
     def adj(self):
-        for func in XTbl:
-            # インスタンスを作るとその数だけXClassインスタンスも作られてしまう。
-            # XClassインスタンスは一つだけにできないか
+        classTbl = copy.copy(self.XclassTbl)
+        classTbl.extend(self.tclassTbl)
+        for func in classTbl:
             instance = func()
+            # 馬の年齢計算時にのみ開催年が必要なため渡す
             if func == HorseAgeClass:
                 if self.race_date == 0:
                     logger.critical("race_date == 0 !!")
                 else:
-                    self.x.append(instance.adj(self.race_date))
+                    if func in self.XclassTbl:
+                        self.x.append(instance.adj(self.race_date))
+                    elif func in self.tclassTbl:
+                        self.t.append(instance.adj(self.race_date))
             else:
-                self.x.append(instance.adj())
+                if func in self.XclassTbl:
+                    self.x.append(instance.adj())
+                elif func in self.tclassTbl:
+                    self.t.append(instance.adj())
 
+    # 
+    def getTotalList(self):
+        # 進捗確認カウンタ
+        comp_cnt = 1
+
+        for race_id in self.totalRaceList:
+
+            logger.info("========================================")
+            logger.info("https://db.netkeiba.com/race/{0}".format(race_id))
+            logger.info("progress : {0} / {1}".format(comp_cnt, self.totalRaceNum))
+
+            comp_cnt += 1
+            self.x.clear()
+            self.t.clear()
+
+            # レースid, 開催日セット
+            self.set(race_id)
+
+            # データ取得から標準化まで行う
+            self.adj()
+
+            # 成果リストにアペンド
+            x_tmp, t_tmp = self.get()
+            self.totalXList.append(x_tmp)
+            self.totaltList.append(t_tmp)
+        
+        return self.totalXList, self.totaltList
+            
 if __name__ == "__main__":
 
-    totalXList = []
-    totaltList = []
+    # 入力用テーブル
+    XTbl = [
+        HorseNumClass,
+        CourseConditionClass,
+        CourseDistanceClass,
+        RaceStartTimeClass,
+        WeatherClass,
+        HorseAgeClass,
+        BurdenWeightClass,
+        PostPositionClass,
+        JockeyClass,
+        CumPerformClass
+    ]
 
-    # 総レース数取得
-    totalRaceList = getTotalRaceList(2020)
-    totalRaceNum  = len(totalRaceList)
+    # 正解用テーブル
+    tTbl = [
+        MarginClass
+    ]
 
-    # 進捗確認カウンタ
-    comp_cnt = 1
-
-    for race_id in totalRaceList:
-
-        logger.info("========================================")
-        logger.info("https://db.netkeiba.com/race/{0}".format(race_id))
-        logger.info("progress : {0} / {1}".format(comp_cnt, totalRaceNum))
-
-        comp_cnt += 1
-
-        # 生成
-        x = MgrClass()
-        # レース開催日取得 
-        x.set(race_id)
-        x.adj()
-        totalXList.append(x.get())
-        # 破棄
-        del x
+    year = 1986
+    totalList = MgrClass(year, XTbl, tTbl)
+    train_x, train_t = totalList.getTotalList()
 
     # 書き込み
     logger.info("========================================")
@@ -729,9 +769,9 @@ if __name__ == "__main__":
     fn = "X"
     logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
     with open(OUTPUT_PATH + fn + ".pickle", 'wb') as f:
-        pickle.dump(totalXList, f)
+        pickle.dump(train_x, f)
 
     fn = "t"
     logger.info("Save {0}{1}.pickle".format(OUTPUT_PATH, fn))
     with open(OUTPUT_PATH + fn + ".pickle", 'wb') as f:
-        pickle.dump(totaltList, f)
+        pickle.dump(train_t, f)
