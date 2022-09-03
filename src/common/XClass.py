@@ -1,4 +1,4 @@
-# 入力X の基底クラス
+# AI に入力するための標準化までを行うクラス
 
 import pickle
 import sys
@@ -12,8 +12,8 @@ from dateutil.relativedelta import relativedelta
 import numpy as np
 import copy
 
-from debug import *
-from getFromDB import * # db ハンドラはここで定義済み
+from common.debug import *
+from common.getFromDB import * # db ハンドラはここで定義済み
 
 common_dir = pathlib.Path(__file__).parent
 src_dir = common_dir.parent
@@ -31,25 +31,24 @@ class XClass:
         XClass.race_id = target_race_id
 
     def get(self):
-        return self.xList
-
-    def fix(self):
-        return self.xList
-
-    def pad(self):
-        return self.xList
-
-    def nrm(self):
-        return self.xList
-
-    def adj(self):
         if XClass.race_id == '0':
             logger.critical("race_id == 0 !!")
-        else:
-            self.xList = self.get()
-            self.xList = self.fix()
-            self.xList = self.pad()
-            self.xList = self.nrm()
+
+    def fix(self):
+        None
+
+    def pad(self):
+        None
+
+    def nrm(self):
+        None
+
+    def adj(self):
+        # 各関数で self.xList を更新する
+        self.get()
+        self.fix()
+        self.pad()
+        self.nrm()
         return self.xList
 
 class MoneyClass(XClass):
@@ -63,7 +62,7 @@ class MoneyClass(XClass):
         prizeList = db.getColDataFromTbl("race_result", "prize", "race_id", self.race_id)
         for i in range(len(prizeList)):
             prizeList[i] = str(prizeList[i])
-        return prizeList
+        self.xList = prizeList
     
     def fix(self):
         # 賞金リストをfloat変換する
@@ -75,7 +74,7 @@ class MoneyClass(XClass):
             else:
                 fm = m.replace(",","")
             moneyList.append(float(fm))
-        return moneyList
+        self.xList = moneyList
 
     def pad(self):
         # 賞金リスト拡張
@@ -84,7 +83,6 @@ class MoneyClass(XClass):
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(0)
-        return self.xList
 
     def nrm(self):
         # 賞金標準化
@@ -94,7 +92,7 @@ class MoneyClass(XClass):
         moneyNrmList = []
         for m in self.xList:
             moneyNrmList.append(m / money1st)
-        return moneyNrmList
+        self.xList = moneyNrmList
 
     def adj(self):
         return XClass.adj(self)
@@ -107,26 +105,20 @@ class HorseNumClass(XClass):
         super().set(race_id)
 
     def get(self):
-        self.xList = [db.getRowCnt("race_result", "race_id", self.race_id)]
+        self.xList = db.getRowCnt("race_result", "race_id", self.race_id)
 
     def fix(self):
-        self.xList = XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        self.xList = XClass.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 最大出走馬数で割って標準化
-        npcdList = np.array(self.xList)
-        npcdList = npcdList / XClass.pad_size
-        self.xList = npcdList.tolist()
+        self.xList = float(self.xList) / XClass.pad_size
 
     def adj(self):
-        self.get()
-        self.fix()
-        self.pad()
-        self.nrm()
-        return self.xList
+        return XClass.adj(self)
 
 class CourseConditionClass(XClass):
     def __init__(self):
@@ -144,13 +136,14 @@ class CourseConditionClass(XClass):
         sep1 = sep1.split("/")[0]
         # 良
         sep1 = sep1.replace(" ", "")
-        return sep1
+
+        self.xList = sep1
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        return XClass.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 馬場状態のone-hot表現(ただし良は全て0として表現する)
@@ -159,7 +152,7 @@ class CourseConditionClass(XClass):
         hot_idx = condition_dict[self.xList]
         if hot_idx != -1:
             condition_onehot[hot_idx] = 1
-        return condition_onehot
+        self.xList = condition_onehot
 
     def adj(self):
         return XClass.adj(self)
@@ -181,20 +174,20 @@ class CourseDistanceClass(XClass):
         sep1 = re.sub(r'\D', '', sep1)
         sep1 = sep1.replace(" ", "")
         # 他と統一するためリストにする
-        return [float(sep1)]
+        self.xList = [float(sep1)]
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        return XClass.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 最長距離で割って標準化
         MAX_DISTANCE = 3600.0
         npcdList = np.array(self.xList)
         npcdList = npcdList / MAX_DISTANCE
-        return npcdList.tolist()
+        self.xList = npcdList.tolist()
 
     def adj(self):
         return XClass.adj(self)
@@ -215,25 +208,22 @@ class RaceStartTimeClass(XClass):
         sep1 = sep1.split(" : ")[1]
         #  15:35
         sep1 = sep1.replace(" ", "")
-        # 他と統一するためリストにする
-        return [sep1]
+
+        self.xList = sep1
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        return XClass.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 発走時刻の数値化(時*60 + 分)と標準化
         # 遅い時間ほど馬場が荒れていることを表現する
-        minList = []
-        for i in self.xList:
-            t = i.split(":")
-            min = float(t[0])*60 + float(t[1])
-            # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
-            minList.append(min / 990 )
-        return minList
+        t = self.xList.split(":")
+        min = float(t[0])*60 + float(t[1])
+        # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
+        self.xList = min / 990 
 
     def adj(self):
         return XClass.adj(self)
@@ -252,13 +242,13 @@ class WeatherClass(XClass):
         sep1 = sep1.split("/")[0]
         # 晴 
         sep1 = sep1.replace(" ", "")
-        return sep1
+        self.xList = sep1
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        return XClass.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 天気のone-hot表現(ただし晴は全て0として表現する)
@@ -268,7 +258,7 @@ class WeatherClass(XClass):
         hot_idx = weather_dict[self.xList]
         if hot_idx != -1:
             weather_onehot[hot_idx] = 1
-        return weather_onehot
+        self.xList = weather_onehot
 
     def adj(self):
         return XClass.adj(self)
@@ -281,16 +271,19 @@ class HorseAgeClass(XClass):
         super().set(race_id)
 
     def get(self):
-        horseList = db.getColDataFromTbl("race_info", "horse_id", "race_id", self.race_id)
-        bdList = []
-        for horse_id in horseList:
-            data = db.horse_prof_getOneData(horse_id, "bod")
-            birthYear = int(data.split("年")[0])
-            birthMon = int(data.split("年")[1].split("月")[0])
-            birthDay = int(data.split("月")[1].split("日")[0])
-            d1 = date(birthYear, birthMon, birthDay)
-            bdList.append(d1)
-        return bdList
+        if self.race_id == '0':
+            logger.critical("ERROR : SET race_id")
+        else:
+            horseList = db.getColDataFromTbl("race_info", "horse_id", "race_id", self.race_id)
+            bdList = []
+            for horse_id in horseList:
+                data = db.horse_prof_getOneData(horse_id, "bod")
+                birthYear = int(data.split("年")[0])
+                birthMon = int(data.split("年")[1].split("月")[0])
+                birthDay = int(data.split("月")[1].split("日")[0])
+                d1 = date(birthYear, birthMon, birthDay)
+                bdList.append(d1)
+            self.xList = bdList
 
     def fix(self, d0):
         # 標準化の前に誕生日を日数表記にしておく
@@ -299,7 +292,7 @@ class HorseAgeClass(XClass):
             dy = relativedelta(d0, bdList[i])
             age = dy.years + (dy.months / 12.0) + (dy.days / 365.0)
             bdList[i] = age
-        return bdList
+        self.xList = bdList
 
     def pad(self):
         # 年齢リスト拡張
@@ -309,7 +302,6 @@ class HorseAgeClass(XClass):
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(mean_age)
-        return self.xList
 
     def nrm(self):
         # 馬年齢標準化
@@ -318,16 +310,13 @@ class HorseAgeClass(XClass):
         nHorseAgeList = np.array(self.xList)
         maxAge = np.max(nHorseAgeList)
         nHorseAgeList = nHorseAgeList / maxAge
-        return nHorseAgeList.tolist()
+        self.xList = nHorseAgeList.tolist()
 
     def adj(self, d0):
-        if self.race_id == '0':
-            logger.critical("ERROR : SET race_id")
-        else:
-            self.xList = self.get()
-            self.xList = HorseAgeClass.fix(self, d0)
-            self.xList = self.pad()
-            self.xList = self.nrm()
+        self.get()
+        self.fix(d0)
+        self.pad()
+        self.nrm()
         return self.xList
 
 class BurdenWeightClass(XClass):
@@ -341,10 +330,10 @@ class BurdenWeightClass(XClass):
         burdenWeightList = db.getColDataFromTbl("race_info", "burden_weight", "race_id", self.race_id)
         for i in range(len(burdenWeightList)):
             burdenWeightList[i] = float(burdenWeightList[i])
-        return burdenWeightList
+        self.xList = burdenWeightList
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
         # 斤量リスト拡張
@@ -354,7 +343,6 @@ class BurdenWeightClass(XClass):
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(mean_weight)
-        return self.xList
 
     def nrm(self):
         # 斤量の標準化
@@ -362,7 +350,7 @@ class BurdenWeightClass(XClass):
         SCALE_PARAMETER = 60
         n_weight_list = np.array(self.xList)
         n_weight_list = n_weight_list / SCALE_PARAMETER
-        return n_weight_list.tolist()
+        self.xList = n_weight_list.tolist()
 
     def adj(self):
         return XClass.adj(self)
@@ -378,10 +366,10 @@ class PostPositionClass(XClass):
         postPositionList = db.getColDataFromTbl("race_info", "post_position", "race_id", self.race_id)
         for i in range(len(postPositionList)):
             postPositionList[i] = float(postPositionList[i])
-        return postPositionList
+        self.xList = postPositionList
 
     def fix(self):
-        return XClass.fix(self)
+        XClass.fix(self)
 
     def pad(self):
         # 枠番リスト拡張
@@ -390,14 +378,13 @@ class PostPositionClass(XClass):
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(i%8+1)
-        return self.xList
 
     def nrm(self):
         # 枠番標準化
         # sigmoidで標準化
         nPostPositionList = np.array(self.xList)
         nPostPositionList = 1/(1+np.exp(nPostPositionList))
-        return nPostPositionList.tolist()
+        self.xList = nPostPositionList.tolist()
 
     def adj(self):
         return XClass.adj(self)
@@ -413,7 +400,7 @@ class JockeyClass(XClass):
         jockeyIDList = db.getColDataFromTbl("race_info", "jockey_id", "race_id", self.race_id)
         for i in range(len(jockeyIDList)):
             jockeyIDList[i] = str(jockeyIDList[i])
-        return jockeyIDList
+        self.xList = jockeyIDList
 
     def fix(self):
         # 騎手の総出場回数を求める
@@ -421,7 +408,7 @@ class JockeyClass(XClass):
         for i in range(len(jockeyIDList)):
             cnt = db.getRowCnt("race_info", "jockey_id", jockeyIDList[i])
             jockeyIDList[i] = cnt
-        return jockeyIDList
+        self.xList = jockeyIDList
 
     def pad(self):
         # 騎手ダミーデータ挿入
@@ -430,7 +417,6 @@ class JockeyClass(XClass):
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(50)
-        return self.xList
 
     def nrm(self):
         # 騎手標準化
@@ -438,7 +424,7 @@ class JockeyClass(XClass):
         njockeyList = np.array(self.xList)
         maxJockey = np.max(njockeyList)
         njockeyList = njockeyList / maxJockey
-        return njockeyList.tolist()
+        self.xList = njockeyList.tolist()
 
     def adj(self):
         return XClass.adj(self)
@@ -450,17 +436,20 @@ class CumPerformClass(XClass):
     def set(self, race_id):
         super().set(race_id)
 
-    def get(self):
-        # race_id に出場した馬のリストを取得
-        # 各馬の以下情報を取得、fixでパフォーマンスを計算する
-        horse_list = db.getRecordDataFromTbl("race_info", "race_id", self.race_id)
+    def getForCalcPerformInfo(self, horse_list):
         col = ["horse_id", "venue", "time", "burden_weight", "course_condition", "distance", "grade"]
         horse_info_list = []
         for horse in horse_list:
             # horse のcolレコードを取得
             race = db.getMulCol("race_info", col, "horse_id", horse)
             horse_info_list.append(race)
-        return horse_info_list
+        self.xList = horse_info_list
+
+    def get(self):
+        # race_id に出場した馬のリストを取得
+        # 各馬の以下情報を取得、fixでパフォーマンスを計算する
+        horse_list = db.getRecordDataFromTbl("race_info", "race_id", self.race_id)
+        self.getForCalcPerformInfo(horse_list)
 
     def getStandardTime(self, distance, condition, track, location):
         # レースコースの状態に依存する基準タイム(秒)を計算して返す
@@ -552,17 +541,16 @@ class CumPerformClass(XClass):
 
             max_performance_list.append(max_performance)
 
-        return max_performance_list
+        self.xList = max_performance_list
 
     def pad(self):
         exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(0)
-        return self.xList
 
     def nrm(self):
-        return XClass.nrm(self)
+        XClass.nrm(self)
 
     def adj(self):
         return XClass.adj(self)
@@ -578,7 +566,7 @@ class MarginClass(XClass):
         marginList = db.getColDataFromTbl("race_result", "margin", "race_id", self.race_id)
         for i in range(len(marginList)):
             marginList[i] = str(marginList[i])
-        return marginList
+        self.xList = marginList
 
     def fix(self):
         # 着差をfloatにして返す
@@ -621,7 +609,7 @@ class MarginClass(XClass):
             else:
                 time += marginDict[margin]
             retList.append(time)
-        return retList
+        self.xList = retList
 
     def pad(self):
         # 着差リスト拡張
@@ -633,7 +621,6 @@ class MarginClass(XClass):
             for i in range(exSize):
                 lastMargin += HANA
                 self.xList.append(lastMargin)
-        return self.xList
 
     def nrm(self):
         # 着差標準化
@@ -643,7 +630,7 @@ class MarginClass(XClass):
         # リストを逆順にする。元のリストを破壊するため注意。
         # 戻り値はNoneであることも注意
         y.reverse()
-        return y
+        self.xList = y
 
     def adj(self):
         return XClass.adj(self)

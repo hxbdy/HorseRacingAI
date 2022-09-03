@@ -23,26 +23,11 @@ import common.debug
 from common.getFromDB import *
 from common.XClass import *
 
+# 学習テーブル, 教師テーブル取得
+from table import XTbl
+from table import tTbl
+
 if __name__ == "__main__":
-
-    # 入力用テーブル
-    XTbl = [
-        HorseNumClass,
-        CourseConditionClass,
-        CourseDistanceClass,
-        RaceStartTimeClass,
-        WeatherClass,
-        HorseAgeClass,
-        BurdenWeightClass,
-        PostPositionClass,
-        JockeyClass,
-        CumPerformClass
-    ]
-
-    # 正解用テーブル
-    tTbl = [
-        MarginClass
-    ]
 
     # start_year <= data <= end_year のレースから取得する
     start_year = 1986
