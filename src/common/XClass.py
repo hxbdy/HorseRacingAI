@@ -461,7 +461,7 @@ class CumPerformClass(XClass):
         track_dict = {'芝':-1.2514, 'ダ': 1.2514}
         loc_dict = {'札幌':1.1699, '函館':0.3113, '福島':-0.3205, '新潟':-0.2800, '東京':-0.8914,\
              '中山':0.2234, '中京':0.1815, '京都':-0.1556, '阪神':-0.4378, '小倉':0.1994, 'Other':0}
-
+        
         std_time = dis_coef*distance + cond_dict[condition] + track_dict[track] + loc_dict[location] + intercept
         return std_time
 
@@ -506,8 +506,11 @@ class CumPerformClass(XClass):
                     burden_weight = 40
                 # 馬場状態を取得
                 condition = horse_info[COURSE_CONDITION]
-                # 競馬場を取得
-                location = horse_info[VENUE]
+                # condition が空なら良にしておく
+                if condition == '':
+                    condition = '良'
+                # 競馬場を取得 '3小倉8' のような数字が入っていることがあるので数字を削除
+                location = re.sub(r'[0-9]+', '', horse_info[VENUE])
                 if location not in loc_list:
                     location = "Other"
                 # 芝かダートか
