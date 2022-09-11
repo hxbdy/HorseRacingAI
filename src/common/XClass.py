@@ -95,7 +95,9 @@ class MoneyClass(XClass):
         self.xList = moneyNrmList
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("Money adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class HorseNumClass(XClass):
     def __init__(self):
@@ -115,10 +117,12 @@ class HorseNumClass(XClass):
 
     def nrm(self):
         # 最大出走馬数で割って標準化
-        self.xList = float(self.xList) / XClass.pad_size
+        self.xList = [float(self.xList) / XClass.pad_size]
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("HorseNum adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class CourseConditionClass(XClass):
     def __init__(self):
@@ -155,7 +159,9 @@ class CourseConditionClass(XClass):
         self.xList = condition_onehot
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("CourseCondition adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class CourseDistanceClass(XClass):
     def __init__(self):
@@ -190,7 +196,9 @@ class CourseDistanceClass(XClass):
         self.xList = npcdList.tolist()
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("CourseDistance adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class RaceStartTimeClass(XClass):
     def __init__(self):
@@ -223,10 +231,12 @@ class RaceStartTimeClass(XClass):
         t = self.xList.split(":")
         min = float(t[0])*60 + float(t[1])
         # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
-        self.xList = min / 990 
+        self.xList = [min / 990]
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("RaceStartTime adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class WeatherClass(XClass):
     def __init__(self):
@@ -261,7 +271,9 @@ class WeatherClass(XClass):
         self.xList = weather_onehot
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("Weather adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class HorseAgeClass(XClass):
     def __init__(self):
@@ -317,6 +329,7 @@ class HorseAgeClass(XClass):
         self.fix(d0)
         self.pad()
         self.nrm()
+        logger.debug("HorseAge adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class BurdenWeightClass(XClass):
@@ -353,7 +366,9 @@ class BurdenWeightClass(XClass):
         self.xList = n_weight_list.tolist()
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("BurdenWeight adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class PostPositionClass(XClass):
     def __init__(self):
@@ -387,7 +402,9 @@ class PostPositionClass(XClass):
         self.xList = nPostPositionList.tolist()
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("PostPosition adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class JockeyClass(XClass):
     def __init__(self):
@@ -427,7 +444,9 @@ class JockeyClass(XClass):
         self.xList = njockeyList.tolist()
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("Jockey adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class CumPerformClass(XClass):
     def __init__(self):
@@ -556,7 +575,9 @@ class CumPerformClass(XClass):
         XClass.nrm(self)
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("CumPerform adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 class MarginClass(XClass):
     def __init__(self):
@@ -636,7 +657,9 @@ class MarginClass(XClass):
         self.xList = y
 
     def adj(self):
-        return XClass.adj(self)
+        self.xList = XClass.adj(self)
+        logger.debug("Margin adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
 
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
@@ -667,8 +690,6 @@ class MgrClass:
 
     # 標準化を行ったリストを1次元化して返す
     def get(self):
-        logger.debug("X = {0}".format(self.x))
-        logger.debug("t = {0}".format(self.t))
         return list(deepflatten(self.x)), list(deepflatten(self.t))
 
     # 各要素(天気, 賞金, etc...) を標準化まで行う

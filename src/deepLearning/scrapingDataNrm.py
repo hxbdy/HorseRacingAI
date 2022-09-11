@@ -29,9 +29,13 @@ from table import tTbl
 
 if __name__ == "__main__":
 
+    # log出力ファイルのクリア
+    with open(log_file_path, mode = 'w'):
+        pass
+
     # start_year <= data <= end_year のレースから取得する
-    start_year = 1986
-    end_year   = 1986
+    start_year = 1800
+    end_year   = 2020
     totalList = MgrClass(start_year, end_year, XTbl, tTbl)
     train_x, train_t = totalList.getTotalList()
 
