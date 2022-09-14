@@ -1,19 +1,27 @@
 import logging
+import os
+
+# log フォーマット
+output_format = '%(asctime)s %(filename)s [%(levelname)s] %(message)s'
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# DEBUG ログを無効
-logging.disable(logging.DEBUG)
+# コンソール用ハンドラ作成
+handler1 = logging.StreamHandler()
+# コンソール出力するログレベルの設定
+handler1.setLevel(logging.INFO)
+handler1.setFormatter(logging.Formatter(output_format))
 
-# INFO レベル以下のログを無効
-# logging.disable(logging.INFO)
+# ファイル出力用ハンドラ作成
+log_file_path = "./dst/output.log"
+handler2 = logging.FileHandler(filename=log_file_path)
+# ファイル出力するログレベルの設定
+handler2.setLevel(logging.DEBUG)
+handler2.setFormatter(logging.Formatter(output_format))
 
-# WARNING レベル以下のログを無効
-# logging.disable(logging.WARNING)
-
-# ERROR レベル以下のログを無効
-# logging.disable(logging.ERROR)
+#loggerに2つのハンドラを設定
+logger.addHandler(handler1)
+logger.addHandler(handler2)

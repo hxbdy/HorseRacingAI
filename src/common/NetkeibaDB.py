@@ -14,6 +14,7 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 from common.debug import *
+
 class NetkeibaDB:
     def __init__(self):
         logger.info("Database loading")
@@ -74,10 +75,11 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
-    def getDistinctCol(self, table_name, col_name):
+    def getDistinctCol(self, table_name, col_name, lower, upper):
         # 指定列のデータを全て取得しリストで返す
         # ただし重複データは1つになる
-        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + ";"
+        # 検索範囲 lower <= data <= upper
+        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE " + col_name + " <= \""+ upper +"\" AND " + col_name + " >= \""+ lower + "\";"
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():
@@ -93,3 +95,4 @@ class NetkeibaDB:
             retList.append(i)
         return retList
     
+db = NetkeibaDB()

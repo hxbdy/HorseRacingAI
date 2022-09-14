@@ -12,7 +12,7 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-OUTPUT_PATH = str(root_dir) + "\\dst\\traindParam\\"
+OUTPUT_PATH = str(root_dir) + "\\dst\\trainedParam\\"
 class TowLayerNet:
     def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
         self.params={}

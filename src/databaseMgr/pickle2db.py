@@ -1,4 +1,4 @@
-# ./dst/scrapingResult/horsedb.pickle, racedb.pickle から
+# ./dst/scrapingResult/horsedb.pickle, racedb.pickle, raceGradedb.pickle から
 # ./dst/netkeibaDB/netkeiba.db へ変換する
 # テーブルの形については ./doc/テーブル.txt 参照
 
