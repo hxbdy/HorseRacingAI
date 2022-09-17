@@ -378,7 +378,7 @@ class PostPositionClass(XClass):
         super().set(race_id)
 
     def get(self):
-        postPositionList = db.getColDataFromTbl("race_info", "post_position", "race_id", self.race_id)
+        postPositionList = db.getMulColOrderByHorseNum(["race_info.post_position"], "race_info.race_id", self.race_id)
         for i in range(len(postPositionList)):
             postPositionList[i] = float(postPositionList[i])
         self.xList = postPositionList
@@ -414,7 +414,7 @@ class JockeyClass(XClass):
         super().set(race_id)
 
     def get(self):
-        jockeyIDList = db.getColDataFromTbl("race_info", "jockey_id", "race_id", self.race_id)
+        jockeyIDList = db.getMulColOrderByHorseNum(["race_info.jockey_id"], "race_info.race_id", self.race_id)
         for i in range(len(jockeyIDList)):
             jockeyIDList[i] = str(jockeyIDList[i])
         self.xList = jockeyIDList
@@ -467,7 +467,7 @@ class CumPerformClass(XClass):
     def get(self):
         # race_id に出場した馬のリストを取得
         # 各馬の以下情報を取得、fixでパフォーマンスを計算する
-        horse_list = db.getRecordDataFromTbl("race_info", "race_id", self.race_id)
+        horse_list = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
         self.getForCalcPerformInfo(horse_list)
 
     def getStandardTime(self, distance, condition, track, location):
