@@ -340,7 +340,7 @@ class BurdenWeightClass(XClass):
         super().set(race_id)
 
     def get(self):
-        burdenWeightList = db.getColDataFromTbl("race_info", "burden_weight", "race_id", self.race_id)
+        burdenWeightList = db.getMulColOrderByHorseNum(["race_info.burden_weight"], "race_info.race_id", self.race_id)
         for i in range(len(burdenWeightList)):
             burdenWeightList[i] = float(burdenWeightList[i])
         self.xList = burdenWeightList
