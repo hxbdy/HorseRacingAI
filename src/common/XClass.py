@@ -669,21 +669,21 @@ class RankOneHotClass(XClass):
         super().set(race_id)
 
     def get(self):
-        marginList = db.getColDataFromTbl("race_result", "margin", "race_id", self.race_id)
-        for i in range(len(marginList)):
-            marginList[i] = str(marginList[i])
-        self.xList = marginList
+        rankList = db.getMulColOrderByHorseNum(["race_info.result"], "race_info.race_id", self.race_id)
+        for i in range(len(rankList)):
+            rankList[i] = str(rankList[i])
+        self.xList = rankList
 
     def fix(self):
         retList = []
-        # one-hotラベルを作成するので
-        # 0, または 2 つ以上 1 の要素が存在しないように
-        # ガードするためのフラグ
+        # 順位で one-hot ラベルを作成する
+        # 1st = 1, else = 0
+
+        # 同着1位をガードするためのフラグ
         flg = True
         for i in range(len(self.xList)):
-            margin = self.xList[i]
-            # 着差が空欄 = 1位
-            if margin == '':
+            rank = self.xList[i]
+            if rank == '1':
                 if flg:
                     flg = False
                     retList.append(1)

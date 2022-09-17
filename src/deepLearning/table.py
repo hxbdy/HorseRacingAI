@@ -42,6 +42,8 @@ predict_XTbl = [
 ]
 
 # 正解用テーブル
+# !! 1つしか入れないで !!
 tTbl = [
-    MarginClass
+    RankOneHotClass # 1位のOne-Hot表現
+    # MarginClass   # 着差標準化
 ]
