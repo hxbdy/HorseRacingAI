@@ -286,7 +286,7 @@ class HorseAgeClass(XClass):
         if self.race_id == '0':
             logger.critical("ERROR : SET race_id")
         else:
-            horseList = db.getColDataFromTbl("race_info", "horse_id", "race_id", self.race_id)
+            horseList = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
             bdList = []
             for horse_id in horseList:
                 data = db.horse_prof_getOneData(horse_id, "bod")
