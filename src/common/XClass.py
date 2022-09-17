@@ -661,6 +661,60 @@ class MarginClass(XClass):
         logger.debug("Margin adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
+class RankOneHotClass(XClass):
+    def __init__(self):
+        super().__init__()
+    
+    def set(self, race_id):
+        super().set(race_id)
+
+    def get(self):
+        marginList = db.getColDataFromTbl("race_result", "margin", "race_id", self.race_id)
+        for i in range(len(marginList)):
+            marginList[i] = str(marginList[i])
+        self.xList = marginList
+
+    def fix(self):
+        retList = []
+        # one-hotラベルを作成するので
+        # 0, または 2 つ以上 1 の要素が存在しないように
+        # ガードするためのフラグ
+        flg = True
+        for i in range(len(self.xList)):
+            margin = self.xList[i]
+            # 着差が空欄 = 1位
+            if margin == '':
+                if flg:
+                    flg = False
+                    retList.append(1)
+                else:
+                    # 1位が複数いる
+                    # ここには入らない想定
+                    logger.error("Duplicate 1st place one-hot label")
+            else:
+                retList.append(0)
+        if flg:
+            # 1位を見つけられなかった
+            # ここには入らない想定
+            logger.critical("1st place label is not exist")
+        self.xList = retList
+
+    def pad(self):
+        # リスト拡張
+        # ダミーデータ：0
+        exSize   = self.pad_size - len(self.xList)
+        if exSize > 0:
+            for i in range(exSize):
+                self.xList.append(0)
+
+    def nrm(self):
+        XClass.nrm(self)
+
+    def adj(self):
+        self.xList = XClass.adj(self)
+        logger.debug("RankOneHot adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
+
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl):
