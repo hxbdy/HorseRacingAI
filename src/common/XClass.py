@@ -24,6 +24,10 @@ class XClass:
     race_id = '0'
     pad_size = 24
 
+    # final : データを全て取得したあとに標準化を行う
+    # every : データ取得毎に標準化を行う
+    nrm_flg = "final"
+
     def __init__(self):
         self.xList = []
         
@@ -48,7 +52,8 @@ class XClass:
         self.get()
         self.fix()
         self.pad()
-        self.nrm()
+        if XClass.nrm_flg == "every":
+            self.nrm()
         return self.xList
 
 class MoneyClass(XClass):
@@ -107,7 +112,7 @@ class HorseNumClass(XClass):
         super().set(race_id)
 
     def get(self):
-        self.xList = db.getRowCnt("race_result", "race_id", self.race_id)
+        self.xList = [db.getRowCnt("race_result", "race_id", self.race_id)]
 
     def fix(self):
         XClass.fix(self)
@@ -117,7 +122,7 @@ class HorseNumClass(XClass):
 
     def nrm(self):
         # 最大出走馬数で割って標準化
-        self.xList = [float(self.xList) / XClass.pad_size]
+        self.xList = [float(self.xList[0]) / XClass.pad_size]
 
     def adj(self):
         self.xList = XClass.adj(self)
@@ -144,12 +149,6 @@ class CourseConditionClass(XClass):
         self.xList = sep1
 
     def fix(self):
-        XClass.fix(self)
-
-    def pad(self):
-        XClass.pad(self)
-
-    def nrm(self):
         # 馬場状態のone-hot表現(ただし良は全て0として表現する)
         condition_dict = {'良':-1, '稍重':0, '重':1, '不良':2}
         condition_onehot = [0] * 3
@@ -157,6 +156,12 @@ class CourseConditionClass(XClass):
         if hot_idx != -1:
             condition_onehot[hot_idx] = 1
         self.xList = condition_onehot
+
+    def pad(self):
+        XClass.pad(self)
+
+    def nrm(self):
+        XClass.nrm(self)
 
     def adj(self):
         self.xList = XClass.adj(self)
@@ -220,18 +225,18 @@ class RaceStartTimeClass(XClass):
         self.xList = sep1
 
     def fix(self):
-        XClass.fix(self)
+        # 発走時刻の数値化(時*60 + 分)
+        t = self.xList.split(":")
+        min = float(t[0])*60 + float(t[1])
+        self.xList = [min]
 
     def pad(self):
         XClass.pad(self)
 
     def nrm(self):
-        # 発走時刻の数値化(時*60 + 分)と標準化
         # 遅い時間ほど馬場が荒れていることを表現する
-        t = self.xList.split(":")
-        min = float(t[0])*60 + float(t[1])
         # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
-        self.xList = [min / 990]
+        self.xList = [self.xList[0] / 990]
 
     def adj(self):
         self.xList = XClass.adj(self)
@@ -255,12 +260,6 @@ class WeatherClass(XClass):
         self.xList = sep1
 
     def fix(self):
-        XClass.fix(self)
-
-    def pad(self):
-        XClass.pad(self)
-
-    def nrm(self):
         # 天気のone-hot表現(ただし晴は全て0として表現する)
         # 出現する天気は6種類
         weather_dict = {'晴':-1, '曇':0, '小雨':1, '雨':2, '小雪':3, '雪':4}
@@ -269,6 +268,12 @@ class WeatherClass(XClass):
         if hot_idx != -1:
             weather_onehot[hot_idx] = 1
         self.xList = weather_onehot
+
+    def pad(self):
+        XClass.pad(self)
+
+    def nrm(self):
+        XClass.nrm(self)
 
     def adj(self):
         self.xList = XClass.adj(self)
@@ -328,7 +333,8 @@ class HorseAgeClass(XClass):
         self.get()
         self.fix(d0)
         self.pad()
-        self.nrm()
+        if XClass.nrm_flg == "every":
+            self.nrm()
         logger.debug("HorseAge adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
@@ -772,6 +778,14 @@ class MgrClass:
                 elif func in self.tclassTbl:
                     self.t.append(instance.adj())
 
+    # x 一括標準化
+    def zscore(self):
+        x = np.array(self.totalXList)
+        xmean = x.mean(axis=0, keepdims=True)
+        xstd = np.std(x, axis=0, keepdims=True)
+        xzscore = (x - xmean) / (xstd + 1e-10)
+        self.totalXList = xzscore.tolist()
+
     def getTotalList(self):
         # 進捗確認カウンタ
         comp_cnt = 1
@@ -796,6 +810,11 @@ class MgrClass:
             x_tmp, t_tmp = self.get()
             self.totalXList.append(x_tmp)
             self.totaltList.append(t_tmp)
+
+        # 一括標準化
+        if XClass.nrm_flg == "final":
+            self.zscore()
+            logger.debug("total zscore : {0}".format(self.totalXList))
         
         return self.totalXList, self.totaltList
             
