@@ -105,8 +105,8 @@ class SoftmaxWithLoss:
         return self.loss
 
     def backward(self, dout=1):
-        batch_size = self.t.shape[0]
-        dx = (-self.y * (self.y -1) * (self.y - self.t)) / batch_size
+        # batch_size = self.t.shape[0]
+        dx = (self.y - self.t) #/ batch_size
         return dx
 class TowLayerNet:
     def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
