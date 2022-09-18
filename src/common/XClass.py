@@ -572,7 +572,10 @@ class CumPerformClass(XClass):
                 self.xList.append(0)
 
     def nrm(self):
-        XClass.nrm(self)
+        # sigmoidで標準化
+        nPerformList = np.array(self.xList)
+        nPerformList = 1/(1+np.exp(nPerformList))
+        self.xList = nPerformList.tolist()
 
     def adj(self):
         self.xList = XClass.adj(self)
