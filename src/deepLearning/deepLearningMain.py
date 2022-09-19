@@ -19,10 +19,10 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 with open(str(root_dir) + "\\dst\\learningList\\t.pickle", 'rb') as f:
-    tData = pickle.load(f)
+    tData = np.array(pickle.load(f))
 
 with open(str(root_dir) + "\\dst\\learningList\\x.pickle", 'rb') as f:
-    xData = pickle.load(f)
+    xData = np.array(pickle.load(f))
 
 net = TwoLayerNet.TowLayerNet(131,50,24)
 
@@ -31,12 +31,10 @@ loss = []
 for i in range(iters_num):
 
     # 学習データ取り出し
-    batch = np.random.randint(0, 4326)
-    
-    x = np.array(xData[batch])
+    batch = np.random.randint(0, xData.shape[0])
+    x = xData[batch]
     x = x.reshape([1, -1])
-
-    t = np.array(tData[batch])
+    t = tData[batch]
 
     # 勾配計算
     grad = net.gradient(x,t)
