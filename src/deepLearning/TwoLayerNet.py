@@ -16,8 +16,11 @@ for dir_name in dir_lst:
 OUTPUT_PATH = str(root_dir) + "\\dst\\trainedParam\\"
 
 def softmax(x):
-    x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策
-    return np.exp(x) / np.sum(np.exp(x), axis=-1, keepdims=True)
+    c = np.max(x)
+    exp_a = np.exp(x - c)
+    sum_exp_a = np.sum(exp_a)
+    y = exp_a / sum_exp_a
+    return y
 
 def sum_squared_error(y, t):
     return 0.5 * np.sum((y-t)**2)
@@ -87,6 +90,20 @@ class Affine:
         dx = np.dot(dout, self.W.T)
         self.dW = np.dot(self.x.T, dout)
         self.db = np.sum(dout, axis=0)
+
+        return dx
+
+class Sigmoid:
+    def __init__(self):
+        self.out = None
+
+    def forward(self, x):
+        out = 1 / (1 + np.exp(-x))
+        self.out = out
+        return out
+
+    def backward(self, dout):
+        dx = dout * (1.0 - self.out) * self.out
 
         return dx
 
