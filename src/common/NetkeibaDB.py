@@ -100,12 +100,21 @@ class NetkeibaDB:
         # SQLite はレコードの順序保証はないため、馬番で昇順ソートを行う
         # 順序保証が必要な場合この関数を使用すること
         # target_col_list : 取得したい列。テーブル名から明記すること。 ex : ["race_info.result"]
-        # hint_col        : 検索条件の列名。テーブル名から明記すること。 ex : ["race_info.race_id"]
+        # hint_col        : 検索条件の列名。テーブル名から明記すること。 ex : "race_info.race_id"
         # data            : 検索条件のデータ。 hint_col 列から一致したdataのある行のみ取り出すことになる。
 
         # race_info.horse_number に +0 してあるのはテーブルの管理上 文字列の列を数値にキャストするため
         sql = "SELECT " + ','.join(target_col_list) + " FROM race_info INNER JOIN race_result ON (race_result.race_id = race_info.race_id AND race_result.horse_id = race_info.horse_id) WHERE " + hint_col + " = ? ORDER BY race_info.horse_number + 0;"
         self.cur.execute(sql, [data])
+        retList = []
+        for i in self.cur.fetchall():
+            retList.append(i[0])
+        return retList
+
+    def getRaceIdFromHorseId(self, horse1, horse2):
+        # horse1, horse2 両方が出たレースIDを返す
+        sql = "SELECT race_info.race_id FROM (SELECT horse_id, race_id, result, COUNT(race_id) AS CNT FROM race_info WHERE (horse_id=? OR horse_id=?) GROUP BY race_id) AS race_sum INNER JOIN race_info ON race_info.horse_id = race_sum.horse_id AND race_info.race_id = race_sum.race_id AND race_sum.CNT > 1;"
+        self.cur.execute(sql, [horse1, horse2])
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])

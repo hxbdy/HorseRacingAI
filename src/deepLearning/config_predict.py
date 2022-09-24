@@ -69,6 +69,11 @@ class PredictCumPerformClass(CumPerformClass):
         # horse_id
         horse_list = ["1983103914", "1983104782"]
         self.getForCalcPerformInfo(horse_list)
+class PredictBradleyTerryClass(BradleyTerryClass):
+    def get(self):
+        # horse_id
+        self.xList = ["1983103914", "1983104782"]
+        self.col_num = len(self.xList)
 
 # レース開催日
 d0 = date(2022, 9, 1)

@@ -24,7 +24,8 @@ XTbl = [
     BurdenWeightClass,
     PostPositionClass,
     JockeyClass,
-    CumPerformClass
+    CumPerformClass,
+    BradleyTerryClass,
 ]
 
 # 推論時の入力用テーブル
@@ -38,7 +39,7 @@ predict_XTbl = [
     PredictBurdenWeightClass,
     PredictPostPositionClass,
     PredictJockeyClass,
-    PredictCumPerformClass
+    PredictBradleyTerryClass,
 ]
 
 # 正解用テーブル

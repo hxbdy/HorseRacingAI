@@ -26,7 +26,7 @@ class XClass:
 
     # final : データを全て取得したあとに標準化を行う
     # every : データ取得毎に標準化を行う
-    nrm_flg = "final"
+    nrm_flg = "every"
 
     def __init__(self):
         self.xList = []
@@ -670,6 +670,112 @@ class MarginClass(XClass):
         logger.debug("Margin adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
+class BradleyTerryClass(XClass):
+    # 対戦表を作り、そこから強さを推定する
+    # 出馬のリストを作成 ex:10頭出るレースの場合
+    # race_result[10][10]
+    # 1v1の対戦結果を格納していく
+    # horse[0-10]:
+    #  a = horse[0] vs horse[1] の試合数
+    #  b = aの勝利数
+    #  race_result[0][1] = horse[1]との勝利数
+    #  race_result[1][0] = horse[1]との敗北数
+    #  ...
+    # それぞれの勝利数、敗北数を埋めたテーブルから強さを算出する
+    # 20回ほど繰り返して精度を上げる
+    # 尤度初期値 1
+    # ex : p[0] = (合計勝利数) / sum((race_result[0][1] + race_result[1][0]/(p[0] + p[1])) , ... )
+    # 1. 出場する馬一覧の2Dテーブルを作る
+    # 2. 指定の2頭が出たレース一覧を取得
+    # 3. 2.のレース情報からそれぞれ何勝何敗かを求める
+    # 4. 3.の情報で1.のテーブルを埋める
+    # 5. それぞれの強さを算出する
+    def __init__(self):
+        super().__init__()
+    
+    def set(self, race_id):
+        super().set(race_id)
+
+    def get(self):
+        self.xList = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        self.col_num = len(self.xList)
+
+    def getRankFromDB(self, race_id, horse_id):
+        # race_id で horse_id は何位だったか取得
+        val = db.race_info_getOneData(race_id, horse_id, "result")
+        if val.isdigit():
+            rank = int(val)
+        else:
+            # '除'などが稀に入っているため、そのときはビリ扱いとする
+            rank = self.col_num
+        return rank
+
+    def gen_wl_table(self):
+        # 馬数x馬数の対戦表作成
+        self.wl_table = [[-1 for j in range(self.col_num)] for i in range(self.col_num)]
+
+        for y in range(self.col_num):
+            horse_y = self.xList[y]
+            start_x = y + 1
+            for x in range(start_x, self.col_num):
+                win = 0
+                lose = 0
+                horse_x = self.xList[x]
+                races = db.getRaceIdFromHorseId(horse_y, horse_x)
+                for race in races:
+                    # race で horse_x, y は何位だったか取得
+                    rank_y = self.getRankFromDB(race, horse_y)
+                    rank_x = self.getRankFromDB(race, horse_x)
+                    # 勝敗
+                    if rank_y < rank_x:
+                        win += 1
+                    else:
+                        lose += 1
+                self.wl_table[y][x] = win
+                self.wl_table[x][y] = lose        
+
+    def calcPower(self):
+        self.gen_wl_table()
+        self.p = [1 for i in range(self.col_num)]
+        for i in range(20):
+            self.calcFrac()
+            self.p_div()
+
+    def calcFrac(self):
+        for y in range(self.col_num):
+            w = 0 # 分子
+            b = 0 # 分母
+            for x in range(self.col_num):
+                if self.wl_table[y][x] != -1:
+                    w += self.wl_table[y][x]
+                    b += float((self.wl_table[y][x] + self.wl_table[x][y]) / (self.p[y] + self.p[x]))
+            self.p[y] = float(w / b)
+
+    def p_div(self):
+        sum_p = sum(self.p)
+        for i in range(self.col_num):
+            self.p[i] /= sum_p
+
+    def fix(self):
+        self.calcPower()
+        self.xList = self.p
+
+    def pad(self):
+        # リスト拡張
+        # ダミーデータ：0
+        exSize   = self.pad_size - len(self.xList)
+        if exSize > 0:
+            for i in range(exSize):
+                self.xList.append(0)
+        
+    def nrm(self):
+        XClass.nrm(self)
+
+    def adj(self):
+        self.xList = XClass.adj(self)
+        logger.debug("BradleyTerryClass adj (len : {0}) = {1}".format(len(self.xList), self.xList))
+        return self.xList
+
 class RankOneHotClass(XClass):
     def __init__(self):
         super().__init__()
@@ -778,8 +884,9 @@ class MgrClass:
                 elif func in self.tclassTbl:
                     self.t.append(instance.adj())
 
-    # x 一括標準化
     def zscore(self):
+        # x 一括標準化
+        # 各列で標準化する
         x = np.array(self.totalXList)
         xmean = x.mean(axis=0, keepdims=True)
         xstd = np.std(x, axis=0, keepdims=True)
