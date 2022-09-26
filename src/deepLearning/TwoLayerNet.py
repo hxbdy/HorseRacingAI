@@ -16,11 +16,8 @@ for dir_name in dir_lst:
 OUTPUT_PATH = str(root_dir) + "\\dst\\trainedParam\\"
 
 def softmax(x):
-    c = np.max(x)
-    exp_a = np.exp(x - c)
-    sum_exp_a = np.sum(exp_a)
-    y = exp_a / sum_exp_a
-    return y
+    x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策
+    return np.exp(x) / np.sum(np.exp(x), axis=-1, keepdims=True)
 
 def sum_squared_error(y, t):
     return 0.5 * np.sum((y-t)**2)
@@ -72,16 +69,21 @@ class Relu:
 
 class Affine:
     def __init__(self, W, b):
-        self.W =W
+        self.W = W
         self.b = b
-
+        
         self.x = None
+        self.original_x_shape = None
         # 重み・バイアスパラメータの微分
         self.dW = None
         self.db = None
 
     def forward(self, x):
+        # テンソル対応
+        self.original_x_shape = x.shape
+        x = x.reshape(x.shape[0], -1)
         self.x = x
+
         out = np.dot(self.x, self.W) + self.b
 
         return out
@@ -90,7 +92,8 @@ class Affine:
         dx = np.dot(dout, self.W.T)
         self.dW = np.dot(self.x.T, dout)
         self.db = np.sum(dout, axis=0)
-
+        
+        dx = dx.reshape(*self.original_x_shape)  # 入力データの形状に戻す（テンソル対応）
         return dx
 
 class Sigmoid:
@@ -122,8 +125,14 @@ class SoftmaxWithLoss:
         return self.loss
 
     def backward(self, dout=1):
-        # batch_size = self.t.shape[0]
-        dx = (self.y - self.t) #/ batch_size
+        batch_size = self.t.shape[0]
+        if self.t.size == self.y.size: # 教師データがone-hot-vectorの場合
+            dx = (self.y - self.t) / batch_size
+        else:
+            dx = self.y.copy()
+            dx[np.arange(batch_size), self.t] -= 1
+            dx = dx / batch_size
+        
         return dx
 class TowLayerNet:
     def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
@@ -207,6 +216,14 @@ class TowLayerNet:
         for layer in self.layers.values():
             x = layer.forward(x)
         return x
+
+    def accuracy(self, x, t):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        if t.ndim != 1 : t = np.argmax(t, axis=1)
+        
+        accuracy = np.sum(y == t) / float(x.shape[0])
+        return accuracy
 
     def loss(self,x,t):
         y=self.predict(x)

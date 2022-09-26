@@ -1,6 +1,7 @@
 # AI 学習用データの作成
 # DB からデータを標準化し、学習データX と 教師データt の対となるリストを作成する
 # 出力先 ./dst/learningList/X.pickle, t.pickle
+# > python ./src/deepLearning/scrapingDataNrm.py
 
 import pickle
 import sys
