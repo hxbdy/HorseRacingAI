@@ -34,10 +34,8 @@ if __name__ == "__main__":
     with open(log_file_path, mode = 'w'):
         pass
 
-    # start_year <= data <= end_year のレースから取得する
-    start_year = 1800
-    end_year   = 2020
-    totalList = MgrClass(start_year, end_year, XTbl, tTbl)
+    # start_year <= data <= end_year のレースから limit 件取得する
+    totalList = MgrClass(start_year = 1800, end_year = 2020, XclassTbl = XTbl, tclassTbl = tTbl, limit = -1)
     train_x, train_t = totalList.getTotalList()
 
     # 書き込み

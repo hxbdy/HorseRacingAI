@@ -832,7 +832,7 @@ class RankOneHotClass(XClass):
 
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
-    def __init__(self, start_year, end_year, XclassTbl, tclassTbl):
+    def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):
         self.XclassTbl = XclassTbl
         self.tclassTbl = tclassTbl
 
@@ -847,7 +847,7 @@ class MgrClass:
         self.race_date = 0
 
         # yearまでの総 race_id, レース数取得 (year年含む)
-        self.totalRaceList = getTotalRaceList(start_year, end_year)
+        self.totalRaceList = getTotalRaceList(start_year, end_year, limit)
         self.totalRaceNum  = len(self.totalRaceList)
 
     # race_id と 開催日 をクラスで保持する
@@ -859,7 +859,8 @@ class MgrClass:
 
     # 標準化を行ったリストを1次元化して返す
     def get(self):
-        return list(deepflatten(self.x)), list(deepflatten(self.t))
+        # 挿げ替えを後で行う機能のため、ここではフラット化を行わない
+        return self.x, self.t
 
     # 各要素(天気, 賞金, etc...) を標準化まで行う
     # XTble で用意されたクラスごとに標準化を順に実行する
@@ -915,8 +916,8 @@ class MgrClass:
 
             # 成果リストにアペンド
             x_tmp, t_tmp = self.get()
-            self.totalXList.append(x_tmp)
-            self.totaltList.append(t_tmp)
+            self.totalXList.extend(x_tmp)
+            self.totaltList.extend(t_tmp)
 
         # 一括標準化
         if XClass.nrm_flg == "final":
