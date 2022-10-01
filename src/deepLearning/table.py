@@ -28,6 +28,21 @@ XTbl = [
     BradleyTerryClass,
 ]
 
+# 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
+chgXTbl = [
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+]
+
 # 推論時の入力用テーブル
 predict_XTbl = [
     PredictHorseNumClass,
@@ -47,4 +62,10 @@ predict_XTbl = [
 tTbl = [
     RankOneHotClass # 1位のOne-Hot表現
     # MarginClass   # 着差標準化
+]
+
+# 生成済み教師テーブルから一部挿げ替えを行えるテーブル
+# !! 1つしか入れないで !!
+chgtTbl = [
+    None
 ]

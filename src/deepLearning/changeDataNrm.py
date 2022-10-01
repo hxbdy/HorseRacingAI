@@ -1,7 +1,8 @@
 # AI 学習用データの作成
-# DB からデータを標準化し、学習データX と 教師データt の対となるリストを作成する
-# 出力先 ./dst/learningList/X.pickle, t.pickle
-# > python ./src/deepLearning/scrapingDataNrm.py
+# すでに生成済みの学習データX と 教師データtの一部データを差し替えるためのコード
+# 対象のみを DB から標準化し、学習データX と 教師データt の対となるリストを作成する
+# 読込及び出力先 ./dst/learningList/X.pickle, t.pickle
+# > python ./src/deepLearning/changeDataNrm.py
 
 import pickle
 import sys
@@ -27,6 +28,8 @@ from common.XClass import *
 # 学習テーブル, 教師テーブル取得
 from table import XTbl
 from table import tTbl
+from table import chgXTbl
+from table import chgtTbl
 
 if __name__ == "__main__":
 
@@ -34,10 +37,18 @@ if __name__ == "__main__":
     with open(log_file_path, mode = 'w'):
         pass
 
+    # X.pickle, t.pickle 読込
+    with open(str(root_dir) + "\\dst\\learningList\\t.pickle", 'rb') as f:
+        t_train = pickle.load(f)
+    with open(str(root_dir) + "\\dst\\learningList\\X.pickle", 'rb') as f:
+        x_train = pickle.load(f)
+
     # start_year <= data <= end_year のレースから limit 件取得する
-    # ここで生成したデータは ./src/deepLearning/changeDataNrm.py で差し替え可能です
+    # 基となるデータを ./src/deepLearning/scrapingDataNrm.py を実行して生成した上で実行すること
     # MgrClass の生成条件 start_year, end_year, limit は統一すること
-    totalList = MgrClass(start_year = 1800, end_year = 2020, XclassTbl = XTbl, tclassTbl = tTbl, limit = -1)
+    totalList = MgrClass(start_year = 1800, end_year = 2020, XclassTbl = chgXTbl, tclassTbl = tTbl, limit = -1)
+    totalList.set_totalList(x_train, t_train)
+
     x_train, t_train = totalList.getTotalList()
 
     # 書き込み

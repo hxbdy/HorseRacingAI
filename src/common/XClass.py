@@ -101,7 +101,6 @@ class MoneyClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("Money adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class HorseNumClass(XClass):
@@ -126,7 +125,6 @@ class HorseNumClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("HorseNum adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class CourseConditionClass(XClass):
@@ -165,7 +163,6 @@ class CourseConditionClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("CourseCondition adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class CourseDistanceClass(XClass):
@@ -202,7 +199,6 @@ class CourseDistanceClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("CourseDistance adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class RaceStartTimeClass(XClass):
@@ -240,7 +236,6 @@ class RaceStartTimeClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("RaceStartTime adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class WeatherClass(XClass):
@@ -277,7 +272,6 @@ class WeatherClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("Weather adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class HorseAgeClass(XClass):
@@ -335,7 +329,6 @@ class HorseAgeClass(XClass):
         self.pad()
         if XClass.nrm_flg == "every":
             self.nrm()
-        logger.debug("HorseAge adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class BurdenWeightClass(XClass):
@@ -373,7 +366,6 @@ class BurdenWeightClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("BurdenWeight adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class PostPositionClass(XClass):
@@ -409,7 +401,6 @@ class PostPositionClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("PostPosition adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class JockeyClass(XClass):
@@ -451,7 +442,6 @@ class JockeyClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("Jockey adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class CumPerformClass(XClass):
@@ -585,7 +575,6 @@ class CumPerformClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("CumPerform adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class MarginClass(XClass):
@@ -667,7 +656,6 @@ class MarginClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("Margin adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class BradleyTerryClass(XClass):
@@ -773,7 +761,6 @@ class BradleyTerryClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("BradleyTerryClass adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 class RankOneHotClass(XClass):
@@ -827,7 +814,6 @@ class RankOneHotClass(XClass):
 
     def adj(self):
         self.xList = XClass.adj(self)
-        logger.debug("RankOneHot adj (len : {0}) = {1}".format(len(self.xList), self.xList))
         return self.xList
 
 # 学習用入力データX, 教師データt を管理する
@@ -837,18 +823,22 @@ class MgrClass:
         self.tclassTbl = tclassTbl
 
         # セットされた race_id の標準化結果の一時保持リスト
-        self.x = []
-        self.t = []
-        
-        # year までの全標準化結果保持リスト
-        self.totalXList = []
-        self.totaltList = []
+        self.x = [0] * len(XclassTbl)
+        self.t = [0] * len(tclassTbl)
 
         self.race_date = 0
 
         # yearまでの総 race_id, レース数取得 (year年含む)
         self.totalRaceList = getTotalRaceList(start_year, end_year, limit)
         self.totalRaceNum  = len(self.totalRaceList)
+
+        # year までの全標準化結果保持リスト
+        self.totalXList = [[0 for j in range(len(XclassTbl))] for i in range(self.totalRaceNum)]
+        self.totaltList = [[0 for j in range(len(tclassTbl))] for i in range(self.totalRaceNum)]
+
+    def set_totalList(self, totalXList, totaltList):
+        self.totalXList = totalXList
+        self.totaltList = totaltList
 
     # race_id と 開催日 をクラスで保持する
     # DB 検索条件と開催時点での各馬の年齢計算に使用する
@@ -862,29 +852,41 @@ class MgrClass:
         # 挿げ替えを後で行う機能のため、ここではフラット化を行わない
         return self.x, self.t
 
+    def adj_train(self, adj_result, tbl):
+        classTbl = copy.copy(tbl)
+
+        flat_len = 0
+        for func_idx in range(len(classTbl)):
+            if classTbl[func_idx] == None:
+                logger.debug("[{0}] skip adj (len : {1}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
+                continue
+
+            instance = (classTbl[func_idx])()
+
+            # 馬の年齢計算時にのみ開催年が必要なため渡す
+            if classTbl[func_idx] == HorseAgeClass:
+                if self.race_date == 0:
+                    logger.critical("race_date == 0 !!")
+                else:
+                    adj_result[func_idx] = instance.adj(self.race_date)
+            else:
+                adj_result[func_idx] = instance.adj()
+
+            flat_len += len(adj_result[func_idx])
+
+            logger.debug("[{0}] {1} adj (len : {2}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
+
+        logger.debug("total len : {0}".format(flat_len))
+
     # 各要素(天気, 賞金, etc...) を標準化まで行う
     # XTble で用意されたクラスごとに標準化を順に実行する
     # DB から取得する get() -> 数値化やsplitなど整形する fix() -> 要素数を統一する pad() -> データのレンジを統一する nrm())
     def adj(self):
-        classTbl = copy.copy(self.XclassTbl)
-        classTbl.extend(self.tclassTbl)
-        for func in classTbl:
-            instance = func()
-            # 馬の年齢計算時にのみ開催年が必要なため渡す
-            if func == HorseAgeClass:
-                if self.race_date == 0:
-                    logger.critical("race_date == 0 !!")
-                else:
-                    if func in self.XclassTbl:
-                        self.x.append(instance.adj(self.race_date))
-                    elif func in self.tclassTbl:
-                        self.t.append(instance.adj(self.race_date))
-            else:
-                if func in self.XclassTbl:
-                    self.x.append(instance.adj())
-                elif func in self.tclassTbl:
-                    self.t.append(instance.adj())
-
+        logger.debug("X (len : {0}) = ".format(len(self.x)))
+        self.adj_train(self.x, self.XclassTbl)
+        logger.debug("t (len : {0}) = ".format(len(self.t)))
+        self.adj_train(self.t, self.tclassTbl)
+        
     def zscore(self):
         # x 一括標準化
         # 各列で標準化する
@@ -898,26 +900,26 @@ class MgrClass:
         # 進捗確認カウンタ
         comp_cnt = 1
 
-        for race_id in self.totalRaceList:
+        for race in range(len(self.totalRaceList)):
 
             logger.info("========================================")
-            logger.info("https://db.netkeiba.com/race/{0}".format(race_id))
+            logger.info("https://db.netkeiba.com/race/{0}".format(self.totalRaceList[race]))
             logger.info("progress : {0} / {1}".format(comp_cnt, self.totalRaceNum))
 
             comp_cnt += 1
-            self.x.clear()
-            self.t.clear()
+            self.x = self.totalXList[race]
+            self.t = self.totaltList[race]
 
             # レースid, 開催日セット
-            self.set(race_id)
+            self.set(self.totalRaceList[race])
 
             # データ取得から標準化まで行う
             self.adj()
 
             # 成果リストにアペンド
             x_tmp, t_tmp = self.get()
-            self.totalXList.extend(x_tmp)
-            self.totaltList.extend(t_tmp)
+            self.totalXList[race] = x_tmp
+            self.totaltList[race] = t_tmp
 
         # 一括標準化
         if XClass.nrm_flg == "final":
