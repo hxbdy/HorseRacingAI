@@ -6,7 +6,6 @@ import os
 import pathlib
 import logging
 import re
-from iteration_utilities import deepflatten
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import numpy as np

@@ -10,7 +10,6 @@ import os
 import pathlib
 import logging
 import re
-from iteration_utilities import deepflatten
 
 # commonフォルダ内読み込みのため
 deepLearning_dir = pathlib.Path(__file__).parent

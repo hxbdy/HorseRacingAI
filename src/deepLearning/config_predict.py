@@ -8,7 +8,6 @@ import numpy as np
 import pickle
 import sys
 import pathlib
-from iteration_utilities import deepflatten
 
 # commonフォルダ内読み込みのため
 deepLearning_dir = pathlib.Path(__file__).parent

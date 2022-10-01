@@ -16,7 +16,7 @@ if __name__ == "__main__":
             x.append(predict.adj())
 
     print("x = ", x)
-    x = list(deepflatten(x))
+    # x = list(deepflatten(x))
 
     # y = 各馬が1位になる確率
     # y = net.predict(x)
