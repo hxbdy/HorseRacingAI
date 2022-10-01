@@ -924,12 +924,12 @@ class MgrClass:
             # オッズ表示
             odds = get1stOdds(self.totalRaceList[race])
             totalOddsList.append(odds)
-            logger.info("1st odds = {0}".format(odds))
+            logger.debug("1st odds = {0}".format(odds))
 
         # 一括標準化
         if XClass.nrm_flg == "final":
             self.zscore()
             logger.debug("total zscore : {0}".format(self.totalXList))
         
-        return self.totalXList, self.totaltList
+        return self.totalXList, self.totaltList, totalOddsList
             

@@ -19,6 +19,10 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
+import common.debug
+from common.getFromDB import *
+from common.XClass import *
+
 # pickle 読込
 # numpy array に変換して返す
 def load_flat_pcikle(pkl_name):
@@ -33,20 +37,31 @@ def load_flat_pcikle(pkl_name):
 def load_horse_racing_data():
     x_train = load_flat_pcikle("X_1800-2020.pickle")
     t_train = load_flat_pcikle("t_1800-2020.pickle")
+    with open(str(root_dir) + "\\dst\\learningList\\" + "odds_1800-2020.pickle", 'rb') as f:
+        odds_train = pickle.load(f)
 
     x_test = load_flat_pcikle("X_2021-2021.pickle")
     t_test = load_flat_pcikle("t_2021-2021.pickle")
+    with open(str(root_dir) + "\\dst\\learningList\\" + "odds_2021-2021.pickle", 'rb') as f:
+        odds_test = pickle.load(f)
 
-    return (x_train, t_train), (x_test, t_test)
+    return (x_train, t_train, odds_train), (x_test, t_test, odds_test)
 
 # 学習データの読込
-(x_train, t_train), (x_test, t_test) = load_horse_racing_data()
+(x_train, t_train, odds_train), (x_test, t_test, odds_test) = load_horse_racing_data()
 
 # ハイパーパラメータ
-iters_num     = 10000
+iters_num     = 30000
 train_size    = x_train.shape[0]
 learning_rate = 0.1   # 勾配更新単位
 batch_size    = 5     # 1度に学習するレース数
+
+# ペイ確認
+wallet_train = 0
+bet_train = 100
+
+wallet_test = 0
+bet_test = 100
 
 net = TwoLayerNet.TowLayerNet(155, 40, 24)
 
@@ -74,12 +89,14 @@ for i in range(iters_num):
     if i % 100 == 0:
         train_acc = net.accuracy(x_train, t_train)
         test_acc  = net.accuracy(x_test, t_test)
-        print(train_acc, test_acc)
 
-    # print progress bar
-    # per = int(i / iters_num * 20)
-    # pro_bar = ('=' * per) + (' ' * (20 - per))
-    # print('\r[{0}] {1:02.03}% err={2}'.format(pro_bar, i / iters_num * 100, l), end='')
+        train_pay = net.hit(x_train, t_train, odds_train, wallet_train, bet_train)
+        test_pay  = net.hit(x_test, t_test, odds_test, wallet_test, bet_test)
+
+        # 学習データで推論結果, 学習データでいくら儲けたか, テストデータで推論結果, テストデータでいくら儲けたか
+        logger.info("train_acc = {0:0.5f} | train_pay = {1:.0f}".format(train_acc, train_pay))
+        logger.info("test_acc  = {0:0.5f} | test_pay  = {1:.0f}".format(test_acc, test_pay))
+        logger.info("=============================================")
 
 # 保存
 net.saveLoss(train_loss_list)

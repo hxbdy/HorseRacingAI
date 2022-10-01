@@ -217,6 +217,18 @@ class TowLayerNet:
             x = layer.forward(x)
         return x
 
+    def hit(self, x, t, odds, wallet, bet):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        if t.ndim != 1 : t = np.argmax(t, axis=1)
+        
+        for idx in range(y.shape[0]):
+            wallet -= bet
+            if y[idx] == t[idx]:
+                wallet += odds[idx] * bet
+        
+        return wallet
+
     def accuracy(self, x, t):
         y = self.predict(x)
         y = np.argmax(y, axis=1)
