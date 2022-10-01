@@ -63,7 +63,7 @@ class MoneyClass(XClass):
         super().set(race_id)
 
     def get(self):
-        prizeList = db.getColDataFromTbl("race_result", "prize", "race_id", self.race_id)
+        prizeList = db.getColDataFromTbl("race_result", "prize", ["race_id"], [self.race_id])
         for i in range(len(prizeList)):
             prizeList[i] = str(prizeList[i])
         self.xList = prizeList
@@ -134,7 +134,7 @@ class CourseConditionClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", self.race_id)
+        raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [self.race_id])
         # コース状態取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split(":")[2]
@@ -172,7 +172,7 @@ class CourseDistanceClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", self.race_id)
+        raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [self.race_id])
         # 距離取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split(":")[0]
@@ -208,7 +208,7 @@ class RaceStartTimeClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", self.race_id)
+        raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [self.race_id])
         # 出走時刻取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split("/")[3]
@@ -245,7 +245,7 @@ class WeatherClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", self.race_id)
+        raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [self.race_id])
         sep1 = raceData1List[0].split(":")[1]
         #  晴 / 芝 
         sep1 = sep1.split("/")[0]
@@ -584,7 +584,7 @@ class MarginClass(XClass):
         super().set(race_id)
 
     def get(self):
-        marginList = db.getColDataFromTbl("race_result", "margin", "race_id", self.race_id)
+        marginList = db.getColDataFromTbl("race_result", "margin", ["race_id"], [self.race_id])
         for i in range(len(marginList)):
             marginList[i] = str(marginList[i])
         self.xList = marginList
@@ -898,7 +898,8 @@ class MgrClass:
     def getTotalList(self):
         # 進捗確認カウンタ
         comp_cnt = 1
-
+        # 1位オッズリスト(ペイ確認のため)
+        totalOddsList = []
         for race in range(len(self.totalRaceList)):
 
             logger.info("========================================")
@@ -919,6 +920,11 @@ class MgrClass:
             x_tmp, t_tmp = self.get()
             self.totalXList[race] = x_tmp
             self.totaltList[race] = t_tmp
+
+            # オッズ表示
+            odds = get1stOdds(self.totalRaceList[race])
+            totalOddsList.append(odds)
+            logger.info("1st odds = {0}".format(odds))
 
         # 一括標準化
         if XClass.nrm_flg == "final":

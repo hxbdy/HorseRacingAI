@@ -59,13 +59,17 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-    def getColDataFromTbl(self, table_name, col_target, col_hint, data):
+    def getColDataFromTbl(self, table_name, col_target, col_hint_list, data_list):
         # 指定テーブルから列と値が一致する行をリストで返す
-        sql = "SELECT " + col_target + " FROM " + table_name + " WHERE " + col_hint + " =?;"
-        self.cur.execute(sql, [data])
+        for idx in range(len(col_hint_list)):
+            col_hint_list[idx] = col_hint_list[idx] + " =?"
+
+        sql = "SELECT " + col_target + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list) + ";"
+        self.cur.execute(sql, data_list)
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
+
         return retList
 
     def getRowCnt(self, table_name, col_name, data):

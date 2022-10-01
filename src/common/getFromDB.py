@@ -16,7 +16,7 @@ from NetkeibaDB import db
 from debug import *
 
 def getCourseCondition(race_id):
-    raceData1List = db.getColDataFromTbl("race_result", "race_data1", "race_id", race_id)
+    raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [race_id])
     # コース状態取得
     # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
     sep1 = raceData1List[0].split(":")[2]
@@ -25,6 +25,10 @@ def getCourseCondition(race_id):
     # 良
     sep1 = sep1.replace(" ", "")
     return sep1
+
+def get1stOdds(race_id):
+    odds = db.getColDataFromTbl("race_info", "odds", ["race_id", "result"], [race_id, "1"])
+    return float(odds[0])
 
 def getTotalRaceList(start_year = 0, end_year = 9999, limit = -1):
     # yearを含む年のレースまでをlimit件取得する
@@ -52,7 +56,7 @@ def getRaceDate(race_id):
     # レース開催日を取り出す
     # 以下の前提で計算する
     # race_data2 にレース開催日が含まれていること
-    raceDate = db.getColDataFromTbl("race_result", "race_data2", "race_id", race_id)
+    raceDate = db.getColDataFromTbl("race_result", "race_data2", ["race_id"], [race_id])
     raceDate = raceDate[0]
     raceDateYear = int(raceDate.split("年")[0])
     raceDateMon = int(raceDate.split("年")[1].split("月")[0])
