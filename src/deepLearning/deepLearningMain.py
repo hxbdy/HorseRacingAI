@@ -8,6 +8,7 @@ import numpy as np
 import pickle
 import sys
 import pathlib
+import itertools
 
 # commonフォルダ内読み込みのため
 deepLearning_dir = pathlib.Path(__file__).parent
@@ -18,17 +19,28 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-with open(str(root_dir) + "\\dst\\learningList\\t_1800-2020.pickle", 'rb') as f:
-    t_train = np.array(pickle.load(f))
+# pickle 読込
+# numpy array に変換して返す
+def load_flat_pcikle(pkl_name):
+    with open(str(root_dir) + "\\dst\\learningList\\" + pkl_name, 'rb') as f:
+        flat_pkl = []
+        flat_pkl_list = pickle.load(f)
+        for i in flat_pkl_list:
+            flat_pkl.append(list(itertools.chain.from_iterable(i)))
+        flat_pkl = np.array(flat_pkl)
+        return flat_pkl
 
-with open(str(root_dir) + "\\dst\\learningList\\X_1800-2020.pickle", 'rb') as f:
-    x_train = np.array(pickle.load(f))
+def load_horse_racing_data():
+    x_train = load_flat_pcikle("X_1800-2020.pickle")
+    t_train = load_flat_pcikle("t_1800-2020.pickle")
 
-with open(str(root_dir) + "\\dst\\learningList\\t_2021-2021.pickle", 'rb') as f:
-    t_test = np.array(pickle.load(f))
+    x_test = load_flat_pcikle("X_2021-2021.pickle")
+    t_test = load_flat_pcikle("t_2021-2021.pickle")
 
-with open(str(root_dir) + "\\dst\\learningList\\X_2021-2021.pickle", 'rb') as f:
-    x_test = np.array(pickle.load(f))
+    return (x_train, t_train), (x_test, t_test)
+
+# 学習データの読込
+(x_train, t_train), (x_test, t_test) = load_horse_racing_data()
 
 # ハイパーパラメータ
 iters_num     = 10000
