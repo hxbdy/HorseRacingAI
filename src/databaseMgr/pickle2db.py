@@ -17,9 +17,9 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-from common.HorseDB import HorseDB
-from common.RaceDB import RaceDB
-from common.RaceGradeDB import RaceGradeDB
+from deprecated.HorseDB import HorseDB
+from deprecated.RaceDB import RaceDB
+from deprecated.RaceGradeDB import RaceGradeDB
 
 def insert_horse_prof_table(dbname, horsedb):
     logger.info("INSERT INTO horse_prof VALUES start")
