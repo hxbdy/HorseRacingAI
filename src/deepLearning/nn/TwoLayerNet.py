@@ -3,17 +3,12 @@ import numpy as np
 import os
 import sys
 import pathlib
+import configparser
 
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
-
-OUTPUT_PATH = str(root_dir) + "\\dst\\trainedParam\\"
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini')
+path_trainedParam = config.get('nn', 'path_trainedParam')
 
 def softmax(x):
     x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策
@@ -263,8 +258,8 @@ class TowLayerNet:
         勾配をテキストに保存する
         '''
         # 保存先フォルダの存在確認
-        os.makedirs(OUTPUT_PATH, exist_ok=True)
-        path_w=OUTPUT_PATH+par+'.txt'
+        os.makedirs(path_trainedParam, exist_ok=True)
+        path_w=path_trainedParam+par+'.txt'
         f=open(path_w,mode='w')
         it = np.nditer(self.params[par], flags=['multi_index'], op_flags=['readwrite'])
         while not it.finished:
@@ -276,8 +271,8 @@ class TowLayerNet:
 
     def saveLoss(self,loss):
         # 保存先フォルダの存在確認
-        os.makedirs(OUTPUT_PATH, exist_ok=True)
-        path_w=OUTPUT_PATH+'loss.txt'
+        os.makedirs(path_trainedParam, exist_ok=True)
+        path_w=path_trainedParam+'loss.txt'
         f=open(path_w,mode='w')
         for i in loss:
             f.write(str(i)+"\n")
@@ -288,8 +283,8 @@ class TowLayerNet:
         勾配を読みこむ
         '''
         # 保存先フォルダの存在確認
-        os.makedirs(OUTPUT_PATH, exist_ok=True)
-        path_r=OUTPUT_PATH+par+'.txt'
+        os.makedirs(path_trainedParam, exist_ok=True)
+        path_r=path_trainedParam+par+'.txt'
         with open(path_r) as f:
             l = f.readlines()
 

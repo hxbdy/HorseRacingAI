@@ -33,6 +33,37 @@ pass = password
 6. [Python Dateutil :: Anaconda.org](https://anaconda.org/conda-forge/python-dateutil)
 7. [Sqlite3 :: Anaconda.org](https://anaconda.org/blaze/sqlite3)
 
+## conda PATH
+conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
+以下コマンドを仮想環境上で実行してパスを通してください。
+
+```bash:
+> conda env config vars set PYTHONPATH=\
+src/common;\
+src/deepLearning/encoding;\
+src/deepLearning/nn;\
+src/deepLearning/stdTime;\
+src/deepLearning;\
+src/sample;\
+src/scraping;\
+src;\
+```
+
+パスを追加できたは以下コマンドで確認できます。
+```bash:
+> conda env config vars list
+```
+
+追加したパスを有効にするにはリアクティベートします。
+```bash:
+> deactivate
+> conda activate HorseRacingAI 
+```
+
+内部的には追加したパスは以下ファイルで管理されています。
+```bash:
+"C:\Users\{UserName}\anaconda3\envs\HorseRacingAI\conda-meta\state"
+```
 ## 参考
 - [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
 - [海外競馬英和辞典　ＪＲＡ](https://www.jra.go.jp/keiba/overseas/yougo/index.html)
