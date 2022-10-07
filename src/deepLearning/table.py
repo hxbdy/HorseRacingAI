@@ -2,18 +2,18 @@ from XClass import *
 from config_predict import *
 
 # 学習用データ生成条件
-start_year_train = 1998
-end_year_train   = 1999
-limit_train      = 1
+start_year_train = 1800
+end_year_train   = 2020
+limit_train      = -1
 
 X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 t_train_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 odds_train_file_name = "odds_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 
 # テスト用データ生成条件
-start_year_test = 2020
-end_year_test   = 2020
-limit_test      = 1
+start_year_test = 2021
+end_year_test   = 2021
+limit_test      = -1
 
 X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 t_test_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
