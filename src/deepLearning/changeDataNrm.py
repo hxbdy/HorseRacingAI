@@ -22,7 +22,7 @@ for dir_name in dir_lst:
 
 import common.debug
 from common.getFromDB import *
-from common.XClass import *
+from XClass import *
 
 # 学習テーブル, 教師テーブル取得
 from table import XTbl

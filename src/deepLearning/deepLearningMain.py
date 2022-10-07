@@ -21,7 +21,7 @@ for dir_name in dir_lst:
 
 import common.debug
 from common.getFromDB import *
-from common.XClass import *
+from XClass import *
 
 # pickle 読込
 # numpy array に変換して返す

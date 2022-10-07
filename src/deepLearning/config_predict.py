@@ -19,7 +19,7 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 from common.getFromDB import *
-from common.XClass import *
+from XClass import *
 
 # 推測したいレース情報入力
 # ==========================================================================
