@@ -11,7 +11,7 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 from XClass import *
-from config_predict import *
+from nn.config_predict import *
 
 # 学習時の入力用テーブル
 XTbl = [
