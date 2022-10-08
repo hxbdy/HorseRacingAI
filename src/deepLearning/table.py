@@ -1,17 +1,23 @@
-import sys
-import pathlib
-
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
-
-from common.XClass import *
+from XClass import *
 from config_predict import *
+
+# 学習用データ生成条件
+start_year_train = 1800
+end_year_train   = 2020
+limit_train      = -1
+
+X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
+t_train_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
+odds_train_file_name = "odds_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
+
+# テスト用データ生成条件
+start_year_test = 2021
+end_year_test   = 2021
+limit_test      = -1
+
+X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
+t_test_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
+odds_test_file_name = "odds_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 
 # 学習時の入力用テーブル
 XTbl = [

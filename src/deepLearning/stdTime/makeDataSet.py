@@ -25,8 +25,8 @@ for dir_name in dir_lst:
         sys.path.append(str(dir_name))
 
 from scraping import ScrapingUmaData as sud
-from common.RaceGradeDB import RaceGradeDB
-from common.RaceDB import RaceDB
+from deprecated.RaceGradeDB import RaceGradeDB
+from deprecated.RaceDB import RaceDB
 
 def save_raceID(driver, yearlist, race_grade_list=["check_grade_4"]):
     # raceIDを取得する．G1~OPまで

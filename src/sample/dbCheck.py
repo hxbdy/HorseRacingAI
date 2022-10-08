@@ -11,8 +11,8 @@ parentDir = os.path.dirname(os.path.abspath(__file__))
 if parentDir not in sys.path:
     sys.path.append(parentDir)
 
-from common.HorseDB import HorseDB
-from common.RaceDB import RaceDB
+from deprecated.HorseDB import HorseDB
+from deprecated.RaceDB import RaceDB
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL

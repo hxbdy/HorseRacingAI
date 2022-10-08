@@ -31,10 +31,10 @@ for dir_name in dir_lst:
     if str(dir_name) not in sys.path:
         sys.path.append(str(dir_name))
 
-from common.HorseDB import HorseDB
-from common.RaceDB import RaceDB
-from common.RaceGradeDB import RaceGradeDB
-from common.JockeyDB import JockeyDB
+from deprecated.HorseDB import HorseDB
+from deprecated.RaceDB import RaceDB
+from deprecated.RaceGradeDB import RaceGradeDB
+from deprecated.JockeyDB import JockeyDB
 
 OUTPUT_PATH = str(root_dir) + "\\dst\\scrapingResult\\"
 

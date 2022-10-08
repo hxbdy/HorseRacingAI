@@ -1,32 +1,27 @@
 # NN学習本体
 # 学習したパラメータ, バイアスは ./dst/trainedParam/*.txt で確認可能
 # 2020年までのデータで学習し, 2021年のレースで精度を確認している
-# > python ./src/deepLearning/deepLearningMain.py
+# > python ./src/deepLearning/nn/deepLearningMain.py
 
+import configparser
 import TwoLayerNet
 import numpy as np
 import pickle
-import sys
-import pathlib
 import itertools
 
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
+from getFromDB import *
+from XClass import *
+from table import *
 
-import common.debug
-from common.getFromDB import *
-from common.XClass import *
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini')
+path_learningList = config.get('nn', 'path_learningList')
 
 # pickle 読込
 # numpy array に変換して返す
 def load_flat_pcikle(pkl_name):
-    with open(str(root_dir) + "\\dst\\learningList\\" + pkl_name, 'rb') as f:
+    with open(path_learningList + pkl_name, 'rb') as f:
         flat_pkl = []
         flat_pkl_list = pickle.load(f)
         for i in flat_pkl_list:
@@ -35,14 +30,14 @@ def load_flat_pcikle(pkl_name):
         return flat_pkl
 
 def load_horse_racing_data():
-    x_train = load_flat_pcikle("X_1800-2020.pickle")
-    t_train = load_flat_pcikle("t_1800-2020.pickle")
-    with open(str(root_dir) + "\\dst\\learningList\\" + "odds_1800-2020.pickle", 'rb') as f:
+    x_train = load_flat_pcikle(X_train_file_name)
+    t_train = load_flat_pcikle(t_train_file_name)
+    with open(path_learningList + odds_train_file_name, 'rb') as f:
         odds_train = pickle.load(f)
 
-    x_test = load_flat_pcikle("X_2021-2021.pickle")
-    t_test = load_flat_pcikle("t_2021-2021.pickle")
-    with open(str(root_dir) + "\\dst\\learningList\\" + "odds_2021-2021.pickle", 'rb') as f:
+    x_test = load_flat_pcikle(X_test_file_name)
+    t_test = load_flat_pcikle(t_test_file_name)
+    with open(path_learningList + odds_test_file_name, 'rb') as f:
         odds_test = pickle.load(f)
 
     return (x_train, t_train, odds_train), (x_test, t_test, odds_test)

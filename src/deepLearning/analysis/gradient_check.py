@@ -5,28 +5,39 @@
 import TwoLayerNet
 import numpy as np
 import pickle
-import sys
-import pathlib
+import configparser
+import itertools
+
+# 学習テーブル, 教師テーブル取得
+# 学習用データ生成条件取得
+# テスト用データ生成条件
+from table import *
+
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini')
+path_learningList = config.get('nn', 'path_learningList')
     
 # ハイパーパラメータ
 iters_num     = 3     # 計算式チェック回数
 
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
+with open(path_learningList + t_train_file_name, 'rb') as f:
+    flat_pkl = []
+    flat_pkl_list = pickle.load(f)
+    for i in flat_pkl_list:
+        flat_pkl.append(list(itertools.chain.from_iterable(i)))
+    flat_pkl = np.array(flat_pkl)
+    tData = flat_pkl
 
-with open(str(root_dir) + "\\dst\\learningList\\t.pickle", 'rb') as f:
-    tData = pickle.load(f)
+with open(path_learningList + X_train_file_name, 'rb') as f:
+    flat_pkl = []
+    flat_pkl_list = pickle.load(f)
+    for i in flat_pkl_list:
+        flat_pkl.append(list(itertools.chain.from_iterable(i)))
+    flat_pkl = np.array(flat_pkl)
+    xData = flat_pkl
 
-with open(str(root_dir) + "\\dst\\learningList\\x.pickle", 'rb') as f:
-    xData = pickle.load(f)
-
-net = TwoLayerNet.TowLayerNet(131, 30, 24)
+net = TwoLayerNet.TowLayerNet(155, 40, 24)
 
 for i in range(iters_num):
 

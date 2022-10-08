@@ -3,23 +3,18 @@ import sys
 import logging
 import sqlite3
 import pathlib
+import configparser
 
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini')
+path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 
 from common.debug import *
-
 class NetkeibaDB:
     def __init__(self):
         logger.info("Database loading")
-        self.dbpath = str(root_dir) + '\\dst\\netkeibaDB\\netkeiba.db'
-        self.conn = sqlite3.connect(self.dbpath)
+        self.conn = sqlite3.connect(path_netkeibaDB)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
         logger.info("Database loading complete")

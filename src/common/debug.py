@@ -1,5 +1,14 @@
 import logging
-import os
+import configparser
+
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini')
+path_log = config.get('common', 'path_log')
+
+# log出力ファイルのクリア
+with open(path_log, mode = 'w'):
+    pass
 
 # log フォーマット
 output_format = '%(asctime)s %(filename)s [%(levelname)s] %(message)s'
@@ -16,8 +25,7 @@ handler1.setLevel(logging.INFO)
 handler1.setFormatter(logging.Formatter(output_format))
 
 # ファイル出力用ハンドラ作成
-log_file_path = "./dst/output.log"
-handler2 = logging.FileHandler(filename=log_file_path)
+handler2 = logging.FileHandler(filename=path_log)
 # ファイル出力するログレベルの設定
 handler2.setLevel(logging.DEBUG)
 handler2.setFormatter(logging.Formatter(output_format))
