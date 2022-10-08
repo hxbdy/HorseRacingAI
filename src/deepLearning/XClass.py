@@ -898,8 +898,8 @@ class MgrClass:
     def getTotalList(self):
         # 進捗確認カウンタ
         comp_cnt = 1
-        # 1位オッズリスト(ペイ確認のため)
-        totalOddsList = []
+        # 学習データ解析用
+        totalAnalysisList = []
         for race in range(len(self.totalRaceList)):
 
             logger.info("========================================")
@@ -921,15 +921,17 @@ class MgrClass:
             self.totalXList[race] = x_tmp
             self.totaltList[race] = t_tmp
 
-            # オッズ表示
+            # 学習データ解析用
+            # 学習時の精度の解析に使用する
             odds = get1stOdds(self.totalRaceList[race])
-            totalOddsList.append(odds)
-            logger.debug("1st odds = {0}".format(odds))
+            grade = getRaceGrade(self.totalRaceList[race])
+            totalAnalysisList.append([odds, grade])
+            logger.debug("Analysis List [odds, grade] = {0}".format([odds, grade]))
 
         # 一括標準化
         if XClass.nrm_flg == "final":
             self.zscore()
             logger.debug("total zscore : {0}".format(self.totalXList))
         
-        return self.totalXList, self.totaltList, totalOddsList
+        return self.totalXList, self.totaltList, totalAnalysisList
             

@@ -8,7 +8,7 @@ limit_train      = -1
 
 X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 t_train_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
-odds_train_file_name = "odds_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
+analysis_train_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 
 # テスト用データ生成条件
 start_year_test = 2021
@@ -17,7 +17,7 @@ limit_test      = -1
 
 X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 t_test_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
-odds_test_file_name = "odds_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
+analysis_test_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 
 # 学習時の入力用テーブル
 XTbl = [

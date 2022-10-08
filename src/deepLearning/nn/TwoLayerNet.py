@@ -212,7 +212,11 @@ class TowLayerNet:
             x = layer.forward(x)
         return x
 
-    def hit(self, x, t, odds, wallet, bet):
+    def hit(self, x, t, odds, wallet, bet, grade):        
+        g1 = 0
+        g2 = 0
+        g3 = 0
+
         y = self.predict(x)
         y = np.argmax(y, axis=1)
         if t.ndim != 1 : t = np.argmax(t, axis=1)
@@ -221,8 +225,14 @@ class TowLayerNet:
             wallet -= bet
             if y[idx] == t[idx]:
                 wallet += odds[idx] * bet
+                if grade[idx] == 1:
+                    g1 += 1
+                elif grade[idx] == 2:
+                    g2 += 1
+                elif grade[idx] == 3:
+                    g3 += 1
         
-        return wallet
+        return wallet, (g1, g2, g3)
 
     def accuracy(self, x, t):
         y = self.predict(x)

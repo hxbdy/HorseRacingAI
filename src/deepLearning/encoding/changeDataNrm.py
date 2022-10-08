@@ -52,14 +52,14 @@ if __name__ == "__main__":
     logger.info("generate train data")
     total_train_list = MgrClass(start_year = start_year_train, end_year = end_year_train, XclassTbl = chgXTbl, tclassTbl = tTbl, limit = limit_train)
     total_train_list.set_totalList(x_train, t_train)
-    x_train, t_train, odds_train = total_train_list.getTotalList()
+    x_train, t_train, analysis_train = total_train_list.getTotalList()
 
     # 学習確認用テストデータ
     logger.info("========================================")
     logger.info("generate test data")
     total_test_list = MgrClass(start_year = start_year_test, end_year = end_year_test, XclassTbl = chgXTbl, tclassTbl = tTbl, limit = limit_test)
     total_test_list.set_totalList(x_test, t_test)
-    x_test, t_test, odds_test = total_test_list.getTotalList()
+    x_test, t_test, analysis_test = total_test_list.getTotalList()
 
     # 書き込み
     logger.info("========================================")
@@ -68,8 +68,8 @@ if __name__ == "__main__":
     # X_{開始年}-{終了年}-{件数}
     save_nn_data(X_train_file_name, x_train)
     save_nn_data(t_train_file_name, t_train)
-    save_nn_data(odds_train_file_name, odds_train)
+    save_nn_data(analysis_train_file_name, analysis_train)
 
     save_nn_data(X_test_file_name, x_test)
     save_nn_data(t_test_file_name, t_test)
-    save_nn_data(odds_test_file_name, odds_test)
+    save_nn_data(analysis_test_file_name, analysis_test)

@@ -63,6 +63,12 @@ def getRaceDate(race_id):
     raceDateDay = int(raceDate.split("月")[1].split("日")[0])
     return date(raceDateYear, raceDateMon, raceDateDay)
 
+def getRaceGrade(race_id):
+    # レースのグレードを返す
+    # 不明の場合-1を返す
+    raceGrade = db.getColDataFromTbl("race_info", "grade", ["race_id"], [race_id])
+    return int(raceGrade[0])
+
 #def calCumNumOfWin(horsedb):
     # 累計勝利数を計算
     # horsedb.cum_num_wins = []
