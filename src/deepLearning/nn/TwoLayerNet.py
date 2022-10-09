@@ -212,7 +212,8 @@ class TowLayerNet:
             x = layer.forward(x)
         return x
 
-    def hit(self, x, t, odds, wallet, bet, grade):        
+    def hit(self, x, t, odds, bet, grade):
+        wallet = 0
         g1 = 0
         g2 = 0
         g3 = 0
