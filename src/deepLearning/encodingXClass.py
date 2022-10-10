@@ -543,9 +543,17 @@ class UmamusumeClass(XClass):
         umamusume_family = [0] * len(umamusumeTbl)
         horse_list = self.xList
         for i in range(len(horse_list)):
-            # horse_list[i] がウマ娘ちゃんなら ウマ娘ちゃんリスト[i] = 1 とする
-            if horse_list[i] in umamusumeTbl:
-                umamusume_family[i] = 1
+            # horse_list[i] の親にウマ娘ちゃんがいたら umamusume_family[i] = 1 とする
+            # 親を取得
+            parent_list = db.getMulCol("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], "horse_id", horse_list[i])
+            parent_list = parent_list[0]
+            # 親1頭ずつ確認する
+            for parent in parent_list:
+                # ウマ娘ちゃんならフラグをセットする
+                for j in range(len(umamusumeTbl)):
+                    if parent == umamusumeTbl[j]:
+                        umamusume_family[j] = 1
+                        logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
 
     def pad(self):
