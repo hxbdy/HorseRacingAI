@@ -13,7 +13,7 @@ import os
 from matplotlib import pyplot as plt
 
 from getFromDB import *
-from XClass import *
+from encodingXClass import *
 from table import *
 from deepLearningMain import *
 
@@ -148,21 +148,13 @@ if __name__ == "__main__":
     # グラフ描画
     os.makedirs(path_graph, exist_ok=True)
 
-    # 正答率グラフ
-    # title = "ACC"
-    # plt.figure() # 新規ウインドウ
-    # plt.title(title)
-    # plt.plot(train_acc_list, label="train")
-    # plt.plot(test_acc_list, label="test")
-    # plt.legend() # 凡例表示(labelで指定したテキストの表示)
-    # plt.savefig(path_graph + title + ".png")
-
     # グレード別正答率
     title = "AVE_ACC_G1"
     plt.figure() # 新規ウインドウ
     plt.title(title)
     plt.plot(train_g1_ave_list, label="train")
     plt.plot(test_g1_ave_list, label="test")
+    plt.plot(train_g1_ave_list - test_g1_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -171,6 +163,7 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_g2_ave_list, label="train")
     plt.plot(test_g2_ave_list, label="test")
+    plt.plot(train_g2_ave_list - test_g2_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -179,6 +172,7 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_g3_ave_list, label="train")
     plt.plot(test_g3_ave_list, label="test")
+    plt.plot(train_g3_ave_list - test_g3_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -187,7 +181,9 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_wallet_ave_list, label="train")
     plt.plot(test_wallet_ave_list, label="test")
+    plt.plot(train_wallet_ave_list - test_wallet_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
+    logger.info("display graph")
     plt.show()

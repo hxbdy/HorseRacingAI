@@ -1,4 +1,4 @@
-from XClass import *
+from encodingXClass import *
 from config_predict import *
 
 # 学習用データ生成条件
@@ -32,10 +32,12 @@ XTbl = [
     JockeyClass,
     CumPerformClass,
     BradleyTerryClass,
+    UmamusumeClass,
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
 chgXTbl = [
+    None,
     None,
     None,
     None,
@@ -61,6 +63,7 @@ predict_XTbl = [
     PredictPostPositionClass,
     PredictJockeyClass,
     PredictBradleyTerryClass,
+    PredictUmamusumeClass,
 ]
 
 # 正解用テーブル

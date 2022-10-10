@@ -3,23 +3,8 @@
 # 入力データ(予測したいレース情報)を手入力するファイル
 # 入力されたレース情報から実際に推論を実行し、結果を出力するのは predict.py
 
-import TwoLayerNet
-import numpy as np
-import pickle
-import sys
-import pathlib
-
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
-
-from common.getFromDB import *
-from XClass import *
+from getFromDB import *
+from encodingXClass import *
 
 # 推測したいレース情報入力
 # ==========================================================================
@@ -73,6 +58,10 @@ class PredictBradleyTerryClass(BradleyTerryClass):
         # horse_id
         self.xList = ["1983103914", "1983104782"]
         self.col_num = len(self.xList)
+class PredictUmamusumeClass(UmamusumeClass):
+    def get(self):
+        # horse_id
+        self.xList = ["1983103914", "1983104782"]
 
 # レース開催日
 d0 = date(2022, 9, 1)
