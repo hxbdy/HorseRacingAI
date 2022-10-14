@@ -977,10 +977,9 @@ class MgrClass:
     def adj_train(self, adj_result, tbl):
         classTbl = copy.copy(tbl)
 
-        flat_len = 0
         for func_idx in range(len(classTbl)):
             if classTbl[func_idx] == None:
-                logger.debug("[{0}] skip adj (len : {1}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
+                logger.debug("[{0:2d}] skip adj (len : {1:2d}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
                 continue
 
             instance = (classTbl[func_idx])()
@@ -994,11 +993,7 @@ class MgrClass:
             else:
                 adj_result[func_idx] = instance.adj()
 
-            flat_len += len(adj_result[func_idx])
-
-            logger.debug("[{0}] {1} adj (len : {2}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
-
-        logger.debug("total len : {0}".format(flat_len))
+            logger.debug("[{0:2d}] {1} adj (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
 
     # 各要素(天気, 賞金, etc...) を標準化まで行う
     # XTble で用意されたクラスごとに標準化を順に実行する
@@ -1017,6 +1012,31 @@ class MgrClass:
         xstd = np.std(x, axis=0, keepdims=True)
         xzscore = (x - xmean) / (xstd + 1e-10)
         self.totalXList = xzscore.tolist()
+
+    # 既存の標準化済みデータに新規に追加する
+    def getAppendTotalList(self, append_x):
+
+        # 追加クラス以外をNoneにする
+        for i in range(len(self.XclassTbl)):
+            self.XclassTbl[i] = None
+        self.XclassTbl.append(append_x)
+
+        # 追加クラス分の列をアペンド
+        for i in range(len(self.totalXList)):
+            self.totalXList[i].append(0)
+        
+        return self.getTotalList()
+
+    # 既存の標準化済みデータから指定インデックスの要素を削除する
+    def getRemoveTotalList(self, remove_x_idx):
+        for i in range(len(self.XclassTbl)):
+            self.XclassTbl[i] = None
+
+        # 追加クラス分の列をアペンド
+        for i in range(len(self.totalXList)):
+            del self.totalXList[i][remove_x_idx]
+
+        return self.getTotalList()
 
     def getTotalList(self):
         # 進捗確認カウンタ
