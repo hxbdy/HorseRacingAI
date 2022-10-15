@@ -6,6 +6,7 @@ start_year_train = 1800
 end_year_train   = 2020
 limit_train      = -1
 
+# 学習データファイル名フォーマット
 X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 t_train_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
 analysis_train_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
@@ -15,6 +16,7 @@ start_year_test = 2021
 end_year_test   = 2021
 limit_test      = -1
 
+# テストファイル名フォーマット
 X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 t_test_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
 analysis_test_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
@@ -33,10 +35,12 @@ XTbl = [
     CumPerformClass,
     BradleyTerryClass,
     UmamusumeClass,
+    ParentBradleyTerryClass,
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
 chgXTbl = [
+    None,
     None,
     None,
     None,
@@ -64,6 +68,7 @@ predict_XTbl = [
     PredictJockeyClass,
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
+    PredictParentBradleyTerryClass,
 ]
 
 # 正解用テーブル

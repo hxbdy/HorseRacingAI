@@ -106,8 +106,8 @@ def learning_check():
         test_g2_list.append(1.0 * test_g2 / TEST_G2_RACE_NUM)
         test_g3_list.append(1.0 * test_g3 / TEST_G3_RACE_NUM)
 
-        logger.info("  train (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f}".format(train_g1_list[-1], train_g2_list[-1], train_g3_list[-1]))
-        logger.info("  test  (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f}".format(test_g1_list[-1], test_g2_list[-1], test_g3_list[-1]))
+        logger.info("  train (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f} | pay = {3:7}".format(train_g1_list[-1], train_g2_list[-1], train_g3_list[-1], int(train_pay)))
+        logger.info("  test  (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f} | pay = {3:7}".format(test_g1_list[-1], test_g2_list[-1], test_g3_list[-1], int(test_pay)))
         logger.info("========================================")
 
 if __name__ == "__main__":

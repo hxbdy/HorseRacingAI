@@ -858,13 +858,22 @@ class BradleyTerryClass(XClass):
             for x in range(self.col_num):
                 if self.wl_table[y][x] != -1:
                     w += self.wl_table[y][x]
-                    b += float((self.wl_table[y][x] + self.wl_table[x][y]) / (self.p[y] + self.p[x]))
-            self.p[y] = float(w / b)
+                    if (self.p[y] + self.p[x]) == 0:
+                        b = 0
+                    else:
+                        b += float((self.wl_table[y][x] + self.wl_table[x][y]) / (self.p[y] + self.p[x]))
+            if(b == 0):
+                self.p[y] = 0
+            else:
+                self.p[y] = float(w / b)
 
     def p_div(self):
         sum_p = sum(self.p)
         for i in range(self.col_num):
-            self.p[i] /= sum_p
+            if sum_p == 0:
+                self.p[i] = 0
+            else:
+                self.p[i] /= sum_p
 
     def fix(self):
         self.calcPower()
@@ -884,6 +893,16 @@ class BradleyTerryClass(XClass):
     def adj(self):
         self.xList = XClass.adj(self)
         return self.xList
+
+class ParentBradleyTerryClass(BradleyTerryClass):
+    def get(self):
+        childList = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        parentList = []
+        for i in range(len(childList)):
+            parent = db.horse_prof_getOneData(childList[i], "blood_f")
+            parentList.append(parent)
+        self.xList = parentList
+        self.col_num = len(self.xList)
 
 class RankOneHotClass(XClass):
     def __init__(self):
@@ -979,6 +998,7 @@ class MgrClass:
 
         for func_idx in range(len(classTbl)):
             if classTbl[func_idx] == None:
+                # logger.debug("func_idx = {0}".format(func_idx))
                 logger.debug("[{0:2d}] skip adj (len : {1:2d}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
                 continue
 

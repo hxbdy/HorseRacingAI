@@ -63,6 +63,12 @@ class PredictUmamusumeClass(UmamusumeClass):
         # horse_id
         self.xList = ["1983103914", "1983104782"]
 
+class PredictParentBradleyTerryClass(PredictBradleyTerryClass):
+    def get(self):
+        # blood_f の horse_id
+        self.xList = ["1983103914", "1983104782"]
+        self.col_num = len(self.xList)
+
 # レース開催日
 d0 = date(2022, 9, 1)
 
