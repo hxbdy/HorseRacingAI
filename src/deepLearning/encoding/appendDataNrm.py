@@ -1,8 +1,9 @@
 # AI 学習用データの作成
-# すでに生成済みの学習データX と 教師データtの一部データを差し替えるためのコード
+# すでに生成済みの学習データX の末尾に新規クラスを追加するためのコード
 # 対象のみを DB から標準化し、学習データX と 教師データt の対となるリストを作成する
+# 同一のクラスがすでに導入されていても無条件で学習データに追加するので意図しないデータにならないように整合性には注意
 # 読込及び出力先 ./dst/learningList/X.pickle, t.pickle
-# > python ./src/deepLearning/changeDataNrm.py
+# > python ./src/deepLearning/encoding/appendDataNrm.py
 
 import pickle
 import os
@@ -42,24 +43,21 @@ if __name__ == "__main__":
     with open(path_learningList + X_test_file_name, 'rb') as f:
         x_test = pickle.load(f)
 
-    # start_year <= data <= end_year のレースから limit 件取得する
-    # 基となるデータを ./src/deepLearning/scrapingDataNrm.py を実行して生成した上で実行すること
-    # MgrClass の生成条件 start_year, end_year, limit は統一すること
-    # XclassTbl を chgXTbl に差し替え
+    # XclassTbl に以下クラスを追加する
+    # これ以外のクラスの標準化はスキップする(従来の結果をそのまま引き継ぐ)
+    add_class = ParentBradleyTerryClass
     
     # 学習用データ
     logger.info("========================================")
-    logger.info("generate train data")
-    total_train_list = MgrClass(start_year = start_year_train, end_year = end_year_train, XclassTbl = chgXTbl, tclassTbl = tTbl, limit = limit_train)
+    total_train_list = MgrClass(start_year = start_year_train, end_year = end_year_train, XclassTbl = XTbl, tclassTbl = tTbl, limit = limit_train)
     total_train_list.set_totalList(x_train, t_train)
-    x_train, t_train, analysis_train = total_train_list.getTotalList()
+    x_train, t_train, analysis_train = total_train_list.getAppendTotalList(add_class)
 
     # 学習確認用テストデータ
     logger.info("========================================")
-    logger.info("generate test data")
-    total_test_list = MgrClass(start_year = start_year_test, end_year = end_year_test, XclassTbl = chgXTbl, tclassTbl = tTbl, limit = limit_test)
+    total_test_list = MgrClass(start_year = start_year_test, end_year = end_year_test, XclassTbl = XTbl, tclassTbl = tTbl, limit = limit_test)
     total_test_list.set_totalList(x_test, t_test)
-    x_test, t_test, analysis_test = total_test_list.getTotalList()
+    x_test, t_test, analysis_test = total_test_list.getAppendTotalList(add_class)
 
     # 書き込み
     logger.info("========================================")
@@ -73,3 +71,8 @@ if __name__ == "__main__":
     save_nn_data(X_test_file_name, x_test)
     save_nn_data(t_test_file_name, t_test)
     save_nn_data(analysis_test_file_name, analysis_test)
+
+    logger.info("========================================")
+    logger.info("Save finished")
+    # 今回学習用データに追加したクラスは、table.py に定義されている各テーブルにも追記してください
+    logger.info("Append {0} to each table -> XTbl, chgXTbl, predict_XTbl".format(add_class.__name__))

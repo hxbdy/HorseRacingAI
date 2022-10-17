@@ -13,7 +13,7 @@ import os
 from matplotlib import pyplot as plt
 
 from getFromDB import *
-from XClass import *
+from encodingXClass import *
 from table import *
 from deepLearningMain import *
 
@@ -106,8 +106,8 @@ def learning_check():
         test_g2_list.append(1.0 * test_g2 / TEST_G2_RACE_NUM)
         test_g3_list.append(1.0 * test_g3 / TEST_G3_RACE_NUM)
 
-        logger.info("  train (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f}".format(train_g1_list[-1], train_g2_list[-1], train_g3_list[-1]))
-        logger.info("  test  (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f}".format(test_g1_list[-1], test_g2_list[-1], test_g3_list[-1]))
+        logger.info("  train (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f} | pay = {3:7}".format(train_g1_list[-1], train_g2_list[-1], train_g3_list[-1], int(train_pay)))
+        logger.info("  test  (g1, g2, g3) = {0:1.3f}, {1:1.3f}, {2:1.3f} | pay = {3:7}".format(test_g1_list[-1], test_g2_list[-1], test_g3_list[-1], int(test_pay)))
         logger.info("========================================")
 
 if __name__ == "__main__":
@@ -148,21 +148,13 @@ if __name__ == "__main__":
     # グラフ描画
     os.makedirs(path_graph, exist_ok=True)
 
-    # 正答率グラフ
-    # title = "ACC"
-    # plt.figure() # 新規ウインドウ
-    # plt.title(title)
-    # plt.plot(train_acc_list, label="train")
-    # plt.plot(test_acc_list, label="test")
-    # plt.legend() # 凡例表示(labelで指定したテキストの表示)
-    # plt.savefig(path_graph + title + ".png")
-
     # グレード別正答率
     title = "AVE_ACC_G1"
     plt.figure() # 新規ウインドウ
     plt.title(title)
     plt.plot(train_g1_ave_list, label="train")
     plt.plot(test_g1_ave_list, label="test")
+    plt.plot(train_g1_ave_list - test_g1_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -171,6 +163,7 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_g2_ave_list, label="train")
     plt.plot(test_g2_ave_list, label="test")
+    plt.plot(train_g2_ave_list - test_g2_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -179,6 +172,7 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_g3_ave_list, label="train")
     plt.plot(test_g3_ave_list, label="test")
+    plt.plot(train_g3_ave_list - test_g3_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
@@ -187,7 +181,9 @@ if __name__ == "__main__":
     plt.title(title)
     plt.plot(train_wallet_ave_list, label="train")
     plt.plot(test_wallet_ave_list, label="test")
+    plt.plot(train_wallet_ave_list - test_wallet_ave_list, label="train - test")
     plt.legend() # 凡例表示(labelで指定したテキストの表示)
     plt.savefig(path_graph + title + ".png")
 
+    logger.info("display graph")
     plt.show()

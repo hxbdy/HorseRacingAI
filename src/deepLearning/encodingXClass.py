@@ -1,22 +1,14 @@
 # AI に入力するための標準化までを行うクラス
 
-import pickle
-import sys
-import os
-import pathlib
-import logging
-import re
-from datetime import date
-from dateutil.relativedelta import relativedelta
 import numpy as np
+import re
 import copy
 
-from common.debug import *
-from common.getFromDB import * # db ハンドラはここで定義済み
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
-common_dir = pathlib.Path(__file__).parent
-src_dir = common_dir.parent
-root_dir = src_dir.parent
+from debug import *
+from getFromDB import * # db ハンドラはここで定義済み
 
 class XClass:
     # 全インスタンス共通の変数
@@ -443,6 +435,137 @@ class JockeyClass(XClass):
         self.xList = XClass.adj(self)
         return self.xList
 
+class UmamusumeClass(XClass):
+    def __init__(self):
+        super().__init__()
+    
+    def set(self, race_id):
+        super().set(race_id)
+
+    def get(self):
+        # 出馬リストを取得
+        horse_list = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        self.xList = horse_list
+
+    def fix(self):
+        # ウマ娘ちゃんテーブル
+        umamusumeTbl = [
+            "1995103211", #スペシャルウィーク
+            "1994103997", #サイレンススズカ
+            "1988101025", #トウカイテイオー
+            "000a0003bd", #マルゼンスキー
+            "1992109618", #フジキセキ
+            "1985102167", #オグリキャップ
+            "2009102739", #ゴールドシップ
+            "2004104258", #ウオッカ
+            "2004103198", #ダイワスカーレット
+            "1994109686", #タイキシャトル
+            "1995108676", #グラスワンダー
+            "1991109852", #ヒシアマゾン
+            "1987107235", #メジロマックイーン
+            "1995108742", #エルコンドルパサー
+            "1996100292", #テイエムオペラオー
+            "1991108889", #ナリタブライアン
+            "1981107017", #シンボリルドルフ
+            "1993109154", #エアグルーヴ
+            "1997110025", #アグネスデジタル
+            "1995107393", #セイウンスカイ
+            "1984101673", #タマモクロス
+            "1999110187", #ファインモーション
+            "1990103355", #ビワハヤヒデ
+            "1992102988", #マヤノトップガン
+            "1998101554", #マンハッタンカフェ
+            "1989103049", #ミホノブルボン
+            "1987105368", #メジロライアン
+            "1992110167", #ヒシアケボノ
+            "1990103565", #ユキノビジン
+            "1989107699", #ライスシャワー
+            "1987100579", #アイネスフウジン
+            "1998101516", #アグネスタキオン
+            "1996107396", #アドマイヤベガ
+            "1984106229", #イナリワン
+            "1990102314", #ウイニングチケット
+            "1997103398", #エアシャカール
+            "2007102951", #エイシンフラッシュ
+            "2007102807", #カレンチャン
+            "2003107045", #カワカミプリンセス
+            "1984105823", #ゴールドシチー
+            "1989108341", #サクラバクシンオー
+            "1994109364", #シーキングザパール
+            "1993106964", #シンコウウインディ
+            "2001104313", #スイープトウショウ
+            "1985104409", #スーパークリーク
+            "2005100097", #スマートファルコン
+            "2000101517", #ゼンノロブロイ
+            "2006103169", #トーセンジョーダン
+            "2006102424", #ナカヤマフェスタ
+            "1990102766", #ナリタタイシン
+            "1989107262", #ニシノフラワー
+            "1996106177", #ハルウララ
+            "1985104122", #バンブーメモリー
+            "1991109886", #ビコーペガサス
+            "1992103687", #マーベラスサンデー
+            "1994100530", #マチカネフクキタル
+            "1980107022", #ミスターシービー
+            "1996110113", #メイショウドトウ
+            "1994108393", #メジロドーベル
+            "1988104866", #ナイスネイチャ
+            "1995104427", #キングヘイロー
+            "1989103489", #マチカネタンホイザ
+            "1987104784", #イクノディクタス
+            "1987105372", #メジロパーマー
+            "1987102798", #ダイタクヘリオス
+            "1988106332", #ツインターボ
+            "2013106101", #サトノダイヤモンド
+            "2012102013", #キタサンブラック
+            "1985100743", #サクラチヨノオー
+            "1982103448", #シリウスシンボリ
+            "1985103406", #メジロアルダン
+            "1985104215", #ヤエノムテキ
+            "1995108246", #ツルマルツヨシ
+            "1994108411", #メジロブライト
+            "2017100720", #デアリングタクト
+            "1991103498", #サクラローレル
+            "1996102442", #ナリタトップロード
+            "1988101069", #ヤマニンゼファー
+            "1999110099", #シンボリクリスエス
+            "1999100226", #タニノギムレット
+            "1987100260", #ダイイチルビー
+            "2004103323", #アストンマーチャン
+            "1988107943", #ケイエスミラクル
+            "2010106548", #コパノリッキー
+            "2009100921", #ホッコータルマエ
+            "2006106794", #ワンダーアキュート
+        ]
+
+        # 親にウマ娘ちゃんがいるか確認
+        # 居た場合 1 にする
+        umamusume_family = [0] * len(umamusumeTbl)
+        horse_list = self.xList
+        for i in range(len(horse_list)):
+            # horse_list[i] の親にウマ娘ちゃんがいたら umamusume_family[i] = 1 とする
+            # 親を取得
+            parent_list = db.getMulCol("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], "horse_id", horse_list[i])
+            parent_list = parent_list[0]
+            # 親1頭ずつ確認する
+            for parent in parent_list:
+                # ウマ娘ちゃんならフラグをセットする
+                for j in range(len(umamusumeTbl)):
+                    if parent == umamusumeTbl[j]:
+                        umamusume_family[j] = 1
+                        logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
+        self.xList = umamusume_family
+
+    def pad(self):
+        XClass.pad(self)
+
+    def nrm(self):
+        XClass.nrm(self)
+
+    def adj(self):
+        self.xList = XClass.adj(self)
+        return self.xList
+
 class CumPerformClass(XClass):
     def __init__(self):
         super().__init__()
@@ -735,13 +858,22 @@ class BradleyTerryClass(XClass):
             for x in range(self.col_num):
                 if self.wl_table[y][x] != -1:
                     w += self.wl_table[y][x]
-                    b += float((self.wl_table[y][x] + self.wl_table[x][y]) / (self.p[y] + self.p[x]))
-            self.p[y] = float(w / b)
+                    if (self.p[y] + self.p[x]) == 0:
+                        b = 0
+                    else:
+                        b += float((self.wl_table[y][x] + self.wl_table[x][y]) / (self.p[y] + self.p[x]))
+            if(b == 0):
+                self.p[y] = 0
+            else:
+                self.p[y] = float(w / b)
 
     def p_div(self):
         sum_p = sum(self.p)
         for i in range(self.col_num):
-            self.p[i] /= sum_p
+            if sum_p == 0:
+                self.p[i] = 0
+            else:
+                self.p[i] /= sum_p
 
     def fix(self):
         self.calcPower()
@@ -761,6 +893,16 @@ class BradleyTerryClass(XClass):
     def adj(self):
         self.xList = XClass.adj(self)
         return self.xList
+
+class ParentBradleyTerryClass(BradleyTerryClass):
+    def get(self):
+        childList = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        parentList = []
+        for i in range(len(childList)):
+            parent = db.horse_prof_getOneData(childList[i], "blood_f")
+            parentList.append(parent)
+        self.xList = parentList
+        self.col_num = len(self.xList)
 
 class RankOneHotClass(XClass):
     def __init__(self):
@@ -854,10 +996,10 @@ class MgrClass:
     def adj_train(self, adj_result, tbl):
         classTbl = copy.copy(tbl)
 
-        flat_len = 0
         for func_idx in range(len(classTbl)):
             if classTbl[func_idx] == None:
-                logger.debug("[{0}] skip adj (len : {1}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
+                # logger.debug("func_idx = {0}".format(func_idx))
+                logger.debug("[{0:2d}] skip adj (len : {1:2d}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
                 continue
 
             instance = (classTbl[func_idx])()
@@ -871,11 +1013,7 @@ class MgrClass:
             else:
                 adj_result[func_idx] = instance.adj()
 
-            flat_len += len(adj_result[func_idx])
-
-            logger.debug("[{0}] {1} adj (len : {2}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
-
-        logger.debug("total len : {0}".format(flat_len))
+            logger.debug("[{0:2d}] {1} adj (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
 
     # 各要素(天気, 賞金, etc...) を標準化まで行う
     # XTble で用意されたクラスごとに標準化を順に実行する
@@ -894,6 +1032,31 @@ class MgrClass:
         xstd = np.std(x, axis=0, keepdims=True)
         xzscore = (x - xmean) / (xstd + 1e-10)
         self.totalXList = xzscore.tolist()
+
+    # 既存の標準化済みデータに新規に追加する
+    def getAppendTotalList(self, append_x):
+
+        # 追加クラス以外をNoneにする
+        for i in range(len(self.XclassTbl)):
+            self.XclassTbl[i] = None
+        self.XclassTbl.append(append_x)
+
+        # 追加クラス分の列をアペンド
+        for i in range(len(self.totalXList)):
+            self.totalXList[i].append(0)
+        
+        return self.getTotalList()
+
+    # 既存の標準化済みデータから指定インデックスの要素を削除する
+    def getRemoveTotalList(self, remove_x_idx):
+        for i in range(len(self.XclassTbl)):
+            self.XclassTbl[i] = None
+
+        # 追加クラス分の列をアペンド
+        for i in range(len(self.totalXList)):
+            del self.totalXList[i][remove_x_idx]
+
+        return self.getTotalList()
 
     def getTotalList(self):
         # 進捗確認カウンタ
@@ -934,4 +1097,3 @@ class MgrClass:
             logger.debug("total zscore : {0}".format(self.totalXList))
         
         return self.totalXList, self.totaltList, totalAnalysisList
-            

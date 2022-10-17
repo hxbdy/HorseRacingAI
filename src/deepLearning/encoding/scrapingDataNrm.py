@@ -14,7 +14,7 @@ path_learningList = config.get('nn', 'path_learningList')
 path_log = path_log = config.get('common', 'path_log')
 
 from getFromDB import *
-from XClass import *
+from encodingXClass import *
 
 # 学習テーブル, 教師テーブル取得
 # 学習用データ生成条件取得

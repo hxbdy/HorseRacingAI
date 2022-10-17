@@ -10,7 +10,7 @@ import pickle
 import itertools
 
 from getFromDB import *
-from XClass import *
+from encodingXClass import *
 from table import *
 
 # load config
