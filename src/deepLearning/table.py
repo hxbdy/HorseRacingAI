@@ -4,7 +4,7 @@ from config_predict import *
 # 学習用データ生成条件
 start_year_train = 1800
 end_year_train   = 2020
-limit_train      = -1
+limit_train      = 2
 
 # 学習データファイル名フォーマット
 X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
@@ -14,7 +14,7 @@ analysis_train_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_train
 # テスト用データ生成条件
 start_year_test = 2021
 end_year_test   = 2021
-limit_test      = -1
+limit_test      = 2
 
 # テストファイル名フォーマット
 X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
