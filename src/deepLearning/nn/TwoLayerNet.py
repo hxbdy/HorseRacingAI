@@ -5,10 +5,12 @@ import sys
 import pathlib
 import configparser
 
+from encoding_common import *
+
 # load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
-path_trainedParam = config.get('nn', 'path_trainedParam')
+path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
 
 def softmax(x):
     x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策
@@ -247,76 +249,32 @@ class TowLayerNet:
         y=self.predict(x)
         return self.lastLayer.forward(y, t)
 
-    def loadTest(self,path,data_max):
-        '''
-        入力データの読み込み
-        標準化はここで行う
-        '''
-        x_test=[]
-        return x_test
-
-    def loadTrain(self,path,data_max,teach):
-        '''
-        教師データの読み込み
-        標準化はここで行う
-        '''
-        x_train=[]
-        t_train=[]
-        return x_train,t_train
-
-    def saveGradient(self,par):
-        '''
-        勾配をテキストに保存する
-        '''
-        # 保存先フォルダの存在確認
-        os.makedirs(path_trainedParam, exist_ok=True)
-        path_w=path_trainedParam+par+'.txt'
-        f=open(path_w,mode='w')
-        it = np.nditer(self.params[par], flags=['multi_index'], op_flags=['readwrite'])
-        while not it.finished:
-            idx=it.multi_index
-            f.write(str(self.params[par][idx]))
-            f.write("\n")
-            it.iternext()
-        f.close()
-
-    def saveLoss(self,loss):
-        # 保存先フォルダの存在確認
-        os.makedirs(path_trainedParam, exist_ok=True)
-        path_w=path_trainedParam+'loss.txt'
-        f=open(path_w,mode='w')
-        for i in loss:
-            f.write(str(i)+"\n")
-        f.close()
-
-    def loadGradient(self,par):
-        '''
-        勾配を読みこむ
-        '''
-        # 保存先フォルダの存在確認
-        os.makedirs(path_trainedParam, exist_ok=True)
-        path_r=path_trainedParam+par+'.txt'
-        with open(path_r) as f:
-            l = f.readlines()
-
-        it = np.nditer(self.params[par], flags=['multi_index'], op_flags=['readwrite'])
-        cnt=0
-        while not it.finished:
-            idx=it.multi_index
-            self.params[par][idx]=l[cnt]
-            it.iternext()
-            cnt+=1
-
     def seveParam(self):
         '''各パラメータを保存する'''
-        self.saveGradient('W1')
-        self.saveGradient('b1')
-        self.saveGradient('W2')
-        self.saveGradient('b2')
+        # 連番取得
+        serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
+        # 連番フォルダに保存
+        encoding_save_nn_data(serial_dir_path, "W1.pickle", self.params['W1'])
+        encoding_save_nn_data(serial_dir_path, "b1.pickle", self.params['b1'])
+        encoding_save_nn_data(serial_dir_path, "W2.pickle", self.params['W2'])
+        encoding_save_nn_data(serial_dir_path, "b2.pickle", self.params['b2'])
+
+        # 最新フォルダにもコピー
+        # 最新フォルダまでのパスを取得
+        newest_dir_path = dl_newest_dir_path()
+        # newestフォルダ削除
+        shutil.rmtree(newest_dir_path)
+        # 最新フォルダに結果をコピー
+        shutil.copytree(serial_dir_path, newest_dir_path)
 
     def loadParam(self):
-        '''各パラメータを設定する'''
-        self.loadGradient('W1')
-        self.loadGradient('b1')
-        self.loadGradient('W2')
-        self.loadGradient('b2')
+        '''最新フォルダから各パラメータを読み込む'''
+        newest_dir_path = dl_newest_dir_path()
+        with open(newest_dir_path + "W1.pickle", 'rb') as f:
+            self.params['W1'] = pickle.load(f)
+        with open(newest_dir_path + "b1.pickle", 'rb') as f:
+            self.params['b1'] = pickle.load(f)
+        with open(newest_dir_path + "W2.pickle", 'rb') as f:
+            self.params['W2'] = pickle.load(f)
+        with open(newest_dir_path + "b2.pickle", 'rb') as f:
+            self.params['b2'] = pickle.load(f)

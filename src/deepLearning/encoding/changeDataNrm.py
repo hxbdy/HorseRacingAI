@@ -37,9 +37,13 @@ if __name__ == "__main__":
     # 書き込み
     logger.info("========================================")
 
-    # 連番フォルダに保存
+    # 保存先パス取得
+    config = configparser.ConfigParser()
+    config.read('./src/path.ini')
+    path_root = config.get('nn', 'path_root_learningList')
     # 連番取得
-    serial_dir_path = encoding_serial_dir_path()
+    serial_dir_path = encoding_serial_dir_path(path_root)
+    # 連番フォルダに保存
     encoding_save_nn_data(serial_dir_path, X_train_file_name, x_train)
     encoding_save_nn_data(serial_dir_path, t_train_file_name, t_train)
     encoding_save_nn_data(serial_dir_path, analysis_train_file_name, analysis_train)

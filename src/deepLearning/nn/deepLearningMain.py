@@ -12,34 +12,29 @@ import itertools
 from getFromDB import *
 from encodingXClass import *
 from table import *
+from encoding_common import *
 
 # load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
 path_learningList = config.get('nn', 'path_learningList')
 
-# pickle 読込
-# numpy array に変換して返す
-def load_flat_pcikle(pkl_name):
-    with open(path_learningList + pkl_name, 'rb') as f:
-        flat_pkl = []
-        flat_pkl_list = pickle.load(f)
-        for i in flat_pkl_list:
-            flat_pkl.append(list(itertools.chain.from_iterable(i)))
-        flat_pkl = np.array(flat_pkl)
-        return flat_pkl
-
-def load_horse_racing_data():
-    x_train = load_flat_pcikle(X_train_file_name)
-    t_train = load_flat_pcikle(t_train_file_name)
-
-    x_test = load_flat_pcikle(X_test_file_name)
-    t_test = load_flat_pcikle(t_test_file_name)
-
-    return (x_train, t_train), (x_test, t_test)
+# multi_x をnumpy 2次元にして返す
+def flat2d(multi_x):
+    flat_x = []
+    for i in multi_x:
+        flat_x.append(list(itertools.chain.from_iterable(i)))
+    flat_x = np.array(flat_x)
+    return flat_x
 
 # 学習データの読込
-(x_train, t_train), (x_test, t_test) = load_horse_racing_data()
+(x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
+
+# 多次元になっているリストを2次元にならす
+x_train = flat2d(x_train)
+t_train = flat2d(t_train)
+x_test = flat2d(x_test)
+t_test = flat2d(t_test)
 
 # ハイパーパラメータ
 iters_num     = 30000
@@ -90,8 +85,7 @@ def deep_learning_main():
             yield net
 
     # 保存
-    logger.info("Save loss, param")
-    net.saveLoss(train_loss_list)
+    logger.info("Save param")
     net.seveParam()
     logger.info("Finish")
     logger.info("========================================")
