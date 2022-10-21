@@ -960,8 +960,8 @@ class RankOneHotClass(XClass):
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):
-        self.XclassTbl = XclassTbl
-        self.tclassTbl = tclassTbl
+        self.XclassTbl = copy.copy(XclassTbl)
+        self.tclassTbl = copy.copy(tclassTbl)
 
         # セットされた race_id の標準化結果の一時保持リスト
         self.x = [0] * len(XclassTbl)
@@ -999,6 +999,7 @@ class MgrClass:
         for func_idx in range(len(classTbl)):
             if classTbl[func_idx] == None:
                 # logger.debug("func_idx = {0}".format(func_idx))
+                # logger.debug("adj_result[func_idx] = {0}".format(adj_result[func_idx]))
                 logger.debug("[{0:2d}] skip adj (len : {1:2d}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
                 continue
 

@@ -1,47 +1,25 @@
 # AI 学習用データの作成
 # すでに生成済みの学習データX の末尾に新規クラスを追加するためのコード
 # 対象のみを DB から標準化し、学習データX と 教師データt の対となるリストを作成する
-# 同一のクラスがすでに導入されていても無条件で学習データに追加するので意図しないデータにならないように整合性には注意
-# 読込及び出力先 ./dst/learningList/X.pickle, t.pickle
+# 同一のクラスがすでに導入されていても無条件で学習データに追加するので意図しないデータにならないように注意
+# USAGE : add_class 変数に追加したいクラスを代入して以下コマンド実行
 # > python ./src/deepLearning/encoding/appendDataNrm.py
 
-import pickle
-import os
 import configparser
 
 from getFromDB import *
 from encodingXClass import *
-
-# 学習テーブル, 教師テーブル取得
-# 学習用データ生成条件取得
-# テスト用データ生成条件
 from table import *
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini')
-path_learningList = config.get('nn', 'path_learningList')
-path_log = config.get('common', 'path_log')
-
-def save_nn_data(pkl_name, data): 
-    # 保存先フォルダの存在確認
-    os.makedirs(path_learningList, exist_ok=True)
-
-    logger.info("Save {0}{1}".format(path_learningList, pkl_name))
-    with open(path_learningList + pkl_name, 'wb') as f:
-        pickle.dump(data, f)
+from encoding_common import *
 
 if __name__ == "__main__":
+    # load config
+    config = configparser.ConfigParser()
+    config.read('./src/path.ini')
+    path_learningList = config.get('nn', 'path_learningList')
 
     # X.pickle, t.pickle 読込
-    with open(path_learningList + t_train_file_name, 'rb') as f:
-        t_train = pickle.load(f)
-    with open(path_learningList + X_train_file_name, 'rb') as f:
-        x_train = pickle.load(f)
-    with open(path_learningList + t_test_file_name, 'rb') as f:
-        t_test = pickle.load(f)
-    with open(path_learningList + X_test_file_name, 'rb') as f:
-        x_test = pickle.load(f)
+    (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 
     # XclassTbl に以下クラスを追加する
     # これ以外のクラスの標準化はスキップする(従来の結果をそのまま引き継ぐ)
@@ -62,16 +40,26 @@ if __name__ == "__main__":
     # 書き込み
     logger.info("========================================")
 
-    # 出力ファイル名フォーマット
-    # X_{開始年}-{終了年}-{件数}
-    save_nn_data(X_train_file_name, x_train)
-    save_nn_data(t_train_file_name, t_train)
-    save_nn_data(analysis_train_file_name, analysis_train)
+    # 連番フォルダに保存
+    # 連番取得
+    serial_dir_path = encoding_serial_dir_path()
+    encoding_save_nn_data(serial_dir_path, X_train_file_name, x_train)
+    encoding_save_nn_data(serial_dir_path, t_train_file_name, t_train)
+    encoding_save_nn_data(serial_dir_path, analysis_train_file_name, analysis_train)
+    encoding_save_nn_data(serial_dir_path, X_test_file_name, x_test)
+    encoding_save_nn_data(serial_dir_path, t_test_file_name, t_test)
+    encoding_save_nn_data(serial_dir_path, analysis_test_file_name, analysis_test)
 
-    save_nn_data(X_test_file_name, x_test)
-    save_nn_data(t_test_file_name, t_test)
-    save_nn_data(analysis_test_file_name, analysis_test)
+    # 生成条件の保存
+    encoding_save_condition(serial_dir_path)
 
+    # 最新フォルダまでのパスを取得
+    newest_dir_path = encoding_newest_dir_path()
+    # newestフォルダ削除
+    shutil.rmtree(newest_dir_path)
+    # 最新フォルダに結果をコピー
+    shutil.copytree(serial_dir_path, newest_dir_path)
+    
     logger.info("========================================")
     logger.info("Save finished")
     # 今回学習用データに追加したクラスは、table.py に定義されている各テーブルにも追記してください
