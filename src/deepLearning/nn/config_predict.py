@@ -11,7 +11,7 @@ from encodingXClass import *
 class PredictHorseNumClass(HorseNumClass):
     def get(self):
         # 出走する馬の頭数
-        self.xList = 23
+        self.xList = [23]
 
 class PredictCourseConditionClass(CourseConditionClass):
     def get(self):
@@ -22,7 +22,7 @@ class PredictCourseConditionClass(CourseConditionClass):
 class PredictCourseDistanceClass(CourseDistanceClass):
     def get(self):
         # コース長
-        self.xList = 1600.0
+        self.xList = [1600.0]
 class PredictRaceStartTimeClass(RaceStartTimeClass):
     def get(self):
         # 出走時刻

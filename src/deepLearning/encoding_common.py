@@ -3,6 +3,8 @@ import os
 import shutil
 import configparser
 import datetime
+import numpy as np
+import itertools
 
 from debug import *
 from table import *
@@ -65,3 +67,12 @@ def encoding_load(dir_path):
 # !! 通常生成, クラス追加, 差し替え のどれから実行されたかが不明になっている
 def encoding_save_condition(dir_path):
     shutil.copy("./src/deepLearning/table.py", dir_path)
+
+# multi_x をnumpy 2次元にして返す
+def dl_flat2d(multi_x):
+    flat_x = []
+    for i in multi_x:
+        flat_x.append(list(itertools.chain.from_iterable(i)))
+    flat_x = np.array(flat_x)
+    return flat_x
+    

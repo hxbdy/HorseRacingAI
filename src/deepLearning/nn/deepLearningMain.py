@@ -6,35 +6,23 @@
 import configparser
 import TwoLayerNet
 import numpy as np
-import pickle
-import itertools
 
 from getFromDB import *
 from encodingXClass import *
 from table import *
 from encoding_common import *
 
-# load config
+# 学習データの読込
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
 path_learningList = config.get('nn', 'path_learningList')
-
-# multi_x をnumpy 2次元にして返す
-def flat2d(multi_x):
-    flat_x = []
-    for i in multi_x:
-        flat_x.append(list(itertools.chain.from_iterable(i)))
-    flat_x = np.array(flat_x)
-    return flat_x
-
-# 学習データの読込
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 
 # 多次元になっているリストを2次元にならす
-x_train = flat2d(x_train)
-t_train = flat2d(t_train)
-x_test = flat2d(x_test)
-t_test = flat2d(t_test)
+x_train = dl_flat2d(x_train)
+t_train = dl_flat2d(t_train)
+x_test = dl_flat2d(x_test)
+t_test = dl_flat2d(t_test)
 
 # ハイパーパラメータ
 iters_num     = 30000
