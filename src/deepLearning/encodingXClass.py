@@ -985,7 +985,7 @@ class MgrClass:
             instance = (classTbl[func_idx])()
             adj_result[func_idx] = instance.adj()
 
-            logger.debug("[{0:2d}] {1} adj (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
+            logger.debug("[{0:2d}] {1:23} (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
 
     # 各要素(天気, 賞金, etc...) を標準化まで行う
     # XTble で用意されたクラスごとに標準化を順に実行する
