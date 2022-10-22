@@ -2,24 +2,24 @@ from encodingXClass import *
 from config_predict import *
 
 # 学習用データ生成条件
-start_year_train = 1800
-end_year_train   = 2020
-limit_train      = -1
+start_year_train = 1800 # 開始年
+end_year_train   = 2020 # 終了年
+limit_train      = -1   # 取得件数 -1 なら全件
 
 # 学習データファイル名フォーマット
-X_train_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
-t_train_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
-analysis_train_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_train, end_year_train, limit_train)
+X_train_file_name = "x_train.pickle"
+t_train_file_name = "t_train.pickle"
+analysis_train_file_name = "analysis_train.pickle"
 
 # テスト用データ生成条件
-start_year_test = 2021
-end_year_test   = 2021
-limit_test      = -1
+start_year_test = 2021 # 開始年
+end_year_test   = 2021 # 終了年
+limit_test      = -1   # 取得件数 -1 なら全件
 
 # テストファイル名フォーマット
-X_test_file_name = "X_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
-t_test_file_name = "t_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
-analysis_test_file_name = "analysis_{0}-{1}-{2}.pickle".format(start_year_test, end_year_test, limit_test)
+X_test_file_name = "x_test.pickle"
+t_test_file_name = "t_test.pickle"
+analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル
 XTbl = [
@@ -66,6 +66,7 @@ predict_XTbl = [
     PredictBurdenWeightClass,
     PredictPostPositionClass,
     PredictJockeyClass,
+    PredictCumPerformClass,
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
     PredictParentBradleyTerryClass,
