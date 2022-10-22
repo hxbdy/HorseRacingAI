@@ -1,36 +1,18 @@
-import sys
-import pathlib
-from datetime import date
-import re
+# DB に問い合わせ、取得したデータを整形する
+# ここで行って良い変換処理はDBから取得したデータの変換のみ
+# エンコードに都合の良いように変換する作業は各クラスのget, fixで行う
 
-# commonフォルダ内読み込みのため
-deepLearning_dir = pathlib.Path(__file__).parent
-src_dir = deepLearning_dir.parent
-root_dir = src_dir.parent
-dir_lst = [deepLearning_dir, src_dir, root_dir]
-for dir_name in dir_lst:
-    if str(dir_name) not in sys.path:
-        sys.path.append(str(dir_name))
+from datetime import date
 
 from NetkeibaDB import netkeibaDB
 from debug import *
 
-def getCourseCondition(race_id):
-    raceData1List = netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id])
-    # コース状態取得
-    # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
-    sep1 = raceData1List[0].split(":")[2]
-    #  良 / 発走 
-    sep1 = sep1.split("/")[0]
-    # 良
-    sep1 = sep1.replace(" ", "")
-    return sep1
-
-def get1stOdds(race_id):
+def db_race_1st_odds(race_id):
+    # 指定レースの1位オッズをfloatで返す
     odds = netkeibaDB.sql_mul_tbl("race_info", ["odds"], ["race_id", "result"], [race_id, "1"])
     return float(odds[0])
 
-def getTotalRaceList(start_year = 0, end_year = 9999, limit = -1):
+def db_race_list_id(start_year = 0, end_year = 9999, limit = -1):
     # yearを含む年のレースまでをlimit件取得する
     # limit を指定しない場合は全件検索
     # デフォルトでは全てのレースを取得する
@@ -52,7 +34,7 @@ def getTotalRaceList(start_year = 0, end_year = 9999, limit = -1):
     totalRaceList = netkeibaDB.sql_mul_distinctColCnt("race_result", "race_id", start_year, end_year, limit)
     return totalRaceList
 
-def getRaceDate(race_id):
+def db_race_date(race_id):
     # レース開催日を取り出す
     # 以下の前提で計算する
     # race_data2 にレース開催日が含まれていること
@@ -63,11 +45,101 @@ def getRaceDate(race_id):
     raceDateDay = int(raceDate.split("月")[1].split("日")[0])
     return date(raceDateYear, raceDateMon, raceDateDay)
 
-def getRaceGrade(race_id):
+def db_race_grade(race_id):
     # レースのグレードを返す
     # 不明の場合-1を返す
     raceGrade = netkeibaDB.sql_mul_tbl("race_info", ["grade"], ["race_id"], [race_id])
     return int(raceGrade[0])
+
+def db_race_list_prize(race_id):
+    # レースの賞金をリストで返す
+    # (降順ソートされているか未確認)
+    prizeList = netkeibaDB.sql_mul_tbl("race_result", ["prize"], ["race_id"], [race_id])
+    for i in range(len(prizeList)):
+        prizeList[i] = str(prizeList[i])
+    return prizeList
+
+def db_race_num_horse(race_id):
+    # 出走する頭数を返す
+    return [netkeibaDB.sql_one_rowCnt("race_result", "race_id", race_id)]
+
+def db_race_list_race_data1(race_id):
+    # race_result テーブルの race_data1 列のデータを取得する
+    return netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id])
+
+def db_race_list_horse_id(race_id):
+    # 出走する馬のIDリストを返す
+    return netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", race_id)
+
+def db_horse_bod(horse_id):
+    # 馬の誕生日を返す
+    data = netkeibaDB.sql_one_horse_prof(horse_id, "bod")
+    birthYear = int(data.split("年")[0])
+    birthMon = int(data.split("年")[1].split("月")[0])
+    birthDay = int(data.split("月")[1].split("日")[0])
+    return date(birthYear, birthMon, birthDay)
+
+def db_race_list_burden_weight(race_id):
+    # 斤量リストをfloatに変換して返す
+    burdenWeightList = netkeibaDB.sql_mul_sortHorseNum(["race_info.burden_weight"], "race_info.race_id", race_id)
+    for i in range(len(burdenWeightList)):
+        burdenWeightList[i] = float(burdenWeightList[i])
+    return burdenWeightList
+
+def db_race_list_post_position(race_id):
+    # 枠番リストをfloatに変換して返す
+    postPositionList = netkeibaDB.sql_mul_sortHorseNum(["race_info.post_position"], "race_info.race_id", race_id)
+    for i in range(len(postPositionList)):
+        postPositionList[i] = float(postPositionList[i])
+    return postPositionList
+
+def db_race_list_jockey(race_id):
+    # 騎手リストを返す
+    jockeyIDList = netkeibaDB.sql_mul_sortHorseNum(["race_info.jockey_id"], "race_info.race_id", race_id)
+    for i in range(len(jockeyIDList)):
+        jockeyIDList[i] = str(jockeyIDList[i])
+    return jockeyIDList
+
+def db_race_cnt_jockey(jockey_id):
+    # 騎手の総出場回数を求める
+    return netkeibaDB.sql_one_rowCnt("race_info", "jockey_id", jockey_id)
+
+def db_horse_list_parent(horse_id):
+    # 親馬のIDリストを返す
+    parent_list = netkeibaDB.sql_mul_tbl("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], ["horse_id"], [horse_id])
+    parent_list = parent_list[0]
+    return parent_list
+
+def db_horse_list_perform(horse_id):
+    # パフォーマンス計算に必要な列を返す
+    col = ["horse_id", "venue", "time", "burden_weight", "course_condition", "distance", "grade"]
+    race = netkeibaDB.sql_mul_tbl("race_info", col, ["horse_id"], [horse_id])
+    return race
+
+def db_race_list_margin(race_id):
+    # 着差を文字列のリストで返す
+    marginList = netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id])
+    for i in range(len(marginList)):
+        marginList[i] = str(marginList[i])
+
+def db_race_rank(race_id, horse_id):
+    # race_id で horse_id は何位だったか取得
+    return netkeibaDB.sql_one_race_info(race_id, horse_id, "result")
+
+def db_race_list_1v1(horse_id_1, horse_id_2):
+    # horse_id_1, horse_id_2 が出走したレースリストを返す
+    return netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2)
+
+def db_horse_father(horse_id):
+    # 父のidを返す
+    return netkeibaDB.sql_one_horse_prof(horse_id, "blood_f")
+
+def db_race_list_rank(race_id):
+    # 馬番で昇順ソートされた順位を文字列で返す
+    rankList = netkeibaDB.sql_mul_sortHorseNum(["race_info.result"], "race_info.race_id", race_id)
+    for i in range(len(rankList)):
+        rankList[i] = str(rankList[i])
+    return rankList
 
 #def calCumNumOfWin(horsedb):
     # 累計勝利数を計算
