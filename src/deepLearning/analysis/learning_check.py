@@ -1,6 +1,4 @@
 # NN学習を呼び出す。学習途中の情報を使ってグラフを描画したりもする
-# 学習したパラメータ, バイアスは ./dst/trainedParam/*.txt で確認可能
-# 2020年までのデータで学習し, 2021年のレースで精度を確認している
 # > python ./src/deepLearning/analysis/learning_check.py
 
 import configparser
@@ -20,6 +18,8 @@ from deepLearningMain import *
 # load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
+path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
+path_learningList = config.get('nn', 'path_learningList')
 path_graph = config.get('nn', 'path_graph')
 
 def get_analysis_info(analysis_data, mask):
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     train_g3_ave_list     = np.average(train_g3_ave_list, axis=0)
     test_g3_ave_list      = np.average(test_g3_ave_list, axis=0)
 
-    # グラフ描画
+    # グラフ保存用フォルダ
     os.makedirs(path_graph, exist_ok=True)
 
     # グレード別正答率

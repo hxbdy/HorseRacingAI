@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 
 from debug import config, logger
 import webdriver_functions as wf
-from NetkeibaDB import db
+from NetkeibaDB import netkeibaDB
 
 
 def login(driver, mail_address, password):
@@ -121,7 +121,7 @@ def scrape_raceID(driver, year_month, race_grade=4):
             raceID_list = raceID_list[::-1]
             # dbのrace_idテーブルに保存
             logger.debug("saving race_id {0}.{1}-{2} on database started".format(year,scraping_month[0],scraping_month[-1]))
-            db.insertRowToRaceId(raceID_list)
+            netkeibaDB.sql_insert_RowToRaceId(raceID_list)
             logger.info("saving race_id {0}.{1}-{2} on database completed".format(year,scraping_month[0],scraping_month[-1]))
 
 
@@ -175,7 +175,7 @@ def scrape_racedata(driver, raceID_list):
             data = [horseIDs_race[i], raceID, race_name, race_data1, race_data2, goal_time[i], margin[i], horse_weight[i], prize[i], rank[i]]
             data_list.append(data)
         target_col = ["horse_id","race_id","race_name","race_data1","race_data2","time","margin","horse_weight","prize","result"]
-        db.insertRow("race_result", target_col, data_list)
+        netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
         # race_idテーブルのisScrapedを更新(時間かかりそう&変なエラー起きそう&間接的重複回避)
         #db.cur.execute("UPDATE race_id SET isScraped = 1 WHERE id = {}".format(raceID))
         logger.debug("saving race_result completed, raceID={}".format(raceID))
@@ -302,18 +302,18 @@ def scrape_horsedata(driver, horseID_list):
         #- horse_profテーブル
         data_list = [[horseID, *prof_contents, *blood_list, horse_title, check]]
         # 存在確認して，あればUPDATE，なければINSERT
-        if len(db.getColDataFromTbl("horse_prof","*",["horse_id"],[horseID])) > 0:
-            db.updateRow("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
+        if len(netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID])) > 0:
+            netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
         else:
-            db.insertRow("horse_prof", target_col_hp, data_list)
+            netkeibaDB.sql_insert_Row("horse_prof", target_col_hp, data_list)
         logger.debug("save horsedata on horse_prof table horse_id={}".format(horseID))
         
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
-        dif = len(perform_contents) - len(db.getColDataFromTbl("race_info","*",["horse_id"],[horseID]))
+        dif = len(perform_contents) - len(netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID]))
         if dif > 0:
             data_list = perform_contents[:dif]
-            db.insertRow("race_info", target_col_ri, perform_contents)
+            netkeibaDB.sql_insert_Row("race_info", target_col_ri, perform_contents)
         else:
             pass
         
@@ -325,7 +325,7 @@ def reconfirm_check():
     db上のデータを削除することはせず，flgの値のみ変更する．
     """
     # checkが0の馬のhorse_idを抽出
-    id_check_list = db.getColDataFromTbl("horse_prof","horse_id",["check_flg"],["0"])
+    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"])
     logger.info("{} horses need be reconfirmed.".format(len(id_check_list)))
     logger.info("horse_id:")
     logger.info(id_check_list)
@@ -336,18 +336,18 @@ def reconfirm_check():
         # エラーを含むレース数のカウンター
         num_error = 0
         # 着順による判定
-        result_list = db.getColDataFromTbl("race_info","result",["horse_id"],horse_id)
+        result_list = netkeibaDB.sql_mul_tbl("race_info",["result"],["horse_id"],horse_id)
         for res in result_list:
             # 着順が "除","取","" のレースを除外 (競走除外，出走取消，開催延期?)
             if res == "除" or res == "取" or res == "":
                 num_error += 1
         # horse_profの通算成績の競走回数と比較
-        race_prof = db.getColDataFromTbl("horse_prof","lifetime_record",["horse_id"],horse_id)[0]
+        race_prof = netkeibaDB.sql_mul_tbl("horse_prof",["lifetime_record"],["horse_id"],horse_id)[0]
         if int(race_prof) == len(result_list) - num_error:
-            db.updateRow("horse_prof",["check_flg"],["1"],["horse_id = '{}'".format(horse_id)])
+            netkeibaDB.sql_update_Row("horse_prof",["check_flg"],["1"],["horse_id = '{}'".format(horse_id)])
     
     # checkが0の馬のhorse_idを再抽出して表示
-    id_check_list = db.getColDataFromTbl("horse_prof","horse_id",["check_flg"],["0"])
+    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"])
     logger.info("{} horses remained.".format(len(id_check_list)))
     logger.info("horse_id:")
     logger.info(id_check_list)

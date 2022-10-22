@@ -1,38 +1,16 @@
 # AI 学習用データの作成
 # DB からデータを標準化し、学習データX と 教師データt の対となるリストを作成する
-# 出力先 ./dst/learningList/X.pickle, t.pickle
+# start_year <= data <= end_year のレースから limit 件取得する
+# USAGE : 生成条件をtable.pyで設定し以下コマンド実行
 # > python ./src/deepLearning/encoding/scrapingDataNrm.py
-
-import pickle
-import os
-import configparser
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini')
-path_learningList = config.get('nn', 'path_learningList')
-path_log = path_log = config.get('common', 'path_log')
 
 from getFromDB import *
 from encodingXClass import *
-
-# 学習テーブル, 教師テーブル取得
-# 学習用データ生成条件取得
-# テスト用データ生成条件
 from table import *
-
-def save_nn_data(pkl_name, data): 
-    # 保存先フォルダの存在確認
-    os.makedirs(path_learningList, exist_ok=True)
-
-    logger.info("Save {0}{1}".format(path_learningList, pkl_name))
-    with open(path_learningList + pkl_name, 'wb') as f:
-        pickle.dump(data, f)
+from encoding_common import *
+import shutil
 
 if __name__ == "__main__":
-    # start_year <= data <= end_year のレースから limit 件取得する
-    # ここで生成したデータは ./src/deepLearning/changeDataNrm.py で差し替え可能です
-    # MgrClass の生成条件 start_year, end_year, limit は統一すること
     
     # 学習用データ
     logger.info("========================================")
@@ -49,12 +27,26 @@ if __name__ == "__main__":
     # 書き込み
     logger.info("========================================")
 
-    # 出力ファイル名フォーマット
-    # X_{開始年}-{終了年}-{件数}
-    save_nn_data(X_train_file_name, x_train)
-    save_nn_data(t_train_file_name, t_train)
-    save_nn_data(analysis_train_file_name, analysis_train)
+    # 保存先パス取得
+    config = configparser.ConfigParser()
+    config.read('./src/path.ini')
+    path_root = config.get('nn', 'path_root_learningList')
+    # 連番取得
+    serial_dir_path = encoding_serial_dir_path(path_root)
+    # 連番フォルダに保存
+    encoding_save_nn_data(serial_dir_path, X_train_file_name, x_train)
+    encoding_save_nn_data(serial_dir_path, t_train_file_name, t_train)
+    encoding_save_nn_data(serial_dir_path, analysis_train_file_name, analysis_train)
+    encoding_save_nn_data(serial_dir_path, X_test_file_name, x_test)
+    encoding_save_nn_data(serial_dir_path, t_test_file_name, t_test)
+    encoding_save_nn_data(serial_dir_path, analysis_test_file_name, analysis_test)
 
-    save_nn_data(X_test_file_name, x_test)
-    save_nn_data(t_test_file_name, t_test)
-    save_nn_data(analysis_test_file_name, analysis_test)
+    # 生成条件の保存
+    encoding_save_condition(serial_dir_path)
+
+    # 最新フォルダまでのパスを取得
+    newest_dir_path = encoding_newest_dir_path()
+    # newestフォルダ削除
+    shutil.rmtree(newest_dir_path)
+    # 最新フォルダに結果をコピー
+    shutil.copytree(serial_dir_path, newest_dir_path)
