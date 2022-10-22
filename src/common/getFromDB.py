@@ -16,7 +16,7 @@ from NetkeibaDB import db
 from debug import *
 
 def getCourseCondition(race_id):
-    raceData1List = db.getColDataFromTbl("race_result", "race_data1", ["race_id"], [race_id])
+    raceData1List = db.db_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id])
     # コース状態取得
     # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
     sep1 = raceData1List[0].split(":")[2]
@@ -27,7 +27,7 @@ def getCourseCondition(race_id):
     return sep1
 
 def get1stOdds(race_id):
-    odds = db.getColDataFromTbl("race_info", "odds", ["race_id", "result"], [race_id, "1"])
+    odds = db.db_mul_tbl("race_info", ["odds"], ["race_id", "result"], [race_id, "1"])
     return float(odds[0])
 
 def getTotalRaceList(start_year = 0, end_year = 9999, limit = -1):
@@ -49,14 +49,14 @@ def getTotalRaceList(start_year = 0, end_year = 9999, limit = -1):
         # SQLite Int の最大値 2**63 -1
         limit = 9223372036854775807
 
-    totalRaceList = db.getDistinctCol("race_result", "race_id", start_year, end_year, limit)
+    totalRaceList = db.db_mul_distinctColCnt("race_result", "race_id", start_year, end_year, limit)
     return totalRaceList
 
 def getRaceDate(race_id):
     # レース開催日を取り出す
     # 以下の前提で計算する
     # race_data2 にレース開催日が含まれていること
-    raceDate = db.getColDataFromTbl("race_result", "race_data2", ["race_id"], [race_id])
+    raceDate = db.db_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id])
     raceDate = raceDate[0]
     raceDateYear = int(raceDate.split("年")[0])
     raceDateMon = int(raceDate.split("年")[1].split("月")[0])
@@ -66,7 +66,7 @@ def getRaceDate(race_id):
 def getRaceGrade(race_id):
     # レースのグレードを返す
     # 不明の場合-1を返す
-    raceGrade = db.getColDataFromTbl("race_info", "grade", ["race_id"], [race_id])
+    raceGrade = db.db_mul_tbl("race_info", ["grade"], ["race_id"], [race_id])
     return int(raceGrade[0])
 
 #def calCumNumOfWin(horsedb):
