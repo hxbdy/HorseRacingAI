@@ -37,3 +37,6 @@ options = Options()
 options.add_argument('--headless')
 driver = webdriver.Chrome(DriverPath, options = options)
 ```
+
+webdriver_managerにより自動的にドライバがダウンロードされる．
+初回ダウンロード時にprocell unexpectedly closedエラーが出るが再実行すると発生しなくなる．
