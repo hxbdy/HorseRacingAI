@@ -8,7 +8,11 @@ import configparser
 # load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
+
+## スクレイピング側で使用するとき
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
+## AI側で使用するとき
+# path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
 
 from common.debug import *
 class NetkeibaDB:
