@@ -62,7 +62,10 @@ class NetkeibaDB:
         self.cur.execute(sql, data_list)
         retList = []
         for i in self.cur.fetchall():
-            retList.append(i[0])
+            if len(col_target_list) == 1:
+                retList.append(i[0])
+            else:
+                retList.append(i)
 
         return retList
 
