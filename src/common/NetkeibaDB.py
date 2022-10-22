@@ -119,5 +119,53 @@ class NetkeibaDB:
         for i in self.cur.fetchall():
             retList.append(i[0])
         return retList
+
+
+    def insertRowToRaceId(self, race_id_list):
+        # race_idテーブルに新しい行を挿入
+        for race_id in race_id_list:
+            sql = "INSERT INTO race_id(id) values('{}')".format(race_id)
+            self.cur.execute(sql)
+        self.conn.commit()
+
+    def insertRow(self, tbl_name, target_col_list, data_list):
+        """テーブルに新しい行を挿入
+        tbl_name: テーブル名
+        target_col_list: 列の指定
+        data: 挿入するデータ．全ての要素で列数が同じ．2次元配列で指定． (全部文字列になる)
+        """
+        for data in data_list:
+            for i in range(len(data)):
+                # シングルクォーテーションのエスケープ処理
+                if "'" in data[i]:
+                    data[i] = data[i].replace("'", "''")
+            # データの文字列化
+            data_modified = list(map(lambda x: "'" + str(x) + "'", data))
+            val_str = ",".join(data_modified)
+
+            sql = "INSERT INTO {}(".format(tbl_name) + ",".join(target_col_list) + ") values(" + val_str + ")"
+            self.cur.execute(sql)
+        self.conn.commit()
+
+    def updateRow(self, tbl_name, target_col_list, data_list, condition=[]):
+        """テーブルのデータを更新
+        conditon: 条件式がない場合は[]
+        """
+        val_text = ""
+        for i in range(len(target_col_list)):
+            for i in range(len(data)):
+                # シングルクォーテーションのエスケープ処理
+                if "'" in data:
+                    data = data.replace("'", "''")
+
+            val_text = val_text + target_col_list[i] + " = '" + data_list[i] + "', "
+        val_text = val_text[:-2]
+        if condition == []:
+            sql = "UPDATE {} SET ".format(tbl_name) + val_text
+        else:
+            sql = "UPDATE {} SET ".format(tbl_name) + val_text + " WHERE " + " AND ".join(condition)
+        self.cur.execute(sql)
+        self.conn.commit()
+
     
 db = NetkeibaDB()
