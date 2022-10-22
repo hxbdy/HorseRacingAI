@@ -2,7 +2,7 @@
 # DBにアクセスするためSQL発行して結果を加工して返す
 
 # 関数命名ルール
-# db_{A}_{B}()
+# sql_{A}_{B}()
 # {A} = one | mul
 # one : 取得する行数が必ず1つ
 # mul : 取得する行数が1つ以上
@@ -31,28 +31,28 @@ class NetkeibaDB:
         self.cur.close()
         self.conn.close()
 
-    def db_one_horse_prof(self, horse_id, col_name):
+    def sql_one_horse_prof(self, horse_id, col_name):
         # horse_prof テーブルから指定列の要素を一つ取り出す
         # 主キーを指定するため必ず1つに絞れる
         sql = "SELECT " + col_name + " FROM horse_prof WHERE horse_id=?;"
         self.cur.execute(sql, [horse_id])
         return self.cur.fetchone()[0]
 
-    def db_one_race_info(self, race_id, horse_id, col_name):
+    def sql_one_race_info(self, race_id, horse_id, col_name):
         # race_info テーブルから指定列の要素を一つ取り出す
         # 主キーを指定するため必ず1つに絞れる
         sql = "SELECT " + col_name + " FROM race_info WHERE race_id=? AND horse_id=?;"
         self.cur.execute(sql, [race_id, horse_id])
         return self.cur.fetchone()[0]
 
-    def db_one_race_result(self, race_id, horse_id, col_name):
+    def sql_one_race_result(self, race_id, horse_id, col_name):
         # race_result テーブルから指定列の要素を一つ取り出す
         # 主キーを指定するため必ず1つに絞れる
         sql = "SELECT " + col_name + " FROM race_result WHERE race_id=? AND horse_id=?;"
         self.cur.execute(sql, [race_id, horse_id])
         return self.cur.fetchone()[0]
 
-    def db_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list):
+    def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list):
         # テーブル table_name から列 col_target を複数取得する
         # 条件は 列 col_hint_list と値  data_list が一致する行
         for idx in range(len(col_hint_list)):
@@ -66,7 +66,7 @@ class NetkeibaDB:
 
         return retList
 
-    def db_one_rowCnt(self, table_name, col_name, data):
+    def sql_one_rowCnt(self, table_name, col_name, data):
         # テーブル table_name の 列 col_name が 値 data である行数を返す
 
         # COUNTは!NULLレコード数を返すため, 条件に OR NULL を付加する
@@ -74,7 +74,7 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
-    def db_mul_distinctColCnt(self, table_name, col_name, lower, upper, limit):
+    def sql_mul_distinctColCnt(self, table_name, col_name, lower, upper, limit):
         # 指定列のデータを全て取得しリストで返す
         # ただし重複データは1つになる
         # 検索範囲 lower <= data <= upper
@@ -86,7 +86,7 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-    def db_mul_sortHorseNum(self, target_col_list, hint_col, data):
+    def sql_mul_sortHorseNum(self, target_col_list, hint_col, data):
         # 複数テーブルから内部結合(inner join)してから指定列を取り出す
         # SQLite はレコードの順序保証はないため、馬番で昇順ソートを行う
         # 順序保証が必要な場合この関数を使用すること
@@ -102,7 +102,7 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-    def db_mul_race_id_1v1(self, horse1, horse2):
+    def sql_mul_race_id_1v1(self, horse1, horse2):
         # horse1, horse2 両方が出たレースIDを返す
         sql = "SELECT race_info.race_id FROM (SELECT horse_id, race_id, result, COUNT(race_id) AS CNT FROM race_info WHERE (horse_id=? OR horse_id=?) GROUP BY race_id) AS race_sum INNER JOIN race_info ON race_info.horse_id = race_sum.horse_id AND race_info.race_id = race_sum.race_id AND race_sum.CNT > 1;"
         self.cur.execute(sql, [horse1, horse2])
@@ -111,4 +111,4 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
     
-db = NetkeibaDB()
+netkeibaDB = NetkeibaDB()

@@ -55,7 +55,7 @@ class MoneyClass(XClass):
         super().set(race_id)
 
     def get(self):
-        prizeList = db.db_mul_tbl("race_result", ["prize"], ["race_id"], [self.race_id])
+        prizeList = netkeibaDB.sql_mul_tbl("race_result", ["prize"], ["race_id"], [self.race_id])
         for i in range(len(prizeList)):
             prizeList[i] = str(prizeList[i])
         self.xList = prizeList
@@ -102,7 +102,7 @@ class HorseNumClass(XClass):
         super().set(race_id)
 
     def get(self):
-        self.xList = [db.db_one_rowCnt("race_result", "race_id", self.race_id)]
+        self.xList = [netkeibaDB.sql_one_rowCnt("race_result", "race_id", self.race_id)]
 
     def fix(self):
         XClass.fix(self)
@@ -126,7 +126,7 @@ class CourseConditionClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.db_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
+        raceData1List = netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
         # コース状態取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split(":")[2]
@@ -164,7 +164,7 @@ class CourseDistanceClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.db_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
+        raceData1List = netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
         # 距離取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split(":")[0]
@@ -200,7 +200,7 @@ class RaceStartTimeClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.db_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
+        raceData1List = netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
         # 出走時刻取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split("/")[3]
@@ -237,7 +237,7 @@ class WeatherClass(XClass):
         super().set(race_id)
 
     def get(self):
-        raceData1List = db.db_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
+        raceData1List = netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [self.race_id])
         sep1 = raceData1List[0].split(":")[1]
         #  晴 / 芝 
         sep1 = sep1.split("/")[0]
@@ -278,10 +278,10 @@ class HorseAgeClass(XClass):
             logger.critical("ERROR : SET race_id")
         else:
             # 出走馬の誕生日リストを作成
-            horseList = db.db_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+            horseList = netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
             bdList = []
             for horse_id in horseList:
-                data = db.db_one_horse_prof(horse_id, "bod")
+                data = netkeibaDB.sql_one_horse_prof(horse_id, "bod")
                 birthYear = int(data.split("年")[0])
                 birthMon = int(data.split("年")[1].split("月")[0])
                 birthDay = int(data.split("月")[1].split("日")[0])
@@ -332,7 +332,7 @@ class BurdenWeightClass(XClass):
         super().set(race_id)
 
     def get(self):
-        burdenWeightList = db.db_mul_sortHorseNum(["race_info.burden_weight"], "race_info.race_id", self.race_id)
+        burdenWeightList = netkeibaDB.sql_mul_sortHorseNum(["race_info.burden_weight"], "race_info.race_id", self.race_id)
         for i in range(len(burdenWeightList)):
             burdenWeightList[i] = float(burdenWeightList[i])
         self.xList = burdenWeightList
@@ -369,7 +369,7 @@ class PostPositionClass(XClass):
         super().set(race_id)
 
     def get(self):
-        postPositionList = db.db_mul_sortHorseNum(["race_info.post_position"], "race_info.race_id", self.race_id)
+        postPositionList = netkeibaDB.sql_mul_sortHorseNum(["race_info.post_position"], "race_info.race_id", self.race_id)
         for i in range(len(postPositionList)):
             postPositionList[i] = float(postPositionList[i])
         self.xList = postPositionList
@@ -404,7 +404,7 @@ class JockeyClass(XClass):
         super().set(race_id)
 
     def get(self):
-        jockeyIDList = db.db_mul_sortHorseNum(["race_info.jockey_id"], "race_info.race_id", self.race_id)
+        jockeyIDList = netkeibaDB.sql_mul_sortHorseNum(["race_info.jockey_id"], "race_info.race_id", self.race_id)
         for i in range(len(jockeyIDList)):
             jockeyIDList[i] = str(jockeyIDList[i])
         self.xList = jockeyIDList
@@ -413,7 +413,7 @@ class JockeyClass(XClass):
         # 騎手の総出場回数を求める
         jockeyIDList = self.xList
         for i in range(len(jockeyIDList)):
-            cnt = db.db_one_rowCnt("race_info", "jockey_id", jockeyIDList[i])
+            cnt = netkeibaDB.sql_one_rowCnt("race_info", "jockey_id", jockeyIDList[i])
             jockeyIDList[i] = cnt
         self.xList = jockeyIDList
 
@@ -446,7 +446,7 @@ class UmamusumeClass(XClass):
 
     def get(self):
         # 出馬リストを取得
-        horse_list = db.db_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        horse_list = netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
         self.xList = horse_list
 
     def fix(self):
@@ -547,7 +547,7 @@ class UmamusumeClass(XClass):
         for i in range(len(horse_list)):
             # horse_list[i] の親にウマ娘ちゃんがいたら umamusume_family[i] = 1 とする
             # 親を取得
-            parent_list = db.db_mul_tbl("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], ["horse_id"], [horse_list[i]])
+            parent_list = netkeibaDB.sql_mul_tbl("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], ["horse_id"], [horse_list[i]])
             parent_list = parent_list[0]
             # 親1頭ずつ確認する
             for parent in parent_list:
@@ -580,14 +580,14 @@ class CumPerformClass(XClass):
         horse_info_list = []
         for horse in horse_list:
             # horse のcolレコードを取得
-            race = db.db_mul_tbl("race_info", col, ["horse_id"], [horse])
+            race = netkeibaDB.sql_mul_tbl("race_info", col, ["horse_id"], [horse])
             horse_info_list.append(race)
         self.xList = horse_info_list
 
     def get(self):
         # race_id に出場した馬のリストを取得
         # 各馬の以下情報を取得、fixでパフォーマンスを計算する
-        horse_list = db.db_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        horse_list = netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
         self.getForCalcPerformInfo(horse_list)
 
     def getStandardTime(self, distance, condition, track, location):
@@ -709,7 +709,7 @@ class MarginClass(XClass):
         super().set(race_id)
 
     def get(self):
-        marginList = db.db_mul_tbl("race_result", ["margin"], ["race_id"], [self.race_id])
+        marginList = netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [self.race_id])
         for i in range(len(marginList)):
             marginList[i] = str(marginList[i])
         self.xList = marginList
@@ -809,12 +809,12 @@ class BradleyTerryClass(XClass):
         super().set(race_id)
 
     def get(self):
-        self.xList = db.db_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        self.xList = netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
         self.col_num = len(self.xList)
 
     def getRankFromDB(self, race_id, horse_id):
         # race_id で horse_id は何位だったか取得
-        val = db.db_one_race_info(race_id, horse_id, "result")
+        val = netkeibaDB.sql_one_race_info(race_id, horse_id, "result")
         if val.isdigit():
             rank = int(val)
         else:
@@ -833,7 +833,7 @@ class BradleyTerryClass(XClass):
                 win = 0
                 lose = 0
                 horse_x = self.xList[x]
-                races = db.db_mul_race_id_1v1(horse_y, horse_x)
+                races = netkeibaDB.sql_mul_race_id_1v1(horse_y, horse_x)
                 for race in races:
                     # race で horse_x, y は何位だったか取得
                     rank_y = self.getRankFromDB(race, horse_y)
@@ -898,10 +898,10 @@ class BradleyTerryClass(XClass):
 
 class ParentBradleyTerryClass(BradleyTerryClass):
     def get(self):
-        childList = db.db_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
+        childList = netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
         parentList = []
         for i in range(len(childList)):
-            parent = db.db_one_horse_prof(childList[i], "blood_f")
+            parent = netkeibaDB.sql_one_horse_prof(childList[i], "blood_f")
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)
@@ -914,7 +914,7 @@ class RankOneHotClass(XClass):
         super().set(race_id)
 
     def get(self):
-        rankList = db.db_mul_sortHorseNum(["race_info.result"], "race_info.race_id", self.race_id)
+        rankList = netkeibaDB.sql_mul_sortHorseNum(["race_info.result"], "race_info.race_id", self.race_id)
         for i in range(len(rankList)):
             rankList[i] = str(rankList[i])
         self.xList = rankList
