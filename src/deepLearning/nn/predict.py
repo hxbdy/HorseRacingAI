@@ -27,10 +27,7 @@ if __name__ == "__main__":
     for func in predict_XTbl:
         # インスタンス生成
         predict = func()
-        if func == PredictHorseAgeClass:
-            x.append(predict.adj(d0))
-        else:
-            x.append(predict.adj())
+        x.append(predict.adj())
 
     x = dl_flat2d([x])
     # print("x = ", x)

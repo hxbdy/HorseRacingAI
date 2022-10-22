@@ -268,6 +268,7 @@ class WeatherClass(XClass):
 class HorseAgeClass(XClass):
     def __init__(self):
         super().__init__()
+        self.d0 = 0
     
     def set(self, race_id):
         super().set(race_id)
@@ -276,6 +277,7 @@ class HorseAgeClass(XClass):
         if self.race_id == '0':
             logger.critical("ERROR : SET race_id")
         else:
+            # 出走馬の誕生日リストを作成
             horseList = db.getMulColOrderByHorseNum(["race_info.horse_id"], "race_info.race_id", self.race_id)
             bdList = []
             for horse_id in horseList:
@@ -286,12 +288,16 @@ class HorseAgeClass(XClass):
                 d1 = date(birthYear, birthMon, birthDay)
                 bdList.append(d1)
             self.xList = bdList
+            # レース開催日を取得
+            self.d0 = getRaceDate(self.race_id)
 
-    def fix(self, d0):
+    def fix(self):
+        if self.d0 == 0:
+            logger.critical("ERROR : SET d0")
         # 標準化の前に誕生日を日数表記にしておく
         bdList = self.xList
         for i in range(len(bdList)):
-            dy = relativedelta(d0, bdList[i])
+            dy = relativedelta(self.d0, bdList[i])
             age = dy.years + (dy.months / 12.0) + (dy.days / 365.0)
             bdList[i] = age
         self.xList = bdList
@@ -314,12 +320,8 @@ class HorseAgeClass(XClass):
         nHorseAgeList = nHorseAgeList / maxAge
         self.xList = nHorseAgeList.tolist()
 
-    def adj(self, d0):
-        self.get()
-        self.fix(d0)
-        self.pad()
-        if XClass.nrm_flg == "every":
-            self.nrm()
+    def adj(self):
+        self.xList = XClass.adj(self)
         return self.xList
 
 class BurdenWeightClass(XClass):
@@ -967,8 +969,6 @@ class MgrClass:
         self.x = [0] * len(XclassTbl)
         self.t = [0] * len(tclassTbl)
 
-        self.race_date = 0
-
         # yearまでの総 race_id, レース数取得 (year年含む)
         self.totalRaceList = getTotalRaceList(start_year, end_year, limit)
         self.totalRaceNum  = len(self.totalRaceList)
@@ -985,8 +985,6 @@ class MgrClass:
     # DB 検索条件と開催時点での各馬の年齢計算に使用する
     def set(self, race_id):
         XClass.race_id = race_id
-        d0 = getRaceDate(race_id)
-        self.race_date = d0
 
     # 標準化を行ったリストを1次元化して返す
     def get(self):
@@ -1004,15 +1002,7 @@ class MgrClass:
                 continue
 
             instance = (classTbl[func_idx])()
-
-            # 馬の年齢計算時にのみ開催年が必要なため渡す
-            if classTbl[func_idx] == HorseAgeClass:
-                if self.race_date == 0:
-                    logger.critical("race_date == 0 !!")
-                else:
-                    adj_result[func_idx] = instance.adj(self.race_date)
-            else:
-                adj_result[func_idx] = instance.adj()
+            adj_result[func_idx] = instance.adj()
 
             logger.debug("[{0:2d}] {1} adj (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
 

@@ -12,13 +12,11 @@ class PredictHorseNumClass(HorseNumClass):
     def get(self):
         # 出走する馬の頭数
         self.xList = [23]
-
 class PredictCourseConditionClass(CourseConditionClass):
     def get(self):
         # コース状態
         # '良', '稍重', '重', '不良' のいずれか
         self.xList = '良'
-        
 class PredictCourseDistanceClass(CourseDistanceClass):
     def get(self):
         # コース長
@@ -36,6 +34,8 @@ class PredictHorseAgeClass(HorseAgeClass):
     def get(self):
         # 馬の誕生日
         self.xList = [date(1998,6,25), date(2003, 3, 12)]
+        # レース開催日
+        self.d0 = date(2022, 9, 1)
 class PredictBurdenWeightClass(BurdenWeightClass):
     def get(self):
         # 斤量
@@ -62,14 +62,8 @@ class PredictUmamusumeClass(UmamusumeClass):
     def get(self):
         # horse_id
         self.xList = ["1983103914", "1983104782"]
-
 class PredictParentBradleyTerryClass(PredictBradleyTerryClass):
     def get(self):
         # blood_f の horse_id
         self.xList = ["1983103914", "1983104782"]
         self.col_num = len(self.xList)
-
-# レース開催日
-d0 = date(2022, 9, 1)
-
-# ==========================================================================
