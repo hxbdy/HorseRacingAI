@@ -118,15 +118,14 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-
-    def insertRowToRaceId(self, race_id_list):
+    def sql_insert_RowToRaceId(self, race_id_list):
         # race_idテーブルに新しい行を挿入
         for race_id in race_id_list:
             sql = "INSERT INTO race_id(id) values('{}')".format(race_id)
             self.cur.execute(sql)
         self.conn.commit()
 
-    def insertRow(self, tbl_name, target_col_list, data_list):
+    def sql_insert_Row(self, tbl_name, target_col_list, data_list):
         """テーブルに新しい行を挿入
         tbl_name: テーブル名
         target_col_list: 列の指定
@@ -145,7 +144,7 @@ class NetkeibaDB:
             self.cur.execute(sql)
         self.conn.commit()
 
-    def updateRow(self, tbl_name, target_col_list, data_list, condition=[]):
+    def sql_update_Row(self, tbl_name, target_col_list, data_list, condition=[]):
         """テーブルのデータを更新
         conditon: 条件式がない場合は[]
         """
