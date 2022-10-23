@@ -35,6 +35,17 @@ def create_table():
     ※paceについて https://oshiete.goo.ne.jp/qa/3358577.html
     race_resultテーブル：result列追加．レース順位を記録．
     """
+
+    """更新用メモ
+    netkeibaDB.cur.execute("CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)")
+    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN owner_info")
+    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN horse_title")
+    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN corner_pos")
+    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN pace")
+    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN last_3f")
+    netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN result")
+    netkeibaDB.conn.commit()
+    """
     dbname = config.get("common", "path_netkeibaDB")
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
@@ -132,6 +143,11 @@ def scrape_racedata(driver, raceID_list):
     """
     for raceID in raceID_list:
         raceID = str(raceID)
+
+        ## race_resultに既に存在しているか判定
+        if netkeibaDB.sql_one_rowCnt("race_result","race_id",raceID) > 0:
+            continue
+
         ## レースページにアクセス
         race_url = "https://db.netkeiba.com/race/{}/".format(raceID)
         logger.debug('access {}'.format(race_url))
@@ -311,9 +327,10 @@ def scrape_horsedata(driver, horseID_list):
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
         dif = len(perform_contents) - len(netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID]))
+        logger.debug("dif = {}".format(dif))
         if dif > 0:
             data_list = perform_contents[:dif]
-            netkeibaDB.sql_insert_Row("race_info", target_col_ri, perform_contents)
+            netkeibaDB.sql_insert_Row("race_info", target_col_ri, data_list)
         else:
             pass
         
@@ -355,6 +372,54 @@ def reconfirm_check():
     logger.info("reconfirm_check comp")
 
 
+def make_raceID_list():
+    """raceIDリスト作成(暫定)
+    race_info -> race_result
+    """
+    raceID_list_ri = netkeibaDB.cur.execute("SELECT race_id FROM race_info WHERE horse_id > '2019100000'").fetchall()
+    raceID_list_ri = list(map(lambda x: x[0], raceID_list_ri))
+    raceID_set_ri = set(raceID_list_ri)
+
+    raceID_list_rr = netkeibaDB.cur.execute("SELECT race_id FROM race_result").fetchall()
+    raceID_list_rr = list(map(lambda x: x[0], raceID_list_rr))
+    raceID_set_rr = set(raceID_list_rr)
+
+    raceID_list = list(raceID_set_ri - raceID_set_rr)
+    raceID_list_out = []
+    for raceID in raceID_list:
+        if raceID.isdecimal():
+            raceID_list_out.append(raceID)
+
+    logger.info(raceID_list_out)
+
+    return raceID_list_out
+
+def write_grade(raceID_list):
+    for raceID in raceID_list:
+        grade = getRaceGrade(raceID)
+        netkeibaDB.sql_update_Row("race_info",["grade"],[[grade]],["race_id = '{}'".format(raceID)])
+
+def getRaceGrade(raceID):
+    # G1, G2, G3, 無印(OP) を判定
+    # 障害競走は J.G1, J.G2, J.G3で返す
+    name = netkeibaDB.cur.execute("SELECT race_name FROM race_result WHERE race_id = '{}'".format(raceID))
+    name = name.fetchone()[0]
+    if "(G3)" in name:
+        return "3"
+    elif "(G2)" in name:
+        return "2"
+    elif "(G1)" in name:
+        return "1"
+    elif "(J.G3)" in name:
+        return "-1"
+    elif "(J.G2)" in name:
+        return "-1"
+    elif "(J.G1)" in name:
+        return "-1"
+    else:
+        return "-1"
+
+
 if __name__ == "__main__":
     config_scraping = configparser.ConfigParser()
     config_scraping.read("src\\private.ini")
@@ -363,11 +428,21 @@ if __name__ == "__main__":
     password = config_scraping.get("scraping", "pass")
     
     # 後々別のところで管理．
-    create_table()
+    #create_table()
 
     """"""
     driver = wf.start_driver(browser)
     login(driver, mail_address, password)
-    scrape_raceID(driver, ["202105", "202108"], 4)
-    scrape_racedata(driver, ["202109021210"])
-    scrape_horsedata(driver, ["2018105074"])
+    #scrape_raceID(driver, ["202105", "202108"], 4)
+    #scrape_racedata(driver, ["202109021210"])
+    #scrape_horsedata(driver, ["2018105074"])
+
+    #scrape_horsedata(driver,["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
+    #scrape_horsedata(driver,["2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
+    #scrape_horsedata(driver,["2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
+    
+    raceID_list = make_raceID_list()
+    #scrape_racedata(driver, raceID_list)
+    write_grade(raceID_list)
+
+    #driver.close()
