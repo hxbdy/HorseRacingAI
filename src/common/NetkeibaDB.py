@@ -16,9 +16,9 @@ config = configparser.ConfigParser()
 config.read('./src/path.ini')
 
 ## スクレイピング側で使用するとき
-path_netkeibaDB = config.get('common', 'path_netkeibaDB')
+#path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 ## AI側で使用するとき
-# path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
+path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
 
 from debug import *
 
@@ -141,27 +141,31 @@ class NetkeibaDB:
             val_str = ",".join(data_modified)
 
             sql = "INSERT INTO {}(".format(tbl_name) + ",".join(target_col_list) + ") values(" + val_str + ")"
+            print(sql)
             self.cur.execute(sql)
         self.conn.commit()
 
     def sql_update_Row(self, tbl_name, target_col_list, data_list, condition=[]):
         """テーブルのデータを更新
+        data: 更新するデータ．全ての要素で列数が同じ．2次元配列で指定． (全部文字列になる)
         conditon: 条件式がない場合は[]
         """
-        val_text = ""
-        for i in range(len(target_col_list)):
-            for i in range(len(data)):
-                # シングルクォーテーションのエスケープ処理
-                if "'" in data:
-                    data = data.replace("'", "''")
 
-            val_text = val_text + target_col_list[i] + " = '" + data_list[i] + "', "
-        val_text = val_text[:-2]
-        if condition == []:
-            sql = "UPDATE {} SET ".format(tbl_name) + val_text
-        else:
-            sql = "UPDATE {} SET ".format(tbl_name) + val_text + " WHERE " + " AND ".join(condition)
-        self.cur.execute(sql)
+        for i in range(len(target_col_list)):
+            target_col_list[i] = target_col_list[i] + "=?"
+        
+        for data in data_list:
+            # シングルクォーテーションのエスケープ処理
+            for i in range(len(data)):
+                if "'" in data[i]:
+                    data[i] = data[i].replace("'", "''")
+                
+            if condition == []:
+                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list)
+            else:
+                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list) + " WHERE " + " AND ".join(condition)
+            self.cur.execute(sql, data)
+
         self.conn.commit()
 
     
