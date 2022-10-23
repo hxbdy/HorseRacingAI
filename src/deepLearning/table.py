@@ -23,6 +23,7 @@ analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル
 XTbl = [
+    # MoneyClass,
     HorseNumClass,
     CourseConditionClass,
     CourseDistanceClass,
@@ -35,11 +36,12 @@ XTbl = [
     CumPerformClass,
     BradleyTerryClass,
     UmamusumeClass,
-    ParentBradleyTerryClass,
+    # ParentBradleyTerryClass,
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
 chgXTbl = [
+    # None,
     None,
     None,
     None,
@@ -52,11 +54,12 @@ chgXTbl = [
     None,
     None,
     None,
-    None,
+    # None,
 ]
 
 # 推論時の入力用テーブル
 predict_XTbl = [
+    # PredictMoneyClass,
     PredictHorseNumClass,
     PredictCourseConditionClass,
     PredictCourseDistanceClass,
@@ -69,7 +72,7 @@ predict_XTbl = [
     PredictCumPerformClass,
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
-    PredictParentBradleyTerryClass,
+    # PredictParentBradleyTerryClass,
 ]
 
 # 正解用テーブル

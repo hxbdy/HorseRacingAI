@@ -10,6 +10,10 @@ from encodingXClass import *
 # 菊花賞
 # https://race.netkeiba.com/race/shutuba.html?race_id=202209040711
 # ==========================================================================
+class PredictMoneyClass(MoneyClass):
+    def get(self):
+        # 賞金リスト
+        self.xList = [15000,6000,3800,2300,1500]
 class PredictHorseNumClass(HorseNumClass):
     def get(self):
         # 出走する馬の頭数

@@ -72,7 +72,7 @@ class MoneyClass(XClass):
     def pad(self):
         # 賞金リスト拡張
         # ダミーデータ：0
-        exSize = self.padSize - len(self.xList)
+        exSize = XClass.pad_size - len(self.xList)
         if exSize > 0:
             for i in range(exSize):
                 self.xList.append(0)

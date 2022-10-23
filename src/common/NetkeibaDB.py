@@ -15,6 +15,7 @@ import configparser
 config = configparser.ConfigParser()
 config.read('./src/path.ini')
 
+# TODO:自動で切り替えるようにする
 ## スクレイピング側で使用するとき
 #path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 ## AI側で使用するとき
