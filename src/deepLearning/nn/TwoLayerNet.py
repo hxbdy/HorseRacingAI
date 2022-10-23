@@ -278,3 +278,11 @@ class TowLayerNet:
             self.params['W2'] = pickle.load(f)
         with open(newest_dir_path + "b2.pickle", 'rb') as f:
             self.params['b2'] = pickle.load(f)
+
+        # レイヤ
+        # TODO:コンストラクタでも同じことをしているので要リファクタ
+        self.layers = OrderedDict()
+        self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
+        self.layers['Relu1']   = Relu()
+        self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
+        self.lastLayer = SoftmaxWithLoss()

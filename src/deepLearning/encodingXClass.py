@@ -615,6 +615,7 @@ class CumPerformClass(XClass):
         for race in self.xList:
             for horse_info in race:
                 # horse_info = ('1982106916', '3小倉8', '1:12.7', '53', '良', '芝1200', '-1')
+                # logger.debug("horse_info = {0}".format(horse_info))
                 max_performance = -1000.0
                 # ゴールタイムを取得
                 goaltime = horse_info[TIME]
@@ -652,10 +653,10 @@ class CumPerformClass(XClass):
                 # レースのグレード (G1,G2,G3,OP)
                 # 日本の中央競馬以外のレースは全てOP扱いになる
                 grade = horse_info[GRADE]
-                if grade == "-1":
-                    grade = "OP"
-                else:
+                if grade == "1" or grade =="2" or grade=="3":
                     grade = "G" + grade
+                else:
+                    grade = "OP"
 
                 # 計算不能な場合を除いてperformanceを計算
                 if track != "E" and distance != "E":
