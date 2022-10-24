@@ -6,14 +6,19 @@ from selenium.webdriver.common.by import By
 
 from debug import config, logger
 import webdriver_functions as wf
-from NetkeibaDB import *
+from NetkeibaDB import NetkeibaDB
 
 # 現在はスクレイピング側と学習側で使用するDBを使い分けている
 # TODO:パスは今後一本化される予定
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 netkeibaDB = NetkeibaDB(path_netkeibaDB)
+
+# netkeiba上の列名とデータベース上の名前をつなぐ辞書
+col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \
+        "馬番":"horse_number", "オッズ":"odds", "人気":"fav", "着順":"result", "斤量":"burden_weight", \
+            "距離":"distance","馬場":"course_condition", "タイム":"time", "着差":"margin", "賞金":"prize", \
+                "レース名":"race_id", "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace", \
+                    "上り":"last_3f", "馬名":"horse_id", "馬体重":"horse_weight", "賞金(万円)":"prize"}
 
 def login(driver, mail_address, password):
     """netkeibaにログインする
@@ -51,21 +56,23 @@ def create_table():
     netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN last_3f")
     netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN result")
     netkeibaDB.conn.commit()
+    # さらに追加2022/10/25
+    netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN post_position")
     """
     dbname = config.get("common", "path_netkeibaDB")
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
-    cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT, isScraped INTEGER DEFAULT 0)')
+    cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)')
     cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg)')
     cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
-    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, race_data1, race_data2, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
+    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, race_data1, race_data2, post_position, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
     conn.commit()
 
     cur.close()
     conn.close()
 
 
-def scrape_raceID(driver, year_month, race_grade=4):
+def scrape_raceID(driver, year_month, race_grade="4"):
     """指定期間内のraceIDを取得する。
     driver: webdriver
     year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
@@ -86,10 +93,11 @@ def scrape_raceID(driver, year_month, race_grade=4):
     else:
         month_list_last = list(range(1, end_mon+1))
 
-    race_grade_name = "check_grade_{}".format(int(race_grade))
+    race_grade_name = "check_grade_{}".format(race_grade)
 
 
     for year in year_list:
+        # スクレイプする月のリスト
         if year == year_list[-1]:
             month_list = month_list_last
         else:
@@ -147,11 +155,18 @@ def scrape_racedata(driver, raceID_list):
     driver: webdriver
     raceID_list: 調べるraceIDのリスト
     """
-    for raceID in raceID_list:
-        raceID = str(raceID)
+    # 進捗表示の間隔
+    progress_notice_cycle = 10
 
-        ## race_resultに既に存在しているか判定
-        if netkeibaDB.sql_one_rowCnt("race_result","race_id",raceID) > 0:
+    for iter_num in range(len(raceID_list)):
+        raceID = str(raceID_list[iter_num])
+
+        ## race_resultテーブル内に既に存在しているか判定
+        if netkeibaDB.sql_isIn("race_result",["race_id='{}'".format(raceID)]):
+            logger.debug("race (raceID={}) is skipped.".format(raceID))
+            # 進捗表示
+            if (iter_num+1) % progress_notice_cycle == 0:
+                logger.info("{0} / {1} finished.".format(iter_num+1, len(raceID_list)))
             continue
 
         ## レースページにアクセス
@@ -160,47 +175,63 @@ def scrape_racedata(driver, raceID_list):
         wf.access_page(driver, race_url)
 
 
-        ## horseIDの取得
-        horse_column_html = driver.find_elements(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody/tr/td[4]")
-        horseIDs_race = []
-        for i in range(len(horse_column_html)):
-            horse_url_str = horse_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-            horseID = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
-            horseIDs_race.append(horseID)
-
-
         ## race情報の取得・整形と保存 (払い戻しの情報は含まず)
         # レース名、レースデータ1(天候など)、レースデータ2(日付など)  <未補正 文字列>
         race_name = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/h1").text
         race_data1 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/p/diary_snap_cut/span").text
         race_data2 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/p").text
 
-        # テーブルデータ
-        race_table_data = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']/tbody")
-        race_table_data_rows = race_table_data.find_elements(By.TAG_NAME, "tr")
-        goal_time = []    #タイム
-        margin = []       #着差
-        horse_weight = [] #馬体重
-        prize = []        #賞金
-        rank = []         #順位
-        for row in range(1,len(race_table_data_rows)):
-            race_table_row = race_table_data_rows[row].find_elements(By.TAG_NAME, "td")
-            goal_time.append(race_table_row[7].text)
-            margin.append(race_table_row[8].text)
-            horse_weight.append(race_table_row[14].text)
-            prize.append(race_table_row[-1].text)
-            rank.append(race_table_row[0].text)
+        # raceテーブルのデータを取得
+        race_table = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']")
+        race_table = race_table.find_elements(By.TAG_NAME, "tr")
+        # 取得する列 (順不同)
+        COL_NAME_TEXT = ["枠番","タイム","着差","馬体重","賞金(万円)","着順"]
+        COL_NAME_ID = ["馬名"]
+        column_name_data = race_table[0].find_elements(By.TAG_NAME, "th")
+        col_idx = []
+        col_idx_id = []
+        target_col = []
+        for i in range(len(column_name_data)):
+            # 列名
+            cname = column_name_data[i].text.replace("\n","")
+            if cname in COL_NAME_TEXT:
+                col_idx.append(i)
+                target_col.append(col_name_dict[cname])
+            elif cname in COL_NAME_ID:
+                col_idx_id.append(i)
+                col_idx.append(i)
+                target_col.append(col_name_dict[cname])
+        # 各順位のデータを取得
+        race_contents = []
+        for row in range(1, len(race_table)):
+            # 文字列として取得
+            race_table_row = race_table[row].find_elements(By.TAG_NAME, "td")
+            race_contents_row = list(map(lambda x: x.text, race_table_row))
+            # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
+            for i in col_idx_id:
+                try:
+                    horse_url_str = race_table_row[i].find_element(By.TAG_NAME,"a").get_attribute("href")
+                    id = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
+                    race_contents_row[i] = id
+                except:
+                    pass
+            # 必要部分だけ取り出して追加
+            race_contents.append(list(map(lambda x: race_contents_row[x], col_idx)))
 
         ## race_resultテーブルへの保存    
         data_list = []
-        for i in range(len(horseIDs_race)):
-            data = [horseIDs_race[i], raceID, race_name, race_data1, race_data2, goal_time[i], margin[i], horse_weight[i], prize[i], rank[i]]
+        for row in race_contents:
+            data = [*row, raceID, race_name, race_data1, race_data2]
             data_list.append(data)
-        target_col = ["horse_id","race_id","race_name","race_data1","race_data2","time","margin","horse_weight","prize","result"]
+        target_col = [*target_col,"race_id","race_name","race_data1","race_data2"]
         netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
-        # race_idテーブルのisScrapedを更新(時間かかりそう&変なエラー起きそう&間接的重複回避)
-        #db.cur.execute("UPDATE race_id SET isScraped = 1 WHERE id = {}".format(raceID))
         logger.debug("saving race_result completed, raceID={}".format(raceID))
+
+        # 進捗表示
+        if (iter_num+1) % progress_notice_cycle == 0:
+            logger.info("{0} / {1} finished.".format(iter_num+1, len(raceID_list)))
+    
+    logger.info("scrape_racedata comp")
 
 
 def scrape_horsedata(driver, horseID_list):
@@ -211,16 +242,11 @@ def scrape_horsedata(driver, horseID_list):
     ## 以下保留事項
     # 外国から参加してきた馬はどう処理するのか
 
-    
-    # netkeiba上の列名とデータベース上の名前をつなぐ辞書
-    col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \
-            "馬番":"horse_number", "オッズ":"odds", "人気":"fav", "着順":"result", "斤量":"burden_weight", \
-                "距離":"distance","馬場":"course_condition", "タイム":"time", "着差":"margin", "賞金":"prize", \
-                    "レース名":"race_id", "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace", \
-                        "上り":"last_3f"}
+    # 進捗表示の間隔
+    progress_notice_cycle = 10
 
-    for horseID in horseID_list:
-        horseID = str(horseID)
+    for iter_num in range(len(horseID_list)):
+        horseID = str(horseID_list[iter_num])
         ## 馬のページにアクセス
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
         logger.debug('access {}'.format(horse_url))
@@ -282,6 +308,7 @@ def scrape_horsedata(driver, horseID_list):
         column_name_data = perform_table[0].find_elements(By.TAG_NAME, "th")
         col_idx = []
         col_idx_id = []
+        race_name_col_idx = 0 # レース名の列位置を保持
         target_col_ri = ["horse_id"]
         for i in range(len(column_name_data)):
             # 列名
@@ -293,12 +320,18 @@ def scrape_horsedata(driver, horseID_list):
                 col_idx_id.append(i)
                 col_idx.append(i)
                 target_col_ri.append(col_name_dict[cname])
+            if cname == "レース名":
+                race_name_col_idx = i
+        target_col_ri.append("grade")
         # 各レースの情報を取得
         perform_contents = []
         for row in range(1, len(perform_table)):
+            # 文字列として取得
             perform_table_row = perform_table[row].find_elements(By.TAG_NAME, "td")
             perform_contents_row = list(map(lambda x: x.text, perform_table_row))
-            # idを取得可能な場合のみ取得
+            # グレードの判定
+            grade = string2grade(perform_contents_row[race_name_col_idx])
+            # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
             for i in col_idx_id:
                 try:
                     url_str_id = perform_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
@@ -311,7 +344,7 @@ def scrape_horsedata(driver, horseID_list):
                 except:
                     pass
             # 必要部分だけ取り出して追加
-            perform_contents.append([horseID, *list(map(lambda x: perform_contents_row[x], col_idx))])
+            perform_contents.append([horseID, *list(map(lambda x: perform_contents_row[x], col_idx)), grade])
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_contents):
@@ -340,7 +373,12 @@ def scrape_horsedata(driver, horseID_list):
         else:
             pass
         
-        logger.info("save horsedata completed, horse_id={}".format(horseID))
+        logger.debug("save horsedata completed, horse_id={}".format(horseID))
+        # 進捗表示
+        if (iter_num+1) % progress_notice_cycle == 0:
+            logger.info("{0} / {1} finished.".format(iter_num+1, len(horseID_list)))
+    
+    logger.info("save_horsedata comp")
 
 
 def reconfirm_check():
@@ -379,51 +417,59 @@ def reconfirm_check():
 
 
 def make_raceID_list():
-    """raceIDリスト作成(暫定)
-    race_info -> race_result
+    """race_resultテーブル内に存在しないraceIDリストを作成
+    OP以上のレースに限定するため，race_idテーブルを基にする．
+    race_idテーブル -> race_resultテーブル
     """
-    raceID_list_ri = netkeibaDB.cur.execute("SELECT race_id FROM race_info WHERE horse_id > '2019100000'").fetchall()
-    raceID_list_ri = list(map(lambda x: x[0], raceID_list_ri))
+    #raceID_list_ri = netkeibaDB.cur.execute("SELECT race_id FROM race_id WHERE horse_id > '2019100000'").fetchall()
+    raceID_list_ri = netkeibaDB.sql_mul_tbl("race_id",["race_id"],["1"],["1"])
+    #raceID_list_ri = list(map(lambda x: x[0], raceID_list_ri))
     raceID_set_ri = set(raceID_list_ri)
 
-    raceID_list_rr = netkeibaDB.cur.execute("SELECT race_id FROM race_result").fetchall()
-    raceID_list_rr = list(map(lambda x: x[0], raceID_list_rr))
+    #raceID_list_rr = netkeibaDB.cur.execute("SELECT race_id FROM race_result").fetchall()
+    raceID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT race_id"],["1"],["1"])
+    #raceID_list_rr = list(map(lambda x: x[0], raceID_list_rr))
     raceID_set_rr = set(raceID_list_rr)
 
     raceID_list = list(raceID_set_ri - raceID_set_rr)
+    # raceIDにアルファベットが入るレースを排除
     raceID_list_out = []
     for raceID in raceID_list:
         if raceID.isdecimal():
             raceID_list_out.append(raceID)
 
     logger.info(raceID_list_out)
-
     return raceID_list_out
 
 def write_grade(raceID_list):
     for raceID in raceID_list:
-        grade = getRaceGrade(raceID)
+        grade = string2grade(raceID)
         netkeibaDB.sql_update_Row("race_info",["grade"],[[grade]],["race_id = '{}'".format(raceID)])
 
-def getRaceGrade(raceID):
-    # G1, G2, G3, 無印(OP) を判定
-    # 障害競走は J.G1, J.G2, J.G3で返す
-    name = netkeibaDB.cur.execute("SELECT race_name FROM race_result WHERE race_id = '{}'".format(raceID))
-    name = name.fetchone()[0]
-    if "(G3)" in name:
+def string2grade(val):
+    """文字列からレースのグレードを判定
+    val: 入力文字列
+    
+    G1, G2, G3, 無印(OP) を判定
+    障害競走は J.G1, J.G2, J.G3で返す
+    """
+    
+    #name = netkeibaDB.cur.execute("SELECT race_name FROM race_result WHERE race_id = '{}'".format(raceID))
+    #val = val.fetchone()[0]
+    if "(G3)" in val:
         return "3"
-    elif "(G2)" in name:
+    elif "(G2)" in val:
         return "2"
-    elif "(G1)" in name:
+    elif "(G1)" in val:
         return "1"
-    elif "(J.G3)" in name:
-        return "-1"
-    elif "(J.G2)" in name:
-        return "-1"
-    elif "(J.G1)" in name:
-        return "-1"
+    elif "(J.G3)" in val:
+        return "7"
+    elif "(J.G2)" in val:
+        return "6"
+    elif "(J.G1)" in val:
+        return "5"
     else:
-        return "-1"
+        return "0"
 
 
 if __name__ == "__main__":
@@ -441,14 +487,12 @@ if __name__ == "__main__":
     login(driver, mail_address, password)
     #scrape_raceID(driver, ["202105", "202108"], 4)
     #scrape_racedata(driver, ["202109021210"])
-    #scrape_horsedata(driver, ["2018105074"])
+    scrape_horsedata(driver, ["2018105074"])
 
     #scrape_horsedata(driver,["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
-    #scrape_horsedata(driver,["2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
-    #scrape_horsedata(driver,["2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
     
-    raceID_list = make_raceID_list()
+    #raceID_list = make_raceID_list()
     #scrape_racedata(driver, raceID_list)
-    write_grade(raceID_list)
+    #write_grade(raceID_list)
 
     #driver.close()
