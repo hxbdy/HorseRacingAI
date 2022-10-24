@@ -14,7 +14,7 @@ from encoding_common import *
 
 # 学習データの読込
 config = configparser.ConfigParser()
-config.read('./src/path.ini')
+config.read('./src/path.ini', 'UTF-8')
 path_learningList = config.get('nn', 'path_learningList')
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 

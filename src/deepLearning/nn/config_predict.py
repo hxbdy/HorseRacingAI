@@ -9,6 +9,8 @@ from encodingXClass import *
 # 推測したいレース情報入力
 # 菊花賞
 # https://race.netkeiba.com/race/shutuba.html?race_id=202209040711
+# 結果
+# https://race.netkeiba.com/special/index.html?id=0107&rf=link_news
 # ==========================================================================
 class PredictMoneyClass(MoneyClass):
     def get(self):

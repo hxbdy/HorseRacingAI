@@ -3,7 +3,7 @@ import configparser
 
 # load config
 config = configparser.ConfigParser()
-config.read('./src/path.ini')
+config.read('./src/path.ini', 'UTF-8')
 path_log = config.get('common', 'path_log')
 
 # log出力ファイルのクリア

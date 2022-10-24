@@ -9,7 +9,7 @@ from encoding_common import *
 
 # load config
 config = configparser.ConfigParser()
-config.read('./src/path.ini')
+config.read('./src/path.ini', 'UTF-8')
 path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
 
 def softmax(x):

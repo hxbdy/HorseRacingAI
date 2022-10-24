@@ -15,7 +15,7 @@ from table import *
 
 # load config
 config = configparser.ConfigParser()
-config.read('./src/path.ini')
+config.read('./src/path.ini', 'UTF-8')
 path_learningList = config.get('nn', 'path_learningList')
     
 # ハイパーパラメータ

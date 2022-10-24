@@ -13,7 +13,7 @@ import configparser
 
 # load config
 config = configparser.ConfigParser()
-config.read('./src/path.ini')
+config.read('./src/path.ini', 'UTF-8')
 
 # TODO:自動で切り替えるようにする
 ## スクレイピング側で使用するとき

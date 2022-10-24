@@ -29,7 +29,7 @@ def encoding_serial_dir_path(path_root):
 def encoding_newest_dir_path():
     # newest フォルダパス取得
     config = configparser.ConfigParser()
-    config.read('./src/path.ini')
+    config.read('./src/path.ini', 'UTF-8')
     path_learningList = config.get('nn', 'path_learningList')
     os.makedirs(path_learningList, exist_ok=True)
     return path_learningList
@@ -38,7 +38,7 @@ def encoding_newest_dir_path():
 def dl_newest_dir_path():
     # newest フォルダパス取得
     config = configparser.ConfigParser()
-    config.read('./src/path.ini')
+    config.read('./src/path.ini', 'UTF-8')
     path_learningList = config.get('nn', 'path_trainedParam')
     os.makedirs(path_learningList, exist_ok=True)
     return path_learningList

@@ -15,7 +15,7 @@ from encoding_common import *
 if __name__ == "__main__":
     # load config
     config = configparser.ConfigParser()
-    config.read('./src/path.ini')
+    config.read('./src/path.ini', 'UTF-8')
     path_learningList = config.get('nn', 'path_learningList')
 
     # X.pickle, t.pickle 読込
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     
     # 保存先パス取得
     config = configparser.ConfigParser()
-    config.read('./src/path.ini')
+    config.read('./src/path.ini', 'UTF-8')
     path_root = config.get('nn', 'path_root_learningList')
     # 連番取得
     serial_dir_path = encoding_serial_dir_path(path_root)
