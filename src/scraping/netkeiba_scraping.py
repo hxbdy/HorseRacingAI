@@ -6,8 +6,14 @@ from selenium.webdriver.common.by import By
 
 from debug import config, logger
 import webdriver_functions as wf
-from NetkeibaDB import netkeibaDB
+from NetkeibaDB import *
 
+# 現在はスクレイピング側と学習側で使用するDBを使い分けている
+# TODO:パスは今後一本化される予定
+config = configparser.ConfigParser()
+config.read('./src/path.ini', 'UTF-8')
+path_netkeibaDB = config.get('common', 'path_netkeibaDB')
+netkeibaDB = NetkeibaDB(path_netkeibaDB)
 
 def login(driver, mail_address, password):
     """netkeibaにログインする

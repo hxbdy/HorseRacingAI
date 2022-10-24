@@ -4,8 +4,17 @@
 
 from datetime import date
 
-from NetkeibaDB import netkeibaDB
+from NetkeibaDB import *
 from debug import *
+
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini', 'UTF-8')
+path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
+
+# 現在はスクレイピング側と学習側で使用するDBを使い分けている
+# TODO:パスは今後一本化される予定
+netkeibaDB = NetkeibaDB(path_netkeibaDB)
 
 def db_race_1st_odds(race_id):
     # 指定レースの1位オッズをfloatで返す

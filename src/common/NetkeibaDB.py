@@ -9,27 +9,16 @@
 # {B} = 関数名
 
 import sqlite3
-import configparser
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-
-# TODO:自動で切り替えるようにする
-## スクレイピング側で使用するとき
-#path_netkeibaDB = config.get('common', 'path_netkeibaDB')
-## AI側で使用するとき
-path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
 
 from debug import *
 
 class NetkeibaDB:
-    def __init__(self):
-        logger.info("Database loading")
-        self.conn = sqlite3.connect(path_netkeibaDB)
+    def __init__(self, path_db):
+        logger.info("Database {0} loading".format(path_db))
+        self.conn = sqlite3.connect(path_db)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
-        logger.info("Database loading complete")
+        logger.info("Database {0} loading complete".format(path_db))
 
     def __del__(self):
         # データベースへのコネクションを閉じる
@@ -168,6 +157,3 @@ class NetkeibaDB:
             self.cur.execute(sql, data)
 
         self.conn.commit()
-
-    
-netkeibaDB = NetkeibaDB()
