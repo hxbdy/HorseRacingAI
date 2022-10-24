@@ -144,7 +144,6 @@ class NetkeibaDB:
             val_str = ",".join(data_modified)
 
             sql = "INSERT INTO {}(".format(tbl_name) + ",".join(target_col_list) + ") values(" + val_str + ")"
-            print(sql)
             self.cur.execute(sql)
         self.conn.commit()
 
