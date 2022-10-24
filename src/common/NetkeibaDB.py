@@ -108,6 +108,19 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
+    def sql_isIn(self, tbl_name, condition_list):
+        """テーブル内に条件に一致する行が存在するか判定
+        tbl_name: テーブル名
+        condition_list: 条件リスト (例) ["horse_id='1983103914'"]
+        """
+        sql = "SELECT * FROM {} WHERE ".format(tbl_name) + " AND ".join(condition_list) + " LIMIT 1"
+        self.cur.execute(sql)
+        search_result = self.cur.fetchall()
+        if len(search_result) == 0:
+            return False
+        else:
+            return True
+
     def sql_insert_RowToRaceId(self, race_id_list):
         # race_idテーブルに新しい行を挿入
         for race_id in race_id_list:
@@ -119,7 +132,7 @@ class NetkeibaDB:
         """テーブルに新しい行を挿入
         tbl_name: テーブル名
         target_col_list: 列の指定
-        data: 挿入するデータ．全ての要素で列数が同じ．2次元配列で指定． (全部文字列になる)
+        data: 挿入するデータ．2次元配列で指定．全ての要素で列数が同じ． (全部文字列になる)
         """
         for data in data_list:
             for i in range(len(data)):
@@ -137,7 +150,7 @@ class NetkeibaDB:
 
     def sql_update_Row(self, tbl_name, target_col_list, data_list, condition=[]):
         """テーブルのデータを更新
-        data: 更新するデータ．全ての要素で列数が同じ．2次元配列で指定． (全部文字列になる)
+        data: 更新するデータ．2次元配列で指定． 全ての要素で列数が同じ．(全部文字列になる)
         conditon: 条件式がない場合は[]
         """
 
