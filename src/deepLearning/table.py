@@ -44,16 +44,16 @@ chgXTbl = [
     # None,
     None,
     None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
+    # None,
     # None,
 ]
 
@@ -87,3 +87,10 @@ tTbl = [
 chgtTbl = [
     None
 ]
+
+# クラス名からXtblの何番目に入っているかを返す
+def get_idx_Xtbl(name):
+    for idx in range(len(XTbl)):
+        if XTbl[idx].__name__ == name:
+            return idx
+    return -1

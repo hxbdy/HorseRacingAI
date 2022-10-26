@@ -14,7 +14,6 @@ from debug import *
 
 class NetkeibaDB:
     def __init__(self, path_db):
-        logger.info("Database {0} loading".format(path_db))
         self.conn = sqlite3.connect(path_db)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
