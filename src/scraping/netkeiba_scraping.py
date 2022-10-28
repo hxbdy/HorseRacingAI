@@ -58,14 +58,15 @@ def create_table():
     netkeibaDB.conn.commit()
     # さらに追加2022/10/25
     netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN post_position")
+    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN retired_flg")
     """
     dbname = config.get("common", "path_netkeibaDB")
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
     cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)')
-    cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg)')
+    cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
     cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
-    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, race_data1, race_data2, post_position, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
+    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
     conn.commit()
 
     cur.close()
@@ -185,7 +186,7 @@ def scrape_racedata(driver, raceID_list):
         race_table = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']")
         race_table = race_table.find_elements(By.TAG_NAME, "tr")
         # 取得する列 (順不同)
-        COL_NAME_TEXT = ["枠番","タイム","着差","馬体重","賞金(万円)","着順"]
+        COL_NAME_TEXT = ["枠番","タイム","着差","馬体重","賞金(万円)","着順","斤量"]
         COL_NAME_ID = ["馬名"]
         column_name_data = race_table[0].find_elements(By.TAG_NAME, "th")
         col_idx = []
@@ -247,6 +248,16 @@ def scrape_horsedata(driver, horseID_list):
 
     for iter_num in range(len(horseID_list)):
         horseID = str(horseID_list[iter_num])
+
+        ## 引退馬としてテーブルに登録されている場合は飛ばす
+        # 注意) JRAへの登録から判定しているため、外国の馬は現状飛ばせない。例: モンジュー
+        if netkeibaDB.sql_isIn("horse_prof",["horse_id='{}'".format(horseID),"retired_flg='1'"]):
+            logger.debug("horse (horseID={}) is skipped.".format(horseID))
+            # 進捗表示
+            if (iter_num+1) % progress_notice_cycle == 0:
+                logger.info("{0} / {1} finished.".format(iter_num+1, len(horseID_list)))
+            continue
+
         ## 馬のページにアクセス
         horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
         logger.debug('access {}'.format(horse_url))
@@ -255,16 +266,22 @@ def scrape_horsedata(driver, horseID_list):
         ## 馬名，英名，抹消/現役，牡牝，毛の色
         # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
         horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
+        # 引退馬判定 (現役:0, 引退:1)
+        if "抹消" in horse_title:
+            retired = "1"
+        else:
+            retired = "0"
 
         ## プロフィールテーブルの取得
         logger.debug('get profile table')
         # 過去と現在(2003年ごろ以降に誕生の馬)で表示内容が違うため、tryを使用
         try:
             prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']")
-            target_col_hp = ["horse_id","bod","trainer","owner","producer","area","auction_price","earned","lifetime_record","main_winner","relative","blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm","horse_title","check_flg"]
+            target_col_hp = ["bod","trainer","owner","producer","area","auction_price","earned","lifetime_record","main_winner","relative"]
         except:
             prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table ']")
-            target_col_hp = ["horse_id","bod","trainer","owner","owner_info","producer","area","auction_price","earned","lifetime_record","main_winner","relative","blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm","horse_title","check_flg"]
+            target_col_hp = ["bod","trainer","owner","owner_info","producer","area","auction_price","earned","lifetime_record","main_winner","relative"]
+        target_col_hp = [*target_col_hp, "blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm", "horse_id","horse_title","check_flg","retired_flg"] #★順序対応確認
         row_name_data = prof_table.find_elements(By.TAG_NAME, "th")
         prof_contents_data = prof_table.find_elements(By.TAG_NAME, "td")
         row_name = []
@@ -355,13 +372,13 @@ def scrape_horsedata(driver, horseID_list):
 
         ## テーブルへの保存
         #- horse_profテーブル
-        data_list = [[horseID, *prof_contents, *blood_list, horse_title, check]]
+        data_list = [[*prof_contents, *blood_list, horseID, horse_title, check, retired]] #★順序対応確認
         # 存在確認して，あればUPDATE，なければINSERT
         if len(netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID])) > 0:
             netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
         else:
             netkeibaDB.sql_insert_Row("horse_prof", target_col_hp, data_list)
-        logger.debug("save horsedata on horse_prof table horse_id={}".format(horseID))
+        logger.debug("save horsedata on horse_prof table, horse_id={}".format(horseID))
         
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
@@ -372,12 +389,11 @@ def scrape_horsedata(driver, horseID_list):
             netkeibaDB.sql_insert_Row("race_info", target_col_ri, data_list)
         else:
             pass
+        logger.debug("save horsedata on race_info table, horse_id={}".format(horseID))
         
-        logger.debug("save horsedata completed, horse_id={}".format(horseID))
         # 進捗表示
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("{0} / {1} finished.".format(iter_num+1, len(horseID_list)))
-    
     logger.info("save_horsedata comp")
 
 
@@ -417,18 +433,12 @@ def reconfirm_check():
 
 
 def make_raceID_list():
-    """race_resultテーブル内に存在しないraceIDリストを作成
-    OP以上のレースに限定するため，race_idテーブルを基にする．
+    """race_idテーブルに存在し、かつrace_resultテーブル内に存在しないレースのraceIDリストを返す
     race_idテーブル -> race_resultテーブル
     """
-    #raceID_list_ri = netkeibaDB.cur.execute("SELECT race_id FROM race_id WHERE horse_id > '2019100000'").fetchall()
-    raceID_list_ri = netkeibaDB.sql_mul_tbl("race_id",["race_id"],["1"],["1"])
-    #raceID_list_ri = list(map(lambda x: x[0], raceID_list_ri))
+    raceID_list_ri = netkeibaDB.sql_mul_tbl("race_id",["DISTINCT id"],["1"],[1])
     raceID_set_ri = set(raceID_list_ri)
-
-    #raceID_list_rr = netkeibaDB.cur.execute("SELECT race_id FROM race_result").fetchall()
-    raceID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT race_id"],["1"],["1"])
-    #raceID_list_rr = list(map(lambda x: x[0], raceID_list_rr))
+    raceID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT race_id"],["1"],[1])
     raceID_set_rr = set(raceID_list_rr)
 
     raceID_list = list(raceID_set_ri - raceID_set_rr)
@@ -438,8 +448,30 @@ def make_raceID_list():
         if raceID.isdecimal():
             raceID_list_out.append(raceID)
 
+    logger.info("race id list ->")
     logger.info(raceID_list_out)
     return raceID_list_out
+
+def make_horseID_list():
+    """race_resultテーブル内に存在し、かつ引退していない馬のhorse_idリストを返す
+    race_resultテーブル -> horse_profテーブル
+    """
+    horseID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT horse_id"],["1"],[1])
+    horseID_set_rr = set(horseID_list_rr)
+    horseID_list_hp = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["retired_flg"],["0"])
+    horseID_set_hp = set(horseID_list_hp)
+
+    horseID_list = list(horseID_set_rr - horseID_set_hp)
+    # horseIDにアルファベットが入る馬を排除
+    horseID_list_out = []
+    for horseID in horseID_list:
+        if horseID.isdecimal():
+            horseID_list_out.append(horseID)
+    
+    logger.debug("horse id list ->")
+    logger.debug(horseID_list_out)
+    return horseID_list_out
+
 
 def write_grade(raceID_list):
     for raceID in raceID_list:
@@ -453,9 +485,6 @@ def string2grade(val):
     G1, G2, G3, 無印(OP) を判定
     障害競走は J.G1, J.G2, J.G3で返す
     """
-    
-    #name = netkeibaDB.cur.execute("SELECT race_name FROM race_result WHERE race_id = '{}'".format(raceID))
-    #val = val.fetchone()[0]
     if "(G3)" in val:
         return "3"
     elif "(G2)" in val:
@@ -472,6 +501,43 @@ def string2grade(val):
         return "0"
 
 
+def update_database(driver, year_month, race_grade="4"):
+    """データベース全体を更新する
+    driver: webdriver
+    year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
+    """
+    # 期間内のrace_idを取得してrace_idテーブルへ保存
+    #scrape_raceID(driver, year_month, race_grade)
+
+    # 未調査のrace_idのリストを作成
+    raceID_list = make_raceID_list()
+
+    # レース結果をスクレイプしてrace_resultテーブルへ保存
+    scrape_racedata(driver, raceID_list)
+
+    # 前回調査時点で引退していない馬のみのhorse_idリストを作成
+    horseID_list = make_horseID_list()
+
+    # 馬の情報をスクレイプしてhorse_profテーブルとrace_infoテーブルへ保存
+    scrape_horsedata(driver, horseID_list)
+
+    # データ整合性チェック
+    #reconfirm_check()
+
+    logger.info("update_database comp")
+
+def update_horsedata_only(driver, horseID_list):
+    """レース直前にレースに出走する馬に関係する情報のみ集める
+    レースの予想に必要なのはrace_infoテーブル。
+    scrape_horsedataを実行し、race_infoとhorse_profを更新する。
+    driver: webdriver
+    horseID_list: レースに出走する馬のhorse idのリスト
+    """
+    scrape_horsedata(driver, horseID_list)
+    #reconfirm_check()
+    logger.info("update_horsedata_only comp")
+
 if __name__ == "__main__":
     config_scraping = configparser.ConfigParser()
     config_scraping.read("src\\private.ini")
@@ -480,19 +546,12 @@ if __name__ == "__main__":
     password = config_scraping.get("scraping", "pass")
     
     # 後々別のところで管理．
-    #create_table()
+    create_table()
 
     """"""
     driver = wf.start_driver(browser)
     login(driver, mail_address, password)
-    #scrape_raceID(driver, ["202105", "202108"], 4)
-    #scrape_racedata(driver, ["202109021210"])
-    scrape_horsedata(driver, ["2018105074"])
 
-    #scrape_horsedata(driver,["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"])
-    
-    #raceID_list = make_raceID_list()
-    #scrape_racedata(driver, raceID_list)
-    #write_grade(raceID_list)
-
-    #driver.close()
+    #update_database(driver, ["202012","202012"])
+    #update_horsedata_only(driver, ["2014100492"])
+    driver.close()
