@@ -117,6 +117,9 @@ def scrape_raceID(driver, year_month, race_grade="4"):
             URL_find_race_id = "https://db.netkeiba.com/?pid=race_search_detail"
             wf.access_page(driver, URL_find_race_id)
             
+            # 芝・ダートのみを選択(障害競走を除外)
+            wf.click_checkbox(driver,"check_track_1")
+            wf.click_checkbox(driver,"check_track_2")
             # 期間の選択
             wf.select_from_dropdown(driver, "start_year", year)
             wf.select_from_dropdown(driver, "end_year", year)
@@ -167,7 +170,7 @@ def scrape_racedata(driver, raceID_list):
             logger.debug("race (raceID={}) is skipped.".format(raceID))
             # 進捗表示
             if (iter_num+1) % progress_notice_cycle == 0:
-                logger.info("{0} / {1} finished.".format(iter_num+1, len(raceID_list)))
+                logger.info("scrape_racedata {0} / {1} finished.".format(iter_num+1, len(raceID_list)))
             continue
 
         ## レースページにアクセス
@@ -226,11 +229,11 @@ def scrape_racedata(driver, raceID_list):
             data_list.append(data)
         target_col = [*target_col,"race_id","race_name","race_data1","race_data2"]
         netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
-        logger.debug("saving race_result completed, raceID={}".format(raceID))
+        logger.debug("save race data on race_result table, raceID={}".format(raceID))
 
         # 進捗表示
         if (iter_num+1) % progress_notice_cycle == 0:
-            logger.info("{0} / {1} finished.".format(iter_num+1, len(raceID_list)))
+            logger.info("scrape_racedata {0} / {1} finished.".format(iter_num+1, len(raceID_list)))
     
     logger.info("scrape_racedata comp")
 
@@ -255,7 +258,7 @@ def scrape_horsedata(driver, horseID_list):
             logger.debug("horse (horseID={}) is skipped.".format(horseID))
             # 進捗表示
             if (iter_num+1) % progress_notice_cycle == 0:
-                logger.info("{0} / {1} finished.".format(iter_num+1, len(horseID_list)))
+                logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
             continue
 
         ## 馬のページにアクセス
@@ -378,7 +381,7 @@ def scrape_horsedata(driver, horseID_list):
             netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
         else:
             netkeibaDB.sql_insert_Row("horse_prof", target_col_hp, data_list)
-        logger.debug("save horsedata on horse_prof table, horse_id={}".format(horseID))
+        logger.debug("save horse data on horse_prof table, horse_id={}".format(horseID))
         
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
@@ -389,12 +392,12 @@ def scrape_horsedata(driver, horseID_list):
             netkeibaDB.sql_insert_Row("race_info", target_col_ri, data_list)
         else:
             pass
-        logger.debug("save horsedata on race_info table, horse_id={}".format(horseID))
+        logger.debug("save horse data on race_info table, horse_id={}".format(horseID))
         
         # 進捗表示
         if (iter_num+1) % progress_notice_cycle == 0:
-            logger.info("{0} / {1} finished.".format(iter_num+1, len(horseID_list)))
-    logger.info("save_horsedata comp")
+            logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
+    logger.info("scrape_horsedata comp")
 
 
 def reconfirm_check():
@@ -508,7 +511,7 @@ def update_database(driver, year_month, race_grade="4"):
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
     # 期間内のrace_idを取得してrace_idテーブルへ保存
-    #scrape_raceID(driver, year_month, race_grade)
+    scrape_raceID(driver, year_month, race_grade)
 
     # 未調査のrace_idのリストを作成
     raceID_list = make_raceID_list()
