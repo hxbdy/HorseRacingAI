@@ -66,7 +66,7 @@ def create_table():
     cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)')
     cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
     cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
-    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
+    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
     conn.commit()
 
     cur.close()
@@ -185,6 +185,10 @@ def scrape_racedata(driver, raceID_list):
         race_data1 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/dl/dd/p/diary_snap_cut/span").text
         race_data2 = driver.find_element(By.XPATH,"//*[@id='main']/div/div/div/diary_snap/div/div/p").text
 
+        # グレード判定
+        grade_str = race_data1.split("/")[0]
+        grade = string2grade(race_name, grade_str)
+
         # raceテーブルのデータを取得
         race_table = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']")
         race_table = race_table.find_elements(By.TAG_NAME, "tr")
@@ -225,9 +229,9 @@ def scrape_racedata(driver, raceID_list):
         ## race_resultテーブルへの保存    
         data_list = []
         for row in race_contents:
-            data = [*row, raceID, race_name, race_data1, race_data2]
+            data = [*row, raceID, race_name, race_data1, race_data2, grade]
             data_list.append(data)
-        target_col = [*target_col,"race_id","race_name","race_data1","race_data2"]
+        target_col = [*target_col,"race_id","race_name","race_data1","race_data2","grade"]
         netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
         logger.debug("save race data on race_result table, raceID={}".format(raceID))
 
@@ -328,7 +332,7 @@ def scrape_horsedata(driver, horseID_list):
         column_name_data = perform_table[0].find_elements(By.TAG_NAME, "th")
         col_idx = []
         col_idx_id = []
-        race_name_col_idx = 0 # レース名の列位置を保持
+        col_idx_for_grade = [-1, -1] # グレード判定用の列の位置を保持(レース名、距離)
         target_col_ri = ["horse_id"]
         for i in range(len(column_name_data)):
             # 列名
@@ -341,7 +345,9 @@ def scrape_horsedata(driver, horseID_list):
                 col_idx.append(i)
                 target_col_ri.append(col_name_dict[cname])
             if cname == "レース名":
-                race_name_col_idx = i
+                col_idx_for_grade[0] = i
+            elif cname == "距離":
+                col_idx_for_grade[1] = i
         target_col_ri.append("grade")
         # 各レースの情報を取得
         perform_contents = []
@@ -350,7 +356,7 @@ def scrape_horsedata(driver, horseID_list):
             perform_table_row = perform_table[row].find_elements(By.TAG_NAME, "td")
             perform_contents_row = list(map(lambda x: x.text, perform_table_row))
             # グレードの判定
-            grade = string2grade(perform_contents_row[race_name_col_idx])
+            grade = string2grade(perform_contents_row[col_idx_for_grade[0]],perform_contents_row[col_idx_for_grade[1]])
             # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
             for i in col_idx_id:
                 try:
@@ -478,30 +484,43 @@ def make_horseID_list():
 
 def write_grade(raceID_list):
     for raceID in raceID_list:
-        grade = string2grade(raceID)
-        netkeibaDB.sql_update_Row("race_info",["grade"],[[grade]],["race_id = '{}'".format(raceID)])
+        db_search = netkeibaDB.cur.execute("SELECT race_name, race_data1 FROM race_result WHERE race_id='{}' LIMIT 1".format(raceID)).fetchall()
+        if len(db_search) == 0:
+            continue
+        grade = string2grade(db_search[0], db_search[1].split("/")[0])
+        netkeibaDB.sql_update_Row("race_result",["grade"],[[grade]],["race_id = '{}'".format(raceID)])
 
-def string2grade(val):
+def string2grade(grade_str, distance_str):
     """文字列からレースのグレードを判定
-    val: 入力文字列
+    grade_str: グレードが入っている文字列
+    distance_str: 芝/ダート/障害の情報が入っている文字列
     
-    G1, G2, G3, 無印(OP) を判定
-    障害競走は J.G1, J.G2, J.G3で返す
+    芝 G1: 1, G2: 2, G3: 3, 無印(OP): 4
+    ダ G1: 6, G2: 7, G3: 8, 無印(OP): 9
+    障 J.G1: 11, J.G2: 12, J.G3: 13, 無印(OP): 14
     """
-    if "(G3)" in val:
-        return "3"
-    elif "(G2)" in val:
-        return "2"
-    elif "(G1)" in val:
-        return "1"
-    elif "(J.G3)" in val:
-        return "7"
-    elif "(J.G2)" in val:
-        return "6"
-    elif "(J.G1)" in val:
-        return "5"
+    grade = 0
+    if "障" in distance_str:
+        grade += 10
+    elif "ダ" in distance_str:
+        grade += 5
+
+    if "(G3)" in grade_str:
+        grade += 3
+    elif "(G2)" in grade_str:
+        grade += 2
+    elif "(G1)" in grade_str:
+        grade += 1
+    elif "(J.G3)" in grade_str:
+        grade += 3
+    elif "(J.G2)" in grade_str:
+        grade += 2
+    elif "(J.G1)" in grade_str:
+        grade += 1
     else:
-        return "0"
+        grade += 4
+    
+    return str(grade)
 
 
 def update_database(driver, year_month, race_grade="4"):
