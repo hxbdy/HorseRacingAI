@@ -16,6 +16,7 @@ from getFromDB import * # db ハンドラはここで定義済み
 class XClass:
     # 全インスタンス共通の変数
     race_id = '0'
+    # TODO: 18に変更予定
     pad_size = 24
 
     def __init__(self):
@@ -915,6 +916,7 @@ class RankOneHotClass(XClass):
                 else:
                     # 1位が複数いる
                     # ここには入らない想定
+                    # TODO: 同着一位については許容するようにしようかな
                     logger.error("Duplicate 1st place one-hot label")
             else:
                 retList.append(0)
@@ -1015,7 +1017,7 @@ class MgrClass:
             comp_cnt += 1
 
             # DB 検索条件, 開催時点での各馬の年齢計算などに使用する
-            # TODO: マルチプロセス時、XClassは共有していないよね？
+            # (マルチプロセス時、親XClassの変数は子クラス同士に影響しない)
             XClass.race_id = self.totalRaceList[race]
 
             # データ取得から標準化まで行う
