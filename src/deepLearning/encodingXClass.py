@@ -103,7 +103,7 @@ class HorseNumClass(XClass):
 
     def get(self):
         self.xList = db_race_num_horse(self.race_id)
-
+        
     def fix(self):
         XClass.fix(self)
 
@@ -947,29 +947,22 @@ class RankOneHotClass(XClass):
 # 学習用入力データX, 教師データt を管理する
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):
+
+        # 参照渡しのためディープコピーしておく
         self.XclassTbl = copy.copy(XclassTbl)
         self.tclassTbl = copy.copy(tclassTbl)
 
-        # セットされた race_id の標準化結果の一時保持リスト
-        self.x = [0] * len(XclassTbl)
-        self.t = [0] * len(tclassTbl)
-
-        # yearまでの総 race_id, レース数取得 (year年含む)
+        # (start_year <= 取得範囲 <=  end_year) の race_id, レース数保持
         self.totalRaceList = db_race_list_id(start_year, end_year, limit)
         self.totalRaceNum  = len(self.totalRaceList)
 
-        # year までの全標準化結果保持リスト
-        self.totalXList = [[0 for j in range(len(XclassTbl))] for i in range(self.totalRaceNum)]
-        self.totaltList = [[0 for j in range(len(tclassTbl))] for i in range(self.totalRaceNum)]
+        # 全標準化結果保持リスト
+        self.totalXList = [[0 for j in range(len(self.XclassTbl))] for i in range(self.totalRaceNum)]
+        self.totaltList = []
 
     def set_totalList(self, totalXList, totaltList):
         self.totalXList = totalXList
         self.totaltList = totaltList
-
-    # race_id と 開催日 をクラスで保持する
-    # DB 検索条件と開催時点での各馬の年齢計算に使用する
-    def set(self, race_id):
-        XClass.race_id = race_id
 
     # 既存の標準化済みデータに新規に追加する
     def getAppendTotalList(self, append_x):
@@ -997,48 +990,45 @@ class MgrClass:
         return self.getTotalList()
 
     # クラス名からXtblの何番目に入っているかを返す
+    # TODO: もしかしてpython構文でカバーできる機能ではないか
     def get_idx_Xtbl(self, name):
         for idx in range(len(self.XclassTbl)):
-            if self.XclassTbl[idx].__name__ == name:
-                return idx
+            if self.XclassTbl[idx] != None:
+                if self.XclassTbl[idx].__name__ == name:
+                    return idx
         return -1
 
     def encoding(self, queue, encodeClass):
+        # 結果保存リスト
+        result_list = []
         # エンコード実行するクラスが学習データなのか教師データなのか区別する
         if encodeClass in self.XclassTbl:
             cat = "x"
         elif encodeClass in self.tclassTbl:
             cat = "t"
+        else:
+            cat = "unknown"
+
         # 進捗確認カウンタ
         comp_cnt = 1
         # エンコードクラス生成
         instance = encodeClass()
-        # 結果保存リスト
-        result_list = []
         for race in range(len(self.totalRaceList)):
 
-            if cat == "x":
-                queue.put(["progress", "x", encodeClass.__name__, comp_cnt])
-            elif cat == "t":
-                queue.put(["progress", "t", encodeClass.__name__, comp_cnt])
-
+            # エンコード進捗状況送信
+            queue.put(["progress", cat, encodeClass.__name__, comp_cnt])
             comp_cnt += 1
 
-            # レースid, 開催日セット
-            self.set(self.totalRaceList[race])
+            # DB 検索条件, 開催時点での各馬の年齢計算などに使用する
+            # TODO: マルチプロセス時、XClassは共有していないよね？
+            XClass.race_id = self.totalRaceList[race]
 
             # データ取得から標準化まで行う
             x_tmp = instance.adj()
 
             result_list.append(x_tmp)
         
-        if cat == "x":
-            queue.put(["encoding", "x", encodeClass.__name__, result_list])
-        elif cat == "t":
-            queue.put(["encoding", "t", encodeClass.__name__, result_list])
-        else:
-            # ここには入らない想定
-            queue.put(["encoding", "unknown", encodeClass.__name__, result_list])
+        queue.put(["encoding", cat, encodeClass.__name__, result_list])
 
     def getTotalList(self):
 
@@ -1052,17 +1042,20 @@ class MgrClass:
         encode_list =      copy.copy(self.XclassTbl)
         encode_list.extend(copy.copy(self.tclassTbl))
         for encode in encode_list:
+            if encode == None:
+                continue
             logger.info("encode {0} start".format(encode.__name__))
             process = Process(target = self.encoding, args = (queue, encode))
             process.start()
 
         # 全エンコード終了フラグ
-        encoded_x_flg_list = [0] * len(encode_list)
+        encoded_x_flg_list = [0] * len(self.XclassTbl)
         encoded_t_flg      = 0
 
-        # 学習データエンコード済み格納リスト
-        x_train = [0] * len(self.XclassTbl)
-        t_train = [0]
+        # エンコードをスキップする要素はあらかじめ完了フラグをセットしておく
+        for i in range(len(encode_list)):
+            if encode_list[i] == None:
+                encoded_x_flg_list[i] = 1
 
         # 各エンコード状況, 結果受信
         while True:
@@ -1079,17 +1072,19 @@ class MgrClass:
 
             # エンコード完了
             elif dequeue[0] == "encoding":
-                # 学習用データxエンコード
                 if dequeue[1] == "x":
+                    x = self.get_idx_Xtbl(dequeue[2])
                     # エンコード完了フラグセット
-                    encoded_x_flg_list[self.get_idx_Xtbl(dequeue[2])] = 1
+                    encoded_x_flg_list[x] = 1
                     # エンコード結果を格納
-                    x_train[self.get_idx_Xtbl(dequeue[2])] = dequeue[3]
+                    data = dequeue[3]
+                    for y in range(self.totalRaceNum):
+                        self.totalXList[y][x] = data[y]
                 elif dequeue[1] == "t":
                     # エンコード完了フラグセット
                     encoded_t_flg = 1
                     # エンコード結果を格納
-                    t_train[0] = dequeue[3]
+                    self.totaltList = dequeue[3]
                 else:
                     logger.critical("Undefined comm | category = encoding | data = {0}".format(dequeue[1:]))
 
@@ -1098,7 +1093,7 @@ class MgrClass:
                 logger.critical("Undefined comm | category = {0} | data = {1}".format(dequeue[0], dequeue[1:]))
 
             # 全エンコードが完了したかチェック
-            if (0 in encoded_x_flg_list) and (encoded_t_flg == 0):
+            if (0 in encoded_x_flg_list) or (encoded_t_flg == 0):
                 continue
             else:
                 break
@@ -1115,9 +1110,7 @@ class MgrClass:
         time_end = time.perf_counter()
 
         logger.info("========================================")
-        logger.info("encoding time = {0} [sec]".format(time_end- time_sta))
-        logger.info("x_train = {0}".format(x_train))
-        logger.info("t_train = {0}".format(t_train))
+        logger.info("encoding time = {0} [sec]".format(time_end - time_sta))
         logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
         
-        return x_train, t_train, analysis_train
+        return self.totalXList, self.totaltList, analysis_train
