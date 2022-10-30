@@ -6,6 +6,8 @@ import datetime
 import numpy as np
 import itertools
 
+from iteration_utilities import deepflatten
+
 from debug import *
 from table import *
 
@@ -70,10 +72,12 @@ def encoding_save_condition(dir_path):
     shutil.copy("./src/deepLearning/table.py", dir_path)
 
 # multi_x をnumpy 2次元にして返す
+# TODO: 外部ライブラリに頼らずに書けるのでは
 def dl_flat2d(multi_x):
     flat_x = []
     for i in multi_x:
-        flat_x.append(list(itertools.chain.from_iterable(i)))
-    flat_x = np.array(flat_x)
+        flat_x.append(list(deepflatten(i)))
+        col_num = len(flat_x[-1])
+    flat_x = np.array(flat_x).reshape(-1, col_num)
     return flat_x
     

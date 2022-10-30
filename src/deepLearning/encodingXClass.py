@@ -18,10 +18,6 @@ class XClass:
     race_id = '0'
     pad_size = 24
 
-    # final : データを全て取得したあとに標準化を行う
-    # every : データ取得毎に標準化を行う
-    nrm_flg = "every"
-
     def __init__(self):
         self.xList = []
         
@@ -46,8 +42,7 @@ class XClass:
         self.get()
         self.fix()
         self.pad()
-        if XClass.nrm_flg == "every":
-            self.nrm()
+        self.nrm()
         return self.xList
 
 class MoneyClass(XClass):
@@ -1101,10 +1096,11 @@ class MgrClass:
 
         # 解析用情報取得
         analysis_train = []
-        for race in self.totalRaceList:
-            odds = db_race_1st_odds(race)
-            grade = db_race_grade(race)
+        for i in range(len(self.totalRaceList)):
+            odds = db_race_1st_odds(self.totalRaceList[i])
+            grade = db_race_grade(self.totalRaceList[i])
             analysis_train.append([odds, grade])
+            logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
 
         # 計測終了
         time_end = time.perf_counter()

@@ -28,6 +28,7 @@
 4. [Python Dateutil :: Anaconda.org](https://anaconda.org/conda-forge/python-dateutil)
 5. [Sqlite3 :: Anaconda.org](https://anaconda.org/blaze/sqlite3)
 6. [Matplotlib :: Anaconda.org](https://anaconda.org/conda-forge/matplotlib)
+7. [Iteration Utilities :: Anaconda.org](https://anaconda.org/conda-forge/iteration_utilities)
 
 ## PATH
 conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
