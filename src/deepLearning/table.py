@@ -32,7 +32,7 @@ XTbl = [
     HorseAgeClass,
     BurdenWeightClass,
     PostPositionClass,
-    JockeyClass,
+    # JockeyClass, # エンコードにかなり時間がかかる.一旦おやすみ
     CumPerformClass,
     BradleyTerryClass,
     UmamusumeClass,
@@ -50,7 +50,7 @@ chgXTbl = [
     None,
     None,
     None,
-    None,
+    # None,
     None,
     None,
     None,
@@ -68,7 +68,7 @@ predict_XTbl = [
     PredictHorseAgeClass,
     PredictBurdenWeightClass,
     PredictPostPositionClass,
-    PredictJockeyClass,
+    # PredictJockeyClass,
     PredictCumPerformClass,
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
@@ -80,10 +80,4 @@ predict_XTbl = [
 tTbl = [
     RankOneHotClass # 1位のOne-Hot表現
     # MarginClass   # 着差標準化
-]
-
-# 生成済み教師テーブルから一部挿げ替えを行えるテーブル
-# !! 1つしか入れないで !!
-chgtTbl = [
-    None
 ]

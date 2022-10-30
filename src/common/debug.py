@@ -11,7 +11,7 @@ with open(path_log, mode = 'w'):
     pass
 
 # log フォーマット
-output_format = '%(asctime)s %(filename)s [%(levelname)s] %(message)s'
+output_format = '%(asctime)s %(filename)18s PID:%(process)5d [%(levelname)s] %(message)s'
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
