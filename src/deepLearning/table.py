@@ -4,7 +4,7 @@ from config_predict import *
 # 学習用データ生成条件
 start_year_train = 1800 # 開始年
 end_year_train   = 2020 # 終了年
-limit_train      = -1   # 取得件数 -1 なら全件
+limit_train      = 2   # 取得件数 -1 なら全件
 
 # 学習データファイル名フォーマット
 X_train_file_name = "x_train.pickle"
@@ -14,7 +14,7 @@ analysis_train_file_name = "analysis_train.pickle"
 # テスト用データ生成条件
 start_year_test = 2021 # 開始年
 end_year_test   = 2021 # 終了年
-limit_test      = -1   # 取得件数 -1 なら全件
+limit_test      = 2   # 取得件数 -1 なら全件
 
 # テストファイル名フォーマット
 X_test_file_name = "x_test.pickle"
@@ -87,10 +87,3 @@ tTbl = [
 chgtTbl = [
     None
 ]
-
-# クラス名からXtblの何番目に入っているかを返す
-def get_idx_Xtbl(name):
-    for idx in range(len(XTbl)):
-        if XTbl[idx].__name__ == name:
-            return idx
-    return -1

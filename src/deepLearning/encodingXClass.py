@@ -3,6 +3,9 @@
 import numpy as np
 import re
 import copy
+import time
+from multiprocessing import Process, Queue
+
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -968,44 +971,6 @@ class MgrClass:
     def set(self, race_id):
         XClass.race_id = race_id
 
-    # 標準化を行ったリストを1次元化して返す
-    def get(self):
-        # 挿げ替えを後で行う機能のため、ここではフラット化を行わない
-        return self.x, self.t
-
-    def adj_train(self, adj_result, tbl):
-        classTbl = copy.copy(tbl)
-
-        for func_idx in range(len(classTbl)):
-            if classTbl[func_idx] == None:
-                # logger.debug("func_idx = {0}".format(func_idx))
-                # logger.debug("adj_result[func_idx] = {0}".format(adj_result[func_idx]))
-                logger.debug("[{0:2d}] skip adj (len : {1:2d}) = {2}".format(func_idx, len(adj_result[func_idx]), adj_result[func_idx]))
-                continue
-
-            instance = (classTbl[func_idx])()
-            adj_result[func_idx] = instance.adj()
-
-            logger.debug("[{0:2d}] {1:23} (len : {2:2d}) = {3}".format(func_idx, classTbl[func_idx].__name__, len(adj_result[func_idx]), adj_result[func_idx]))
-
-    # 各要素(天気, 賞金, etc...) を標準化まで行う
-    # XTble で用意されたクラスごとに標準化を順に実行する
-    # DB から取得する get() -> 数値化やsplitなど整形する fix() -> 要素数を統一する pad() -> データのレンジを統一する nrm())
-    def adj(self):
-        logger.debug("X (len : {0}) = ".format(len(self.x)))
-        self.adj_train(self.x, self.XclassTbl)
-        logger.debug("t (len : {0}) = ".format(len(self.t)))
-        self.adj_train(self.t, self.tclassTbl)
-        
-    def zscore(self):
-        # x 一括標準化
-        # 各列で標準化する
-        x = np.array(self.totalXList)
-        xmean = x.mean(axis=0, keepdims=True)
-        xstd = np.std(x, axis=0, keepdims=True)
-        xzscore = (x - xmean) / (xstd + 1e-10)
-        self.totalXList = xzscore.tolist()
-
     # 既存の標準化済みデータに新規に追加する
     def getAppendTotalList(self, append_x):
 
@@ -1031,42 +996,128 @@ class MgrClass:
 
         return self.getTotalList()
 
-    def getTotalList(self):
+    # クラス名からXtblの何番目に入っているかを返す
+    def get_idx_Xtbl(self, name):
+        for idx in range(len(self.XclassTbl)):
+            if self.XclassTbl[idx].__name__ == name:
+                return idx
+        return -1
+
+    def encoding(self, queue, encodeClass):
+        # エンコード実行するクラスが学習データなのか教師データなのか区別する
+        if encodeClass in self.XclassTbl:
+            cat = "x"
+        elif encodeClass in self.tclassTbl:
+            cat = "t"
         # 進捗確認カウンタ
         comp_cnt = 1
-        # 学習データ解析用
-        totalAnalysisList = []
+        # エンコードクラス生成
+        instance = encodeClass()
+        # 結果保存リスト
+        result_list = []
         for race in range(len(self.totalRaceList)):
 
-            logger.info("========================================")
-            logger.info("https://db.netkeiba.com/race/{0}".format(self.totalRaceList[race]))
-            logger.info("progress : {0} / {1}".format(comp_cnt, self.totalRaceNum))
+            if cat == "x":
+                queue.put(["progress", "x", encodeClass.__name__, comp_cnt])
+            elif cat == "t":
+                queue.put(["progress", "t", encodeClass.__name__, comp_cnt])
 
             comp_cnt += 1
-            self.x = self.totalXList[race]
-            self.t = self.totaltList[race]
 
             # レースid, 開催日セット
             self.set(self.totalRaceList[race])
 
             # データ取得から標準化まで行う
-            self.adj()
+            x_tmp = instance.adj()
 
-            # 成果リストにアペンド
-            x_tmp, t_tmp = self.get()
-            self.totalXList[race] = x_tmp
-            self.totaltList[race] = t_tmp
-
-            # 学習データ解析用
-            # 学習時の精度の解析に使用する
-            odds = db_race_1st_odds(self.totalRaceList[race])
-            grade = db_race_grade(self.totalRaceList[race])
-            totalAnalysisList.append([odds, grade])
-            logger.debug("Analysis List [odds, grade] = {0}".format([odds, grade]))
-
-        # 一括標準化
-        if XClass.nrm_flg == "final":
-            self.zscore()
-            logger.debug("total zscore : {0}".format(self.totalXList))
+            result_list.append(x_tmp)
         
-        return self.totalXList, self.totaltList, totalAnalysisList
+        if cat == "x":
+            queue.put(["encoding", "x", encodeClass.__name__, result_list])
+        elif cat == "t":
+            queue.put(["encoding", "t", encodeClass.__name__, result_list])
+        else:
+            # ここには入らない想定
+            queue.put(["encoding", "unknown", encodeClass.__name__, result_list])
+
+    def getTotalList(self):
+
+        # エンコードデータ共有用キュー
+        queue = Queue()
+
+        # 処理時間計測開始
+        time_sta = time.perf_counter()
+
+        # マルチプロセス実行
+        encode_list =      copy.copy(self.XclassTbl)
+        encode_list.extend(copy.copy(self.tclassTbl))
+        for encode in encode_list:
+            logger.info("encode {0} start".format(encode.__name__))
+            process = Process(target = self.encoding, args = (queue, encode))
+            process.start()
+
+        # 全エンコード終了フラグ
+        encoded_x_flg_list = [0] * len(encode_list)
+        encoded_t_flg      = 0
+
+        # 学習データエンコード済み格納リスト
+        x_train = [0] * len(self.XclassTbl)
+        t_train = [0]
+
+        # 各エンコード状況, 結果受信
+        while True:
+            dequeue = queue.get()
+
+            # 進捗確認用
+            if dequeue[0] == "progress":
+                if dequeue[1] == "x":
+                    print("\r\033[{0}C[{1:4}]".format(self.get_idx_Xtbl(dequeue[2]) * 8, dequeue[3]), end="")
+                elif dequeue[1] == "t":
+                    print("\r\033[{0}C|[{1:4}]".format(len(self.XclassTbl) * 8, dequeue[3]), end="")
+                else:
+                    logger.critical("Undefined comm | category = progress | data = {0}".format(dequeue[1:]))
+
+            # エンコード完了
+            elif dequeue[0] == "encoding":
+                # 学習用データxエンコード
+                if dequeue[1] == "x":
+                    # エンコード完了フラグセット
+                    encoded_x_flg_list[self.get_idx_Xtbl(dequeue[2])] = 1
+                    # エンコード結果を格納
+                    x_train[self.get_idx_Xtbl(dequeue[2])] = dequeue[3]
+                elif dequeue[1] == "t":
+                    # エンコード完了フラグセット
+                    encoded_t_flg = 1
+                    # エンコード結果を格納
+                    t_train[0] = dequeue[3]
+                else:
+                    logger.critical("Undefined comm | category = encoding | data = {0}".format(dequeue[1:]))
+
+            # Unknown Comm
+            else:
+                logger.critical("Undefined comm | category = {0} | data = {1}".format(dequeue[0], dequeue[1:]))
+
+            # 全エンコードが完了したかチェック
+            if (0 in encoded_x_flg_list) and (encoded_t_flg == 0):
+                continue
+            else:
+                break
+        print()
+
+        # 解析用情報取得
+        analysis_train = []
+        for race in self.totalRaceList:
+            odds = db_race_1st_odds(race)
+            grade = db_race_grade(race)
+            analysis_train.append([odds, grade])
+
+        # 計測終了
+        time_end = time.perf_counter()
+
+        logger.info("========================================")
+        logger.info("encoding time = {0} [sec]".format(time_end- time_sta))
+        logger.info("x_train = {0}".format(x_train))
+        logger.info("t_train = {0}".format(t_train))
+        logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
+        
+        return x_train, t_train, analysis_train
