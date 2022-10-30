@@ -143,8 +143,7 @@ def scrape_raceID(driver, year_month, race_grade="4"):
             raceID_list = []
             for i in range(len(race_column_html)):
                 race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-                raceID = race_url_str[race_url_str.find("race/")+5 : -1] # 最後の/を除去
-                raceID_list.append(raceID)
+                raceID_list.append(url2raceID(race_url_str))
 
             # raceID_listが日付降順なので、昇順にする
             raceID_list = raceID_list[::-1]
@@ -219,8 +218,7 @@ def scrape_racedata(driver, raceID_list):
             for i in col_idx_id:
                 try:
                     horse_url_str = race_table_row[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-                    id = horse_url_str[horse_url_str.find("horse/")+6 : -1] # 最後の/を除去
-                    race_contents_row[i] = id
+                    race_contents_row[i] = url2horseID(horse_url_str)
                 except:
                     pass
             # 必要部分だけ取り出して追加
@@ -299,8 +297,7 @@ def scrape_horsedata(driver, horseID_list):
             if row_name[row] == "調教師":
                 try:
                     trainer_url_str = prof_contents_data[row].find_element(By.TAG_NAME, "a").get_attribute("href")
-                    trainerID = trainer_url_str[trainer_url_str.find("trainer/")+8 : -1] # 最後の/を除去
-                    prof_contents.append(trainerID)
+                    prof_contents.append(url2trainerID(trainer_url_str))
                 except:
                     prof_contents.append(prof_contents_data[row].text)
             else:
@@ -363,9 +360,9 @@ def scrape_horsedata(driver, horseID_list):
                     url_str_id = perform_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
                     # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
                     if "jockey/result/recent/" in url_str_id:
-                        id = url_str_id[url_str_id.find("jockey/result/recent/")+21 : -1]
+                        id = url2jockeyID(url_str_id)
                     elif "race/" in url_str_id:
-                        id = url_str_id[url_str_id.find("race/")+5 : -1]
+                        id = url2raceID(url_str_id)
                     perform_contents_row[i] = id
                 except:
                     pass
@@ -405,6 +402,69 @@ def scrape_horsedata(driver, horseID_list):
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
     logger.info("scrape_horsedata comp")
 
+
+def scrape_race_today(driver, raceID):
+    """まだ競争が始まっていないレースのデータをスクレイプする
+    driver: webdriver
+    raceID: レースid
+    """
+    # サイトにアクセス
+    url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
+    wf.access_page(driver, url)
+
+    # 予測に必要なデータをスクレイプ
+    shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
+
+    COL_NAME_TEXT = ["枠", "馬番", "斤量"]
+    COL_NAME_ID = ["馬名", "騎手"]
+    column_name_data = shutuba_table.find_elements(By.TAG_NAME, "th")
+    col_idx = []
+    col_idx_id = []
+    target_col = []
+    for i in range(len(column_name_data)):
+        # 列名
+        cname = column_name_data[i].text.replace("\n","")
+        if cname in COL_NAME_TEXT:
+            col_idx.append(i)
+            target_col.append(cname)
+        elif cname in COL_NAME_ID:
+            col_idx_id.append(i)
+            col_idx.append(i)
+            target_col.append(cname)
+    contents = []
+    shutuba_table = shutuba_table.find_element(By.TAG_NAME, "tbody")
+    shutuba_table = shutuba_table.find_elements(By.TAG_NAME, "tr")
+    for row in range(len(shutuba_table)):
+        # 文字列として取得
+        shutuba_table_row = shutuba_table[row].find_elements(By.TAG_NAME, "td")
+        shutuba_contents_row = list(map(lambda x: x.text, shutuba_table_row))
+        # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
+        for i in col_idx_id:
+            try:
+                url_str_id = shutuba_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
+                # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
+                if "jockey/result/recent/" in url_str_id:
+                    id = url2jockeyID(url_str_id)
+                elif "horse/" in url_str_id:
+                    id = url2horseID(url_str_id)
+                shutuba_contents_row[i] = id
+            except:
+                pass
+        # 必要部分だけ取り出して追加
+        contents.append(list(map(lambda x: shutuba_contents_row[x], col_idx)))
+    
+    print("枠")
+    print(list(map(lambda x: int(x[0]), contents)))
+    print("馬番")
+    print(list(map(lambda x: int(x[1]), contents)))
+    print("horse id")
+    print(list(map(lambda x: x[2], contents)))
+    print("斤量")
+    print(list(map(lambda x: float(x[3]), contents)))
+    print("jockey id")
+    print(list(map(lambda x: x[4], contents)))
+    return contents
+    
 
 def reconfirm_check():
     """check_flgが0の馬を再確認して修正可能なら修正する
@@ -523,6 +583,31 @@ def string2grade(grade_str, distance_str):
     return str(grade)
 
 
+def url2raceID(url: str):
+    """urlからraceIDを探して返す
+    """
+    id = url[url.find("race/")+5 : -1] # 最後の/を除去
+    return id
+
+def url2horseID(url: str):
+    """urlからhorseIDを探して返す
+    """
+    id = url[url.find("horse/")+6 : -1] # 最後の/を除去
+    return id
+
+def url2jockeyID(url: str):
+    """urlからjockeyIDを探して返す
+    """
+    id = url[url.find("jockey/result/recent/")+21 : -1] # 最後の/を除去
+    return id
+
+def url2trainerID(url: str):
+    """urlからtrainerIDを探して返す
+    """
+    id = url[url.find("trainer/")+8 : -1] # 最後の/を除去
+    return id
+
+
 def update_database(driver, year_month, race_grade="4"):
     """データベース全体を更新する
     driver: webdriver
@@ -568,12 +653,14 @@ if __name__ == "__main__":
     password = config_scraping.get("scraping", "pass")
     
     # 後々別のところで管理．
-    create_table()
+    #create_table()
 
     """"""
     driver = wf.start_driver(browser)
-    login(driver, mail_address, password)
+    #login(driver, mail_address, password)
 
     #update_database(driver, ["202012","202012"])
     #update_horsedata_only(driver, ["2014100492"])
-    driver.close()
+
+    #a = scrape_race_today(driver, "202205040911")
+    #driver.close()
