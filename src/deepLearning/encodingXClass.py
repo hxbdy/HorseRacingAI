@@ -1034,6 +1034,8 @@ class MgrClass:
         time_sta = time.perf_counter()
 
         # マルチプロセス実行
+        # TODO: logger はマルチプロセスに対応していないためログが乱れる
+        #       ログ用プロセスを別途作成する必要がある
         encode_list =      copy.copy(self.XclassTbl)
         encode_list.extend(copy.copy(self.tclassTbl))
         for encode in encode_list:
