@@ -135,9 +135,7 @@ def scrape_raceID(driver, year_month, race_grade="4"):
         raceID_list = raceID_list[::-1]
         # dbのrace_idテーブルに保存
         logger.debug("saving race_id {0}.{1}-{2}.{3} on database started".format(head.year, head.month, ptr.year, ptr.month))
-        # debug
-        logger.debug("raceID_list  = {0}".format(raceID_list))
-        # netkeibaDB.sql_insert_RowToRaceId(raceID_list)
+        netkeibaDB.sql_insert_RowToRaceId(raceID_list)
         logger.info("saving race_id {0}.{1}-{2}.{3} on database completed".format(head.year, head.month, ptr.year, ptr.month))
 
         # 検索の開始年月を (ptr + 1) 月からに再設定
