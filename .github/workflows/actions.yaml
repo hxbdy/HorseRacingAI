@@ -1,6 +1,8 @@
 name: Lizard Runner
 on:
-  push:
+  schedule:
+    # At 00:00 on Monday (JST)
+    - cron: '0 15 * * SUN'
 
 jobs:
   lizard:
