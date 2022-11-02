@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 import configparser
+import datetime
+from dateutil.relativedelta import relativedelta
 
 from selenium.webdriver.common.by import By
 
@@ -79,78 +81,67 @@ def scrape_raceID(driver, year_month, race_grade="4"):
     year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
-    if len(str(year_month[0])) != 6 or len(str(year_month[1])) != 6:
-        logger.critical('invalid year_month')
-        raise ValueError('年月指定の値が不適切．6桁で指定する．')
-    start_year = int(str(year_month[0][:4]))
-    start_mon = int(str(year_month[0][4:]))
-    end_year = int(str(year_month[1][:4]))
-    end_mon = int(str(year_month[1][4:]))
-    # 指定年
-    year_list = list(range(start_year, end_year+1))
-    # 最終年の指定月
-    if start_year == end_year:
-        month_list_last = list(range(start_mon, end_mon+1))
-    else:
-        month_list_last = list(range(1, end_mon+1))
 
+    start_YYMM = year_month[0]
+    end_YYMM   = year_month[1]
     race_grade_name = "check_grade_{}".format(race_grade)
 
+    try:
+        head = datetime.datetime.strptime(start_YYMM, '%Y%m')
+        tail = datetime.datetime.strptime(end_YYMM, '%Y%m')
+    except:
+        logger.critical('invalid year_month[0] = {0}, year_month[1] = {1}'.format(start_YYMM, end_YYMM))
+        raise ValueError('年月指定の値が不適切. 6桁で指定する.')
+    
+    # 期間内のレースIDを取得する
+    while head <= tail:
+        # head から (head+2) 月までのレースを検索
+        ptr = head + relativedelta(months = 2)
+        if ptr > tail:
+            ptr = tail
 
-    for year in year_list:
-        # スクレイプする月のリスト
-        if year == year_list[-1]:
-            month_list = month_list_last
-        else:
-            month_list = list(range(1,13))
-        # 四半期(3ヶ月)ごとに分割してデータを取得する          
-        for quarter_idx in range(4):
-            if len(month_list) <= 3*quarter_idx:
-                break
-            elif len(month_list) < 3*quarter_idx+3:
-                scraping_month = month_list[3*quarter_idx:]
-            else:
-                scraping_month = month_list[3*quarter_idx:3*quarter_idx+3]
+        ## レース種別を入力して検索
+        # レース詳細検索に移動
+        URL_find_race_id = "https://db.netkeiba.com/?pid=race_search_detail"
+        wf.access_page(driver, URL_find_race_id)
+        
+        # 芝・ダートのみを選択(障害競走を除外)
+        wf.click_checkbox(driver,"check_track_1")
+        wf.click_checkbox(driver,"check_track_2")
+        # 期間の選択
+        wf.select_from_dropdown(driver, "start_year", head.year)
+        wf.select_from_dropdown(driver, "end_year", ptr.year)
+        wf.select_from_dropdown(driver, "start_mon", head.month)
+        wf.select_from_dropdown(driver, "end_mon", ptr.month)
+        # 競馬場の選択
+        for i in range(1,11): # 全競馬場を選択
+            wf.click_checkbox(driver, "check_Jyo_{:02}".format(i))
+        # クラスの選択
+        wf.click_checkbox(driver, race_grade_name)
+        # 表示件数を100件にする
+        wf.select_from_dropdown(driver, "list", "100")
+        # 検索ボタンをクリック
+        wf.click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
+        time.sleep(1)
+        ## 画面遷移後
+        # raceIDをレース名のURLから取得
+        # 5列目のデータ全部
+        race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
+        raceID_list = []
+        for i in range(len(race_column_html)):
+            race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
+            raceID_list.append(url2raceID(race_url_str))
+        # raceID_listが日付降順なので、昇順にする
+        raceID_list = raceID_list[::-1]
+        # dbのrace_idテーブルに保存
+        logger.debug("saving race_id {0}.{1}-{2}.{3} on database started".format(head.year, head.month, ptr.year, ptr.month))
+        # debug
+        logger.debug("raceID_list  = {0}".format(raceID_list))
+        # netkeibaDB.sql_insert_RowToRaceId(raceID_list)
+        logger.info("saving race_id {0}.{1}-{2}.{3} on database completed".format(head.year, head.month, ptr.year, ptr.month))
 
-            ## レース種別を入力して検索
-            # レース詳細検索に移動
-            URL_find_race_id = "https://db.netkeiba.com/?pid=race_search_detail"
-            wf.access_page(driver, URL_find_race_id)
-            
-            # 芝・ダートのみを選択(障害競走を除外)
-            wf.click_checkbox(driver,"check_track_1")
-            wf.click_checkbox(driver,"check_track_2")
-            # 期間の選択
-            wf.select_from_dropdown(driver, "start_year", year)
-            wf.select_from_dropdown(driver, "end_year", year)
-            wf.select_from_dropdown(driver, "start_mon", scraping_month[0])
-            wf.select_from_dropdown(driver, "end_mon", scraping_month[-1])
-            # 競馬場の選択
-            for i in range(1,11): # 全競馬場を選択
-                wf.click_checkbox(driver, "check_Jyo_{:02}".format(i))
-            # クラスの選択
-            wf.click_checkbox(driver, race_grade_name)
-            # 表示件数を100件にする
-            wf.select_from_dropdown(driver, "list", "100")
-            # 検索ボタンをクリック
-            wf.click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
-            time.sleep(1)
-
-            ## 画面遷移後
-            # raceIDをレース名のURLから取得
-            # 5列目のデータ全部
-            race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
-            raceID_list = []
-            for i in range(len(race_column_html)):
-                race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-                raceID_list.append(url2raceID(race_url_str))
-
-            # raceID_listが日付降順なので、昇順にする
-            raceID_list = raceID_list[::-1]
-            # dbのrace_idテーブルに保存
-            logger.debug("saving race_id {0}.{1}-{2} on database started".format(year,scraping_month[0],scraping_month[-1]))
-            netkeibaDB.sql_insert_RowToRaceId(raceID_list)
-            logger.info("saving race_id {0}.{1}-{2} on database completed".format(year,scraping_month[0],scraping_month[-1]))
+        # 検索の開始年月を (ptr + 1) 月からに再設定
+        head = ptr + relativedelta(months = 1)
 
 
 def scrape_racedata(driver, raceID_list):
