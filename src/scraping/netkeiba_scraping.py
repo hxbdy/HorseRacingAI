@@ -75,15 +75,13 @@ def create_table():
     conn.close()
 
 
-def scrape_raceID(driver, year_month, race_grade="4"):
+def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade="4"):
     """指定期間内のraceIDを取得する。
     driver: webdriver
     year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
 
-    start_YYMM = year_month[0]
-    end_YYMM   = year_month[1]
     race_grade_name = "check_grade_{}".format(race_grade)
 
     try:
@@ -95,7 +93,9 @@ def scrape_raceID(driver, year_month, race_grade="4"):
     
     # 期間内のレースIDを取得する
     while head <= tail:
-        # head から (head+2) 月までのレースを検索
+        # head 月から (head+2) 月までのレースを検索
+        # 指定範囲を一度にスクレイピングしないのは
+        # 通信失敗時のロールバックを抑えるためと検索結果を1ページ(100件)以内に抑えるため
         ptr = head + relativedelta(months = 2)
         if ptr > tail:
             ptr = tail
@@ -597,14 +597,14 @@ def url2trainerID(url: str):
     return id
 
 
-def update_database(driver, year_month, race_grade="4"):
+def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     """データベース全体を更新する
     driver: webdriver
     year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
     # 期間内のrace_idを取得してrace_idテーブルへ保存
-    scrape_raceID(driver, year_month, race_grade)
+    scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
 
     # 未調査のrace_idのリストを作成
     raceID_list = make_raceID_list()
@@ -648,7 +648,7 @@ if __name__ == "__main__":
     driver = wf.start_driver(browser)
     #login(driver, mail_address, password)
 
-    #update_database(driver, ["202012","202012"])
+    #update_database(driver, "202012", "202012")
     #update_horsedata_only(driver, ["2014100492"])
 
     #a = scrape_race_today(driver, "202205040911")
