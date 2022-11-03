@@ -76,9 +76,10 @@ def create_table():
 
 
 def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade="4"):
-    """指定期間内のraceIDを取得する。
+    """start_YYMM から end_YYMM までの芝・ダートレースのraceIDを取得する
     driver: webdriver
-    year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
+    start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
+    end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
 
@@ -600,7 +601,8 @@ def url2trainerID(url: str):
 def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     """データベース全体を更新する
     driver: webdriver
-    year_month: 取得する年月(1986年以降)の指定 <例> ["198601", "202012"] (1986年1月から2020年12月)
+    start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
+    end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
     """
     # 期間内のrace_idを取得してrace_idテーブルへ保存
