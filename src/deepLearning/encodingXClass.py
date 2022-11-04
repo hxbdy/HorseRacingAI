@@ -949,28 +949,14 @@ class RankOneHotClass(XClass):
 
     def fix(self):
         retList = []
-        # 順位で one-hot ラベルを作成する
-        # 1st = 1, else = 0
-
-        # 同着1位をガードするためのフラグ
-        flg = True
+        # 順位を int 変換する
+        # 着順"取"のような数字以外は99位とする
+        # ex: https://db.netkeiba.com/race/198608010111/
         for i in range(len(self.xList)):
-            rank = self.xList[i]
-            if rank == '1':
-                if flg:
-                    flg = False
-                    retList.append(1)
-                else:
-                    # 1位が複数いる
-                    # ここには入らない想定
-                    # TODO: 同着一位については許容するようにしようかな
-                    logger.error("Duplicate 1st place one-hot label")
+            if self.xList[i].isdigit():
+                retList.append(int(self.xList[i]))
             else:
-                retList.append(0)
-        if flg:
-            # 1位を見つけられなかった
-            # ここには入らない想定
-            logger.critical("1st place label is not exist")
+                retList.append(99)
         self.xList = retList
 
     def pad(self):
@@ -979,16 +965,29 @@ class RankOneHotClass(XClass):
 
         if len(self.xList) < XClass.pad_size:
             # 要素を増やす
-            # ダミーデータ：0を追加．
+            # ダミーデータ：99を追加．
             for i in range(adj_size):
-                self.xList.append(0)
+                self.xList.append(99)
         else:
             # 要素を減らす
             for i in range(adj_size):
                 del self.xList[-1]
 
+            # 1位の馬がリストから無くなってしまった。
+            # 残ってる馬の中で一番順位がよかった馬を正解とする
+            if (1 in self.xList) == False:
+                logger.error("1st place horse was deleted, https://db.netkeiba.com/race/{0}/".format(self.race_id))
+
     def nrm(self):
-        XClass.nrm(self)
+        # 最小値の順位を取得
+        rank_min = min(self.xList)
+
+        # 最高順位を1とする
+        for i in range(len(self.xList)):
+            if self.xList[i] == rank_min:
+                self.xList[i] = 1
+            else:
+                self.xList[i] = 0
 
     def adj(self):
         self.xList = XClass.adj(self)
