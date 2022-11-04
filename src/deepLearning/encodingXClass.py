@@ -976,7 +976,7 @@ class RankOneHotClass(XClass):
             # 1位の馬がリストから無くなってしまった。
             # 残ってる馬の中で一番順位がよかった馬を正解とする
             if (1 in self.xList) == False:
-                logger.error("1st place horse was deleted, https://db.netkeiba.com/race/{0}/".format(self.race_id))
+                logger.info("1st place horse was deleted, https://db.netkeiba.com/race/{0}/".format(self.race_id))
 
     def nrm(self):
         # 最小値の順位を取得
@@ -1117,7 +1117,7 @@ class MgrClass:
                 if dequeue[1] == "x":
                     print("\r\033[{0}C[{1:4}]".format(self.get_idx_Xtbl(dequeue[2]) * 8, dequeue[3]), end="")
                 elif dequeue[1] == "t":
-                    print("\r\033[{0}C|[{1:4}]".format(len(self.XclassTbl) * 8, dequeue[3]), end="")
+                    print("\r\033[{0}C|  [{1:4}]".format(len(self.XclassTbl) * 8, dequeue[3]), end="")
                 else:
                     logger.critical("Undefined comm | category = progress | data = {0}".format(dequeue[1:]))
 
@@ -1152,17 +1152,17 @@ class MgrClass:
 
         # 解析用情報取得
         analysis_train = []
-        for i in range(len(self.totalRaceList)):
-            odds = db_race_1st_odds(self.totalRaceList[i])
-            grade = db_race_grade(self.totalRaceList[i])
-            analysis_train.append([odds, grade])
-            logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
+        # for i in range(len(self.totalRaceList)):
+        #     odds = db_race_1st_odds(self.totalRaceList[i])
+        #     grade = db_race_grade(self.totalRaceList[i])
+        #     analysis_train.append([odds, grade])
+        #     logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
 
         # 計測終了
         time_end = time.perf_counter()
 
         logger.info("========================================")
         logger.info("encoding time = {0} [sec]".format(time_end - time_sta))
-        logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
+        # logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
         
         return self.totalXList, self.totaltList, analysis_train
