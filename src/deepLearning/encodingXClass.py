@@ -4,10 +4,8 @@ import numpy as np
 import re
 import copy
 import time
+
 from multiprocessing import Process, Queue
-
-
-from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from debug import *
@@ -16,8 +14,8 @@ from getFromDB import * # db ハンドラはここで定義済み
 class XClass:
     # 全インスタンス共通の変数
     race_id = '0'
-    # TODO: 18に変更予定
-    pad_size = 24
+
+    pad_size = 18
 
     def __init__(self):
         self.xList = []
@@ -69,12 +67,17 @@ class MoneyClass(XClass):
         self.xList = moneyList
 
     def pad(self):
-        # 賞金リスト拡張
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
         # ダミーデータ：0
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            for i in range(adj_size):
                 self.xList.append(0)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 賞金標準化
@@ -296,12 +299,18 @@ class HorseAgeClass(XClass):
 
     def pad(self):
         # 年齢リスト拡張
-        # ダミーデータ：平均値
-        mean_age = np.mean(self.xList)
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：平均値
+            mean_age = np.mean(self.xList)
+            for i in range(adj_size):
                 self.xList.append(mean_age)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 馬年齢標準化
@@ -332,12 +341,18 @@ class BurdenWeightClass(XClass):
 
     def pad(self):
         # 斤量リスト拡張
-        # ダミーデータ：平均値
-        mean_weight = np.mean(self.xList)
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
-                self.xList.append(mean_weight)
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：平均値
+            mean_age = np.mean(self.xList)
+            for i in range(adj_size):
+                self.xList.append(mean_age)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 斤量の標準化
@@ -367,11 +382,17 @@ class PostPositionClass(XClass):
 
     def pad(self):
         # 枠番リスト拡張
-        # ダミーデータ：listSizeに達するまで，1から順に追加．
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：拡張サイズに達するまで，1から順に追加．
+            for i in range(adj_size):
                 self.xList.append(i%8+1)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 枠番標準化
@@ -405,11 +426,17 @@ class JockeyClass(XClass):
 
     def pad(self):
         # 騎手ダミーデータ挿入
-        # ダミーデータ：出場回数50を追加．
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：出場回数50を追加．
+            for i in range(adj_size):
                 self.xList.append(50)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 騎手標準化
@@ -540,7 +567,7 @@ class UmamusumeClass(XClass):
                 for j in range(len(umamusumeTbl)):
                     if parent == umamusumeTbl[j]:
                         umamusume_family[j] = 1
-                        logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
+                        # logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
 
     def pad(self):
@@ -670,10 +697,17 @@ class CumPerformClass(XClass):
         self.xList = max_performance_list
 
     def pad(self):
-        exSize = XClass.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：0を追加．
+            for i in range(adj_size):
                 self.xList.append(0)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # sigmoidで標準化
@@ -741,14 +775,21 @@ class MarginClass(XClass):
 
     def pad(self):
         # 着差リスト拡張
-        # ダミーデータ：最下位にハナ差で連続してゴールすることにする
-        HANA = 0.0125
-        exSize   = self.pad_size - len(self.xList)
-        lastMargin = self.xList[-1]
-        if exSize > 0:
-            for i in range(exSize):
+
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：最下位にハナ差で連続してゴールすることにする
+            HANA = 0.0125
+            lastMargin = self.xList[-1]
+            for i in range(adj_size):
                 lastMargin += HANA
                 self.xList.append(lastMargin)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         # 着差標準化
@@ -865,11 +906,17 @@ class BradleyTerryClass(XClass):
 
     def pad(self):
         # リスト拡張
-        # ダミーデータ：0
-        exSize   = self.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：0を追加．
+            for i in range(adj_size):
                 self.xList.append(0)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
         
     def nrm(self):
         XClass.nrm(self)
@@ -928,11 +975,17 @@ class RankOneHotClass(XClass):
 
     def pad(self):
         # リスト拡張
-        # ダミーデータ：0
-        exSize   = self.pad_size - len(self.xList)
-        if exSize > 0:
-            for i in range(exSize):
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：0を追加．
+            for i in range(adj_size):
                 self.xList.append(0)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         XClass.nrm(self)
