@@ -23,7 +23,7 @@ analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル
 XTbl = [
-    # MoneyClass,
+    MoneyClass,
     HorseNumClass,
     CourseConditionClass,
     CourseDistanceClass,
@@ -41,7 +41,7 @@ XTbl = [
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
 chgXTbl = [
-    # None,
+    None,
     None,
     None,
     None,
@@ -59,7 +59,7 @@ chgXTbl = [
 
 # 推論時の入力用テーブル
 predict_XTbl = [
-    # PredictMoneyClass,
+    PredictMoneyClass,
     PredictHorseNumClass,
     PredictCourseConditionClass,
     PredictCourseDistanceClass,
