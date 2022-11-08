@@ -77,7 +77,7 @@ class NetkeibaDB:
         # (条件に使われる数字はstring2grade()のコメント参照)
         # 検索範囲 lower <= data <= upper
         # limit 取り出し件数
-        table_name = "race_info"
+        table_name = "race_result"
         col_name   = "race_id"
         sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE (" + col_name + " <= \""+ upper +"\") AND (" + col_name + " >= \""+ lower + "\") AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\") LIMIT "+ str(limit) + ";"
         self.cur.execute(sql)
