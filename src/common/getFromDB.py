@@ -40,7 +40,7 @@ def db_race_list_id(start_year = 0, end_year = 9999, limit = -1):
         # SQLite Int の最大値 2**63 -1
         limit = 9223372036854775807
 
-    totalRaceList = netkeibaDB.sql_mul_distinctColCnt("race_result", "race_id", start_year, end_year, limit)
+    totalRaceList = netkeibaDB.sql_mul_distinctColCnt_G1G2G3(start_year, end_year, limit)
     return totalRaceList
 
 def db_race_date(race_id):

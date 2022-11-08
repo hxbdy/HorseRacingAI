@@ -70,12 +70,16 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
-    def sql_mul_distinctColCnt(self, table_name, col_name, lower, upper, limit):
-        # 指定列のデータを全て取得しリストで返す
-        # ただし重複データは1つになる
+    def sql_mul_distinctColCnt_G1G2G3(self, lower, upper, limit):
+        # !!注意!! ソートは行っていないので必ず lower から順に limit 件取り出しているとは限らない
+        # DISTINCT を使用して
+        # 芝, ダートの G1, G2, G3 のレースIDを取り出す
+        # (条件に使われる数字はstring2grade()のコメント参照)
         # 検索範囲 lower <= data <= upper
         # limit 取り出し件数
-        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE " + col_name + " <= \""+ upper +"\" AND " + col_name + " >= \""+ lower + "\" limit "+ str(limit) + ";"
+        table_name = "race_info"
+        col_name   = "race_id"
+        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE (" + col_name + " <= \""+ upper +"\") AND (" + col_name + " >= \""+ lower + "\") AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\") LIMIT "+ str(limit) + ";"
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():

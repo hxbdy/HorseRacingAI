@@ -138,8 +138,8 @@ class CourseConditionClass(XClass):
 
     def fix(self):
         # 馬場状態のone-hot表現(ただし良は全て0として表現する)
-        condition_dict = {'良':-1, '稍重':0, '重':1, '不良':2}
-        condition_onehot = [0] * 3
+        condition_dict = {'良':-1, '稍重':0, '重':1, '不良':2, '良ダート':3, '稍重ダート':4, '重ダート':5, '不良ダート':6}
+        condition_onehot = [0] * len(condition_dict)
         hot_idx = condition_dict[self.xList]
         if hot_idx != -1:
             condition_onehot[hot_idx] = 1
