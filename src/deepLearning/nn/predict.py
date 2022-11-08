@@ -1,4 +1,5 @@
 # 推測する
+# 予測したいレース情報は src\deepLearning\nn\config_predict.py で入力してください
 # > python ./src/deepLearning/nn/predict.py
 
 import configparser
@@ -34,13 +35,8 @@ if __name__ == "__main__":
     net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
     net.loadParam()
 
-    # debug
-    # print("x = ", x)
-    # print("x_train = ", x_train[0])
-    # print(net.params['W1'][3][6])
-
     # 推測
     y = net.predict(x)
 
-    # print("y       = ", y)
+    # ソート済みの各馬番が1位になる確率
     print("predict = ", np.argsort(y) + 1)

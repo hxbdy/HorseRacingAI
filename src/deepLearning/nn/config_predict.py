@@ -1,7 +1,7 @@
 # 学習済みパラメータからレース結果を予測する
-# 学習済みパラメータを ./dst/trainedParam から読み込む
-# 入力データ(予測したいレース情報)を手入力するファイル
-# 入力されたレース情報から実際に推論を実行し、結果を出力するのは predict.py
+# 学習済みパラメータを dst\trainedParam\newest から読み込む
+# 入力データ(予測したいレース情報)を手入力してください
+# 入力されたレース情報から実際に推論を実行し、結果を出力するのは src\deepLearning\nn\predict.py
 
 from getFromDB import *
 from encodingXClass import *

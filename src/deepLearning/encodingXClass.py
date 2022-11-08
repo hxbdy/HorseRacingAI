@@ -1163,6 +1163,5 @@ class MgrClass:
 
         logger.info("========================================")
         logger.info("encoding time = {0} [sec]".format(time_end - time_sta))
-        logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
         
         return self.totalXList, self.totaltList, analysis_train

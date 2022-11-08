@@ -1,6 +1,5 @@
 # NN学習本体
-# 学習したパラメータ, バイアスは ./dst/trainedParam/*.txt で確認可能
-# 2020年までのデータで学習し, 2021年のレースで精度を確認している
+# 学習済みパラメータは dst\trainedParam\newest に保存する
 # > python ./src/deepLearning/nn/deepLearningMain.py
 
 import configparser
