@@ -1,12 +1,12 @@
 # HorseRacingAI
 
 # Flow
-|概要| 実行ファイル | 出力ファイル   |
-| ---- | ---- |---- |
-|1. [netkeiba.com](https://www.netkeiba.com/)　からレース情報と出走する馬の情報をスクレイピングする。|./src/scraping/scrapingUmaData.py	|./dst/scrapingResult/raceGradedb.pickle, racedb.pickle, horsedb.pickle|
-|2. 1.で取得した情報を標準化する|./src/deepLearning/scrapingDataNrm.py|./dst/learningList/t.pickle, x.pickle|
-|3. ディープラーニングで学習する|./src/deepLearning/deepLearningMain.py|./dst/trainedParam/gradientb1.txt, gradientb2.txt, gradientW1.txt, gradientW2.txt|
-|4. 3.情報で推定する(未実装)|-| - |
+| About | Exe | Output |
+| ----  | --- | ------ |
+|1. [netkeiba.com](https://www.netkeiba.com/)から必要情報をスクレイピングする|src\scraping\netkeiba_scraping.py	|resrc\netkeibaDB\netkeiba.db|
+|2. 1.で取得した情報をエンコードする|src\deepLearning\encoding\scrapingDataNrm.py|dst\learningList\newest|
+|3. ディープラーニングで学習する|src\deepLearning\nn\deepLearningMain.py|dst\trainedParam\newest|
+|4. 3.情報で推定する|src\deepLearning\nn\predict.py| - |
 
 # Setup
 
@@ -54,7 +54,7 @@ src;\
 追加したパスを有効にするにはリアクティベートします。
 ```bash:
 > conda deactivate
-> conda activate HorseRacingAI 
+> conda activate {YOUR ENV NAME}
 ```
 
 内部的には追加したパスは以下ファイルで管理されています。
@@ -62,7 +62,7 @@ src;\
 "C:\Users\{YOUR USERNAME}\anaconda3\envs\{YOUR ENV NAME}\conda-meta\state"
 ```
 
-# Untracked Folder / File
+# Untracked Dir / File
 
 ## private.ini
 ./src/private.ini を作成して以下を記入して保存してください。  
@@ -75,12 +75,14 @@ mail = hogehoge@mail.com
 pass = password
 ```
 ## resrc
-./resrc/netkeiba フォルダ以下にnet.keibaから作成したデータベースを保存します。  
+net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db に保存します  
 
 ## dst
-./dst/learningList フォルダ以下にデータベースから作成する学習用にエンコードされた学習用データをpickle形式で保存します  
-./dst/trainedParam フォルダ以下にNNによって学習した行列パラメータを保存します  
-./dst/output.log に直前に実行したプログラムのログを保存します
+|Dir|About|
+| ---- | ---- |
+|dst\learningList\newest|データベースから作成する学習用にエンコードされた学習用データをpickle形式で保存します|
+|dst\trainedParam\newest|NNによって学習した行列パラメータを保存します|
+|dst\output.log|直前に実行したプログラムのログを保存します|
 
 # 参考
 - [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)

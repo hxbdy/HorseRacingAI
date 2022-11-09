@@ -1,4 +1,3 @@
-from encodingXClass import *
 from config_predict import *
 
 # 学習用データ生成条件

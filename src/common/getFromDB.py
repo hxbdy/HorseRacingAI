@@ -7,13 +7,10 @@ from datetime import date
 from NetkeibaDB import *
 from debug import *
 
-# load config
+# load DB
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
-path_netkeibaDB = config.get('common', 'path_netkeibaDB_encode')
-
-# 現在はスクレイピング側と学習側で使用するDBを使い分けている
-# TODO:パスは今後一本化される予定
+path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 netkeibaDB = NetkeibaDB(path_netkeibaDB)
 
 def db_race_1st_odds(race_id):
@@ -40,7 +37,7 @@ def db_race_list_id(start_year = 0, end_year = 9999, limit = -1):
         # SQLite Int の最大値 2**63 -1
         limit = 9223372036854775807
 
-    totalRaceList = netkeibaDB.sql_mul_distinctColCnt("race_result", "race_id", start_year, end_year, limit)
+    totalRaceList = netkeibaDB.sql_mul_distinctColCnt_G1G2G3(start_year, end_year, limit)
     return totalRaceList
 
 def db_race_date(race_id):
@@ -149,34 +146,3 @@ def db_race_list_rank(race_id):
     for i in range(len(rankList)):
         rankList[i] = str(rankList[i])
     return rankList
-
-#def calCumNumOfWin(horsedb):
-    # 累計勝利数を計算
-    # horsedb.cum_num_wins = []
-    # for horse_perform in horsedb.perform_contents:
-    #     cum_win_list = []
-    #     cum_win = 0
-    #     horse_perform.reverse()
-    #     for race_result in horse_perform:
-    #         if race_result[8] == '1':
-    #             cum_win += 1
-    #         cum_win_list.append(cum_win)
-    #     cum_win_list.reverse()
-    #     horsedb.cum_num_wins.append(cum_win_list)
-
-#def calCumMoney(horsedb):
-    # 累計獲得賞金を計算
-    # horsedb.cum_money = []
-    # for horse_perform in horsedb.perform_contents:
-    #     cum_money_list = []
-    #     cum_money = 0.0
-    #     horse_perform.reverse()
-    #     for race_result in horse_perform:
-    #         if race_result[15] == ' ':
-    #             money = 0.0
-    #         else:
-    #             money = float(race_result[15].replace(",",""))
-    #         cum_money += money
-    #         cum_money_list.append(cum_money)
-    #     cum_money_list.reverse()
-    #     horsedb.cum_money.append(cum_money_list)

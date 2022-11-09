@@ -5,7 +5,7 @@
 # > python ./src/deepLearning/encoding/scrapingDataNrm.py
 
 from getFromDB import *
-from encodingXClass import *
+from encoder.Encoder_Mgr import MgrClass
 from table import *
 from encoding_common import *
 import shutil
