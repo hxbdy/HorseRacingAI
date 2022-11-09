@@ -3,12 +3,13 @@
 # > python ./src/deepLearning/nn/predict.py
 
 import configparser
+import numpy as np
 
 import TwoLayerNet
 
 from table import predict_XTbl
 from config_predict import *
-from encoding_common import *
+from encoding_common import encoding_load, dl_flat2d
 
 if __name__ == "__main__":
     # 行列サイズ取得のため学習データの読込

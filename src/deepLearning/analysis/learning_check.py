@@ -2,17 +2,13 @@
 # > python ./src/deepLearning/analysis/learning_check.py
 
 import configparser
-import TwoLayerNet
 import numpy as np
 import pickle
-import itertools
 import os
 
 from matplotlib import pyplot as plt
 
-from getFromDB import *
-from encodingXClass import *
-from table import *
+from table import analysis_train_file_name, analysis_test_file_name
 from deepLearningMain import *
 
 # load config

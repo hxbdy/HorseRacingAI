@@ -4,8 +4,7 @@
 # USAGE : 生成条件をtable.pyで設定し以下コマンド実行
 # > python ./src/deepLearning/encoding/scrapingDataNrm.py
 
-from getFromDB import *
-from encoder.Encoder_Mgr import MgrClass
+from Encoder_Mgr import MgrClass
 from table import *
 from encoding_common import *
 import shutil

@@ -4,7 +4,6 @@ import shutil
 import configparser
 import datetime
 import numpy as np
-import itertools
 
 from iteration_utilities import deepflatten
 
