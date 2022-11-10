@@ -1,10 +1,10 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_prize
 
 import logging
 logger = logging.getLogger(__name__)
 
-class MoneyClass(Encoder_X):
+class MoneyClass(XClass):
     def __init__(self):
         super().__init__()
 
@@ -27,10 +27,10 @@ class MoneyClass(Encoder_X):
         self.xList = moneyList
 
     def pad(self):
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
         # ダミーデータ：0
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             for i in range(adj_size):
                 self.xList.append(0)

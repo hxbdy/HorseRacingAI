@@ -1,9 +1,9 @@
-import Encoder_X
+from Encoder_X import XClass
 import re
 from getFromDB import db_horse_list_perform, db_race_list_horse_id
 import numpy as np
 
-class CumPerformClass(Encoder_X):
+class CumPerformClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -120,9 +120,9 @@ class CumPerformClass(Encoder_X):
         self.xList = max_performance_list
 
     def pad(self):
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：0を追加．
             for i in range(adj_size):
@@ -139,5 +139,5 @@ class CumPerformClass(Encoder_X):
         self.xList = nPerformList.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

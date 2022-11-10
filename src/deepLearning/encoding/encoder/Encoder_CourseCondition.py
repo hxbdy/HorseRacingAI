@@ -1,7 +1,7 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_race_data1
 
-class CourseConditionClass(Encoder_X):
+class CourseConditionClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -30,11 +30,11 @@ class CourseConditionClass(Encoder_X):
         self.xList = condition_onehot
 
     def pad(self):
-        Encoder_X.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
-        Encoder_X.nrm(self)
+        XClass.nrm(self)
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

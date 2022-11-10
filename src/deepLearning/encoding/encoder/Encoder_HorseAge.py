@@ -1,13 +1,13 @@
 import numpy as np
 from dateutil.relativedelta import relativedelta
 
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_horse_id, db_horse_bod, db_race_date
 
 import logging
 logger = logging.getLogger(__name__)
 
-class HorseAgeClass(Encoder_X):
+class HorseAgeClass(XClass):
     def __init__(self):
         super().__init__()
         self.d0 = 0
@@ -42,9 +42,9 @@ class HorseAgeClass(Encoder_X):
 
     def pad(self):
         # 年齢リスト拡張
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：平均値
             mean_age = np.mean(self.xList)
@@ -65,5 +65,5 @@ class HorseAgeClass(Encoder_X):
         self.xList = nHorseAgeList.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

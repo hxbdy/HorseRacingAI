@@ -1,10 +1,10 @@
-import Encoder_BradleyTerry
+from Encoder_BradleyTerry import BradleyTerryClass
 from getFromDB import db_race_list_horse_id, db_horse_father
 
 import logging
 logger = logging.getLogger(__name__)
 
-class ParentBradleyTerryClass(Encoder_BradleyTerry):
+class ParentBradleyTerryClass(BradleyTerryClass):
     def get(self):
         childList = db_race_list_horse_id(self.race_id)
         parentList = []

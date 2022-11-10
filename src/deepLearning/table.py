@@ -1,3 +1,4 @@
+import encoder
 from config_predict import *
 
 # 学習用データ生成条件
@@ -22,20 +23,20 @@ analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル
 XTbl = [
-    MoneyClass,
-    HorseNumClass,
-    CourseConditionClass,
-    CourseDistanceClass,
-    RaceStartTimeClass,
-    WeatherClass,
-    HorseAgeClass,
-    BurdenWeightClass,
-    PostPositionClass,
-    # JockeyClass, # エンコードにかなり時間がかかる.一旦おやすみ
-    CumPerformClass,
-    BradleyTerryClass,
-    UmamusumeClass,
-    # ParentBradleyTerryClass,
+    encoder.Encoder_Money.MoneyClass,
+    encoder.Encoder_HorseNum.HorseNumClass,
+    encoder.Encoder_CourseCondition.CourseConditionClass,
+    encoder.Encoder_CourseDistance.CourseDistanceClass,
+    encoder.Encoder_RaceStartTime.RaceStartTimeClass,
+    encoder.Encoder_Weather.WeatherClass,
+    encoder.Encoder_HorseAge.HorseAgeClass,
+    encoder.Encoder_BurdenWeight.BurdenWeightClass,
+    encoder.Encoder_PostPosition.PostPositionClass,
+    # encoder.Encoder_Jockey.JockeyClass, # エンコードにかなり時間がかかる.一旦おやすみ
+    encoder.Encoder_CumPerform.CumPerformClass,
+    encoder.Encoder_BradleyTerry.BradleyTerryClass,
+    encoder.Encoder_Umamusume.UmamusumeClass,
+    # encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
@@ -77,6 +78,6 @@ predict_XTbl = [
 # 正解用テーブル
 # !! 1つしか入れないで !!
 tTbl = [
-    RankOneHotClass # 1位のOne-Hot表現
-    # MarginClass   # 着差標準化
+    encoder.Encoder_RankOneHot.RankOneHotClass # 1位のOne-Hot表現
+    # encoder.Encoder_Margin.MarginClass   # 着差標準化
 ]

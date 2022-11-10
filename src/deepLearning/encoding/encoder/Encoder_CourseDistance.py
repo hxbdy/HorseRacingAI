@@ -1,9 +1,9 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_race_data1
 import re
 import numpy as np
 
-class CourseDistanceClass(Encoder_X):
+class CourseDistanceClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -23,10 +23,10 @@ class CourseDistanceClass(Encoder_X):
         self.xList = [float(sep1)]
 
     def fix(self):
-        Encoder_X.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        Encoder_X.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 最長距離で割って標準化
@@ -36,5 +36,5 @@ class CourseDistanceClass(Encoder_X):
         self.xList = npcdList.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

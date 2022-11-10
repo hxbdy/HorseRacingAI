@@ -1,8 +1,8 @@
 import numpy as np
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_burden_weight
 
-class BurdenWeightClass(Encoder_X):
+class BurdenWeightClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -14,13 +14,13 @@ class BurdenWeightClass(Encoder_X):
         self.xList = burdenWeightList
 
     def fix(self):
-        Encoder_X.fix(self)
+        XClass.fix(self)
 
     def pad(self):
         # 斤量リスト拡張
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：平均値
             mean_age = np.mean(self.xList)
@@ -40,5 +40,5 @@ class BurdenWeightClass(Encoder_X):
         self.xList = n_weight_list.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

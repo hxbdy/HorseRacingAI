@@ -1,11 +1,11 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_post_position
 import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
 
-class PostPositionClass(Encoder_X):
+class PostPositionClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -17,13 +17,13 @@ class PostPositionClass(Encoder_X):
         self.xList = postPositionList
 
     def fix(self):
-        Encoder_X.fix(self)
+        XClass.fix(self)
 
     def pad(self):
         # 枠番リスト拡張
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：拡張サイズに達するまで，1から順に追加．
             for i in range(adj_size):
@@ -41,5 +41,5 @@ class PostPositionClass(Encoder_X):
         self.xList = nPostPositionList.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

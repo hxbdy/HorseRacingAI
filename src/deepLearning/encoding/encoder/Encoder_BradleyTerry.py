@@ -1,8 +1,8 @@
-import Encoder_X
+from Encoder_X import XClass
 
 from getFromDB import db_race_list_horse_id, db_race_rank, db_race_list_1v1
 
-class BradleyTerryClass(Encoder_X):
+class BradleyTerryClass(XClass):
     # 対戦表を作り、そこから強さを推定する
     # 出馬のリストを作成 ex:10頭出るレースの場合
     # race_result[10][10]
@@ -103,9 +103,9 @@ class BradleyTerryClass(Encoder_X):
 
     def pad(self):
         # リスト拡張
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：0を追加．
             for i in range(adj_size):
@@ -116,8 +116,8 @@ class BradleyTerryClass(Encoder_X):
                 del self.xList[-1]
         
     def nrm(self):
-        Encoder_X.nrm(self)
+        XClass.nrm(self)
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

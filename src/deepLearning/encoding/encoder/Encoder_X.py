@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
-class Encoder_X:
+class XClass:
     # 全インスタンス共通の変数
     race_id = '0'
 
@@ -11,10 +11,10 @@ class Encoder_X:
         self.xList = []
         
     def set(self, target_race_id):
-        Encoder_X.race_id = target_race_id
+        XClass.race_id = target_race_id
 
     def get(self):
-        if Encoder_X.race_id == '0':
+        if XClass.race_id == '0':
             logger.critical("race_id == 0 !!")
 
     def fix(self):

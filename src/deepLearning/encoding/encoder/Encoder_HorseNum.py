@@ -1,10 +1,10 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_num_horse
 
 import logging
 logger = logging.getLogger(__name__)
 
-class HorseNumClass(Encoder_X):
+class HorseNumClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -15,15 +15,15 @@ class HorseNumClass(Encoder_X):
         self.xList = db_race_num_horse(self.race_id)
         
     def fix(self):
-        Encoder_X.fix(self)
+        XClass.fix(self)
 
     def pad(self):
-        Encoder_X.pad(self)
+        XClass.pad(self)
 
     def nrm(self):
         # 最大出走馬数で割って標準化
-        self.xList = [float(self.xList[0]) / Encoder_X.pad_size]
+        self.xList = [float(self.xList[0]) / XClass.pad_size]
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

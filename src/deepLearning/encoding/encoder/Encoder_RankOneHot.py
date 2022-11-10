@@ -1,10 +1,10 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_rank
 
 import logging
 logger = logging.getLogger(__name__)
 
-class RankOneHotClass(Encoder_X):
+class RankOneHotClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -29,9 +29,9 @@ class RankOneHotClass(Encoder_X):
 
     def pad(self):
         # リスト拡張
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：99を追加．
             for i in range(adj_size):
@@ -58,5 +58,5 @@ class RankOneHotClass(Encoder_X):
                 self.xList[i] = 0
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList

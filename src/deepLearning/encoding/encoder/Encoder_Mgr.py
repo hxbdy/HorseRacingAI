@@ -4,7 +4,7 @@ import time
 from multiprocessing import Process, Queue
 
 from getFromDB import db_race_list_id
-import Encoder_X
+from Encoder_X import XClass
 
 import logging
 logger = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class MgrClass:
 
             # DB 検索条件, 開催時点での各馬の年齢計算などに使用する
             # (マルチプロセス時、親XClassの変数は子クラス同士に影響しない)
-            Encoder_X.race_id = self.totalRaceList[race]
+            XClass.race_id = self.totalRaceList[race]
 
             # データ取得から標準化まで行う
             x_tmp = instance.adj()

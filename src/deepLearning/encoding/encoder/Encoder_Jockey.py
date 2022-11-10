@@ -1,11 +1,11 @@
-import Encoder_X
+from Encoder_X import XClass
 from getFromDB import db_race_list_jockey, db_race_cnt_jockey
 import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
 
-class JockeyClass(Encoder_X):
+class JockeyClass(XClass):
     def __init__(self):
         super().__init__()
     
@@ -26,9 +26,9 @@ class JockeyClass(Encoder_X):
 
     def pad(self):
         # 騎手ダミーデータ挿入
-        adj_size = abs(Encoder_X.pad_size - len(self.xList))
+        adj_size = abs(XClass.pad_size - len(self.xList))
 
-        if len(self.xList) < Encoder_X.pad_size:
+        if len(self.xList) < XClass.pad_size:
             # 要素を増やす
             # ダミーデータ：出場回数50を追加．
             for i in range(adj_size):
@@ -47,5 +47,5 @@ class JockeyClass(Encoder_X):
         self.xList = njockeyList.tolist()
 
     def adj(self):
-        self.xList = Encoder_X.adj(self)
+        self.xList = XClass.adj(self)
         return self.xList
