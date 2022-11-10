@@ -38,3 +38,17 @@ class MoneyClass(XClass):
             # 要素を減らす
             for i in range(adj_size):
                 del self.xList[-1]
+
+    def nrm(self):
+        # 賞金標準化
+        # 1位賞金で割る
+        # moneyList は float前提
+        money1st = self.xList[0]
+        moneyNrmList = []
+        for m in self.xList:
+            moneyNrmList.append(m / money1st)
+        self.xList = moneyNrmList
+
+    def adj(self):
+        self.xList = XClass.adj(self)
+        return self.xList
