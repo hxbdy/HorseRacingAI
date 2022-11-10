@@ -6,10 +6,8 @@ import configparser
 import TwoLayerNet
 import numpy as np
 
-from getFromDB import *
-from encodingXClass import *
-from table import *
-from encoding_common import *
+from encoding_common import encoding_load, dl_flat2d
+from debug import logger
 
 # 学習データの読込
 config = configparser.ConfigParser()

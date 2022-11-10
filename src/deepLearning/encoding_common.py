@@ -4,12 +4,11 @@ import shutil
 import configparser
 import datetime
 import numpy as np
-import itertools
 
 from iteration_utilities import deepflatten
 
 from debug import *
-from table import *
+from table import t_train_file_name, X_train_file_name, t_test_file_name, X_test_file_name
 
 # 連番保存フォルダまでのパスを取得する
 def encoding_serial_dir_path(path_root):

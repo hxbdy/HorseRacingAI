@@ -4,7 +4,7 @@
 
 from datetime import date
 
-from NetkeibaDB import *
+from NetkeibaDB import NetkeibaDB
 from debug import *
 
 # load DB

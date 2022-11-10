@@ -4,11 +4,18 @@
 # USAGE : 生成条件をtable.pyで設定し以下コマンド実行
 # > python ./src/deepLearning/encoding/scrapingDataNrm.py
 
-from getFromDB import *
-from encodingXClass import *
-from table import *
-from encoding_common import *
 import shutil
+
+from Encoder_Mgr import MgrClass
+from table import start_year_train, end_year_train, \
+                  XTbl, tTbl, \
+                  start_year_test, end_year_test, \
+                  limit_train, limit_test, \
+                  analysis_train_file_name, analysis_test_file_name, \
+                  X_train_file_name, t_train_file_name, \
+                  X_test_file_name, t_test_file_name
+from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_save_condition, encoding_newest_dir_path
+from debug import *
 
 if __name__ == "__main__":
     
