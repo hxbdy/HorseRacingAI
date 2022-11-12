@@ -2,12 +2,10 @@ import numpy as np
 from Encoder_X import XClass
 from getFromDB import db_race_list_burden_weight
 
+import logging
+logger = logging.getLogger("BurdenWeightClass")
+
 class BurdenWeightClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         burdenWeightList = db_race_list_burden_weight(self.race_id)
@@ -38,7 +36,3 @@ class BurdenWeightClass(XClass):
         n_weight_list = np.array(self.xList)
         n_weight_list = n_weight_list / SCALE_PARAMETER
         self.xList = n_weight_list.tolist()
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

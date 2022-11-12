@@ -3,12 +3,10 @@ import re
 from getFromDB import db_horse_list_perform, db_race_list_horse_id
 import numpy as np
 
+import logging
+logger = logging.getLogger("CumPerformClass")
+
 class CumPerformClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def getForCalcPerformInfo(self, horse_list):
         horse_info_list = []
@@ -137,7 +135,3 @@ class CumPerformClass(XClass):
         nPerformList = np.array(self.xList)
         nPerformList = 1/(1+np.exp(nPerformList))
         self.xList = nPerformList.tolist()
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

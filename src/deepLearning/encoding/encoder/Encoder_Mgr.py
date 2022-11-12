@@ -6,8 +6,10 @@ from multiprocessing import Process, Queue
 from getFromDB import db_race_list_id
 from Encoder_X import XClass
 
+from debug_log import log_listener
+
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("MgrClass")
 
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):
@@ -62,7 +64,7 @@ class MgrClass:
                     return idx
         return -1
 
-    def encoding(self, queue, encodeClass):
+    def encoding(self, queue, queue_log, encodeClass):
         # 結果保存リスト
         result_list = []
         # エンコード実行するクラスが学習データなのか教師データなのか区別する
@@ -88,7 +90,7 @@ class MgrClass:
             XClass.race_id = self.totalRaceList[race]
 
             # データ取得から標準化まで行う
-            x_tmp = instance.adj()
+            x_tmp = instance.adj(queue_log)
 
             result_list.append(x_tmp)
         
@@ -98,6 +100,11 @@ class MgrClass:
 
         # エンコードデータ共有用キュー
         queue = Queue()
+
+        # ログ用キュー
+        queue_log = Queue()
+        process = Process(target = log_listener, args = (queue_log,),)
+        process.start()
 
         # 処理時間計測開始
         time_sta = time.perf_counter()
@@ -111,7 +118,7 @@ class MgrClass:
             if encode == None:
                 continue
             logger.info("encode {0} start".format(encode.__name__))
-            process = Process(target = self.encoding, args = (queue, encode))
+            process = Process(target = self.encoding, args = (queue, queue_log, encode))
             process.start()
 
         # 全エンコード終了フラグ

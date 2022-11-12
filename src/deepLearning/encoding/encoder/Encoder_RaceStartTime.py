@@ -2,14 +2,9 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_race_data1
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("RaceStartTimeClass")
 
 class RaceStartTimeClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         raceData1List = db_race_list_race_data1(self.race_id)
@@ -29,14 +24,8 @@ class RaceStartTimeClass(XClass):
         min = float(t[0])*60 + float(t[1])
         self.xList = [min]
 
-    def pad(self):
-        XClass.pad(self)
-
     def nrm(self):
         # 遅い時間ほど馬場が荒れていることを表現する
         # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る
         self.xList = [self.xList[0] / 990]
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList
+        

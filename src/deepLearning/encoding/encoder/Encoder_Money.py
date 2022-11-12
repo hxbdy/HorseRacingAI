@@ -2,14 +2,9 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_prize
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("MoneyClass")
 
 class MoneyClass(XClass):
-    def __init__(self):
-        super().__init__()
-
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         self.xList = db_race_list_prize(self.race_id)
@@ -48,7 +43,3 @@ class MoneyClass(XClass):
         for m in self.xList:
             moneyNrmList.append(m / money1st)
         self.xList = moneyNrmList
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

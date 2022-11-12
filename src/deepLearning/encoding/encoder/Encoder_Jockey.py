@@ -3,14 +3,9 @@ from getFromDB import db_race_list_jockey, db_race_cnt_jockey
 import numpy as np
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("JockeyClass")
 
 class JockeyClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         jockeyIDList = db_race_list_jockey(self.race_id)
@@ -45,7 +40,3 @@ class JockeyClass(XClass):
         maxJockey = np.max(njockeyList)
         njockeyList = njockeyList / maxJockey
         self.xList = njockeyList.tolist()
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

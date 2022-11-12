@@ -2,14 +2,9 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_rank
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("RankOneHotClass")
 
 class RankOneHotClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         # 馬番で昇順ソートされた順位を文字列で取得
@@ -56,7 +51,3 @@ class RankOneHotClass(XClass):
                 self.xList[i] = 1
             else:
                 self.xList[i] = 0
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList
