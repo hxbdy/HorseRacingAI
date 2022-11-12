@@ -10,6 +10,7 @@
 
 import sqlite3
 
+# TODO: * インポートを辞める
 from debug import *
 
 class NetkeibaDB:

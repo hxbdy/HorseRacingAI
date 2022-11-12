@@ -1,12 +1,10 @@
 from Encoder_X import XClass
 from getFromDB import db_race_list_race_data1
 
+import logging
+logger = logging.getLogger("CourseConditionClass")
+
 class CourseConditionClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         raceData1List = db_race_list_race_data1(self.race_id)
@@ -28,13 +26,3 @@ class CourseConditionClass(XClass):
         if hot_idx != -1:
             condition_onehot[hot_idx] = 1
         self.xList = condition_onehot
-
-    def pad(self):
-        XClass.pad(self)
-
-    def nrm(self):
-        XClass.nrm(self)
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

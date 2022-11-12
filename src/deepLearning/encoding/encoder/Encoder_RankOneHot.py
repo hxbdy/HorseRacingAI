@@ -2,14 +2,9 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_rank
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("RankOneHotClass")
 
 class RankOneHotClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         # 馬番で昇順ソートされた順位を文字列で取得
@@ -41,14 +36,14 @@ class RankOneHotClass(XClass):
             for i in range(adj_size):
                 del self.xList[-1]
 
-            # 1位の馬がリストから無くなってしまった。
-            # 残ってる馬の中で一番順位がよかった馬を正解とする
-            if (1 in self.xList) == False:
-                logger.info("1st place horse was deleted, https://db.netkeiba.com/race/{0}/".format(self.race_id))
-
     def nrm(self):
         # 最小値の順位を取得
         rank_min = min(self.xList)
+
+        if rank_min != 1:
+            # pad処理により1位の馬がリストから無くなってしまった。
+            # 残っている馬の中で一番順位がよかった馬を正解とする
+            logger.info("Fastest rank : 1 -> {0} | https://db.netkeiba.com/race/{1}/".format(rank_min, self.race_id))
 
         # 最高順位を1とする
         for i in range(len(self.xList)):
@@ -56,7 +51,3 @@ class RankOneHotClass(XClass):
                 self.xList[i] = 1
             else:
                 self.xList[i] = 0
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

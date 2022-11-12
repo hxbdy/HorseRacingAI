@@ -3,12 +3,10 @@ from getFromDB import db_race_list_race_data1
 import re
 import numpy as np
 
+import logging
+logger = logging.getLogger("CourseDistanceClass")
+
 class CourseDistanceClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         raceData1List = db_race_list_race_data1(self.race_id)
@@ -34,7 +32,3 @@ class CourseDistanceClass(XClass):
         npcdList = np.array(self.xList)
         npcdList = npcdList / MAX_DISTANCE
         self.xList = npcdList.tolist()
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

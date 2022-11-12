@@ -3,14 +3,9 @@ from getFromDB import db_race_list_margin
 import numpy as np
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("MarginClass")
 
 class MarginClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         marginList = db_race_list_margin(self.race_id)
@@ -86,7 +81,3 @@ class MarginClass(XClass):
         # 戻り値はNoneであることも注意
         y.reverse()
         self.xList = y
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

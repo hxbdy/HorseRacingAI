@@ -2,7 +2,7 @@ from Encoder_BradleyTerry import BradleyTerryClass
 from getFromDB import db_race_list_horse_id, db_horse_father
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ParentBradleyTerryClass")
 
 class ParentBradleyTerryClass(BradleyTerryClass):
     def get(self):

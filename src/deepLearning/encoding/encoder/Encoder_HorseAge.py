@@ -5,15 +5,12 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_horse_id, db_horse_bod, db_race_date
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("HorseAgeClass")
 
 class HorseAgeClass(XClass):
     def __init__(self):
         super().__init__()
         self.d0 = 0
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         if self.race_id == '0':
@@ -63,7 +60,3 @@ class HorseAgeClass(XClass):
         maxAge = np.max(nHorseAgeList)
         nHorseAgeList = nHorseAgeList / maxAge
         self.xList = nHorseAgeList.tolist()
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

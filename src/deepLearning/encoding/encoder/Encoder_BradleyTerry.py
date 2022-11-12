@@ -2,31 +2,10 @@ from Encoder_X import XClass
 
 from getFromDB import db_race_list_horse_id, db_race_rank, db_race_list_1v1
 
+import logging
+logger = logging.getLogger("BradleyTerryClass")
+
 class BradleyTerryClass(XClass):
-    # 対戦表を作り、そこから強さを推定する
-    # 出馬のリストを作成 ex:10頭出るレースの場合
-    # race_result[10][10]
-    # 1v1の対戦結果を格納していく
-    # horse[0-10]:
-    #  a = horse[0] vs horse[1] の試合数
-    #  b = aの勝利数
-    #  race_result[0][1] = horse[1]との勝利数
-    #  race_result[1][0] = horse[1]との敗北数
-    #  ...
-    # それぞれの勝利数、敗北数を埋めたテーブルから強さを算出する
-    # 20回ほど繰り返して精度を上げる
-    # 尤度初期値 1
-    # ex : p[0] = (合計勝利数) / sum((race_result[0][1] + race_result[1][0]/(p[0] + p[1])) , ... )
-    # 1. 出場する馬一覧の2Dテーブルを作る
-    # 2. 指定の2頭が出たレース一覧を取得
-    # 3. 2.のレース情報からそれぞれ何勝何敗かを求める
-    # 4. 3.の情報で1.のテーブルを埋める
-    # 5. それぞれの強さを算出する
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         self.xList = db_race_list_horse_id(self.race_id)
@@ -115,9 +94,3 @@ class BradleyTerryClass(XClass):
             for i in range(adj_size):
                 del self.xList[-1]
         
-    def nrm(self):
-        XClass.nrm(self)
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList

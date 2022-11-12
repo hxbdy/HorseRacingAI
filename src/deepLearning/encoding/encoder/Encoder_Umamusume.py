@@ -2,14 +2,9 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_horse_id, db_horse_list_parent
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("UmamusumeClass")
 
 class UmamusumeClass(XClass):
-    def __init__(self):
-        super().__init__()
-    
-    def set(self, race_id):
-        super().set(race_id)
 
     def get(self):
         # 出馬リストを取得
@@ -123,13 +118,3 @@ class UmamusumeClass(XClass):
                         umamusume_family[j] = 1
                         # logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
-
-    def pad(self):
-        XClass.pad(self)
-
-    def nrm(self):
-        XClass.nrm(self)
-
-    def adj(self):
-        self.xList = XClass.adj(self)
-        return self.xList
