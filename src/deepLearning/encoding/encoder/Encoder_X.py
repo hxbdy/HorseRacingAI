@@ -41,6 +41,7 @@ class XClass:
         self.pad()
         self.nrm()
 
-        root.info("{0:23} {1} {2}".format(self.__class__.__name__, XClass.race_id, self.xList))
+        # TODO: 同じログが複数回出力されることがある
+        root.debug("{0:23} {1} {2}".format(self.__class__.__name__, XClass.race_id, self.xList))
         
         return self.xList

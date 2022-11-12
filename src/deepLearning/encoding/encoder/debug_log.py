@@ -25,4 +25,11 @@ def log_listener(q):
 
     # リスナー本体
     while True:
-        logger.handle(q.get())
+        try:
+            # タイムアウトはロガーが全エンコーダが完了したか判断する手段がないため設けている
+            # エンコード途中にタイムアウトした場合は以降ロギングされない
+            # タイムアウトを大きくすることはエンコーダに影響しないので伸ばしてもいい
+            logger.handle(q.get(timeout = 10))
+        except:
+            print("Encode timeout")
+            break
