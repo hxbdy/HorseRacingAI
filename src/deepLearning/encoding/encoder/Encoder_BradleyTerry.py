@@ -79,18 +79,3 @@ class BradleyTerryClass(XClass):
     def fix(self):
         self.calcPower()
         self.xList = self.p
-
-    def pad(self):
-        # リスト拡張
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：0を追加．
-            for i in range(adj_size):
-                self.xList.append(0)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
-        

@@ -8,9 +8,6 @@ import logging
 logger = logging.getLogger("HorseAgeClass")
 
 class HorseAgeClass(XClass):
-    def __init__(self):
-        super().__init__()
-        self.d0 = 0
 
     def get(self):
         if self.race_id == '0':
@@ -39,18 +36,8 @@ class HorseAgeClass(XClass):
 
     def pad(self):
         # 年齢リスト拡張
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：平均値
-            mean_age = np.mean(self.xList)
-            for i in range(adj_size):
-                self.xList.append(mean_age)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
+        # ダミーデータ：平均値
+        super().pad(np.mean(self.xList))
 
     def nrm(self):
         # 馬年齢標準化

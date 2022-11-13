@@ -21,17 +21,8 @@ class JockeyClass(XClass):
 
     def pad(self):
         # 騎手ダミーデータ挿入
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：出場回数50を追加．
-            for i in range(adj_size):
-                self.xList.append(50)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
+        # ダミーデータ：出場回数50を追加．
+        super().pad(50)
 
     def nrm(self):
         # 騎手標準化

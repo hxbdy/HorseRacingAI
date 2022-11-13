@@ -24,17 +24,8 @@ class RankOneHotClass(XClass):
 
     def pad(self):
         # リスト拡張
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：99を追加．
-            for i in range(adj_size):
-                self.xList.append(99)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
+        # ダミーデータ：99を追加．
+        super().pad(99)
 
     def nrm(self):
         # 最小値の順位を取得

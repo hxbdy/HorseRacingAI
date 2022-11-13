@@ -19,12 +19,9 @@ class CourseDistanceClass(XClass):
         sep1 = sep1.replace(" ", "")
         # 他と統一するためリストにする
         self.xList = [float(sep1)]
-
-    def fix(self):
-        XClass.fix(self)
-
+        
     def pad(self):
-        XClass.pad(self)
+        pass
 
     def nrm(self):
         # 最長距離で割って標準化

@@ -11,23 +11,9 @@ class BurdenWeightClass(XClass):
         burdenWeightList = db_race_list_burden_weight(self.race_id)
         self.xList = burdenWeightList
 
-    def fix(self):
-        XClass.fix(self)
-
     def pad(self):
-        # 斤量リスト拡張
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：平均値
-            mean_age = np.mean(self.xList)
-            for i in range(adj_size):
-                self.xList.append(mean_age)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
+        # ダミーデータ：平均値
+        super().pad(np.mean(self.xList))
 
     def nrm(self):
         # 斤量の標準化

@@ -118,3 +118,7 @@ class UmamusumeClass(XClass):
                         umamusume_family[j] = 1
                         # logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
+
+    def pad(self):
+        pass
+    

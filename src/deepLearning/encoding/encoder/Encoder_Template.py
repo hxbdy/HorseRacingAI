@@ -30,16 +30,8 @@ class XXXClass(XClass):
 
     def pad(self):
         # サイズの伸縮を行う
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            for i in range(adj_size):
-                self.xList.append(0)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
+        # 固定値でパディングする場合はXClassのpad()を使おう.
+        super().pad(0)
 
     def nrm(self):
         # 標準化, 正規化を行う

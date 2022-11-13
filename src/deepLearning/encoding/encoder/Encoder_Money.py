@@ -21,19 +21,6 @@ class MoneyClass(XClass):
             moneyList.append(float(fm))
         self.xList = moneyList
 
-    def pad(self):
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        # ダミーデータ：0
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            for i in range(adj_size):
-                self.xList.append(0)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
-
     def nrm(self):
         # 賞金標準化
         # 1位賞金で割る

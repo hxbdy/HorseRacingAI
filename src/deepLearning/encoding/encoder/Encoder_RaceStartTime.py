@@ -24,6 +24,9 @@ class RaceStartTimeClass(XClass):
         min = float(t[0])*60 + float(t[1])
         self.xList = [min]
 
+    def pad(self):
+        pass
+
     def nrm(self):
         # 遅い時間ほど馬場が荒れていることを表現する
         # 最終出走時間 16:30 = 16 * 60 + 30 = 990 で割る

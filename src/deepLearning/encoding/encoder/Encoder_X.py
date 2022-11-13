@@ -22,9 +22,19 @@ class XClass:
     def fix(self):
         pass
 
-    def pad(self):
-        # TODO: 何で拡張するかを決めればここで共通化できそう
-        pass
+    def pad(self, obj = 0):
+        # リスト拡張 デフォルトではゼロで埋める
+        adj_size = abs(XClass.pad_size - len(self.xList))
+
+        if len(self.xList) < XClass.pad_size:
+            # 要素を増やす
+            # ダミーデータ：0を追加．
+            for i in range(adj_size):
+                self.xList.append(obj)
+        else:
+            # 要素を減らす
+            for i in range(adj_size):
+                del self.xList[-1]
 
     def nrm(self):
         pass

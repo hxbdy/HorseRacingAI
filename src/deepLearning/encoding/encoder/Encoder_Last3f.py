@@ -31,19 +31,6 @@ class Last3fClass(XClass):
             
         self.xList = last_3f_list
 
-    def pad(self):
-        # サイズの伸縮を行う
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            for i in range(adj_size):
-                self.xList.append(0)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
-
     def nrm(self):
         np_xList     = np.array(self.xList)
         np_sum_xList = np.sum(self.xList)

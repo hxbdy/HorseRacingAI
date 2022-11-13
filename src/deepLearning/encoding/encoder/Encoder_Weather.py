@@ -24,3 +24,6 @@ class WeatherClass(XClass):
         if hot_idx != -1:
             weather_onehot[hot_idx] = 1
         self.xList = weather_onehot
+
+    def pad(self):
+        pass

@@ -117,19 +117,6 @@ class CumPerformClass(XClass):
 
         self.xList = max_performance_list
 
-    def pad(self):
-        adj_size = abs(XClass.pad_size - len(self.xList))
-
-        if len(self.xList) < XClass.pad_size:
-            # 要素を増やす
-            # ダミーデータ：0を追加．
-            for i in range(adj_size):
-                self.xList.append(0)
-        else:
-            # 要素を減らす
-            for i in range(adj_size):
-                del self.xList[-1]
-
     def nrm(self):
         # sigmoidで標準化
         nPerformList = np.array(self.xList)

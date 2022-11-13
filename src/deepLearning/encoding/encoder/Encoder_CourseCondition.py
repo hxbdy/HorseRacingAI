@@ -26,3 +26,6 @@ class CourseConditionClass(XClass):
         if hot_idx != -1:
             condition_onehot[hot_idx] = 1
         self.xList = condition_onehot
+
+    def pad(self):
+        pass
