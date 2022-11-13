@@ -24,7 +24,8 @@ def log_listener(q):
     logger.addHandler(h)
 
     # リスナー本体
-    while True:
+    # TODO: メモリを無限に食うバグ発生中。停止中
+    while False:
         try:
             # タイムアウトはロガーが全エンコーダが完了したか判断する手段がないため設けている
             # エンコード途中にタイムアウトした場合は以降ロギングされない

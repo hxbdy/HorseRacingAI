@@ -23,6 +23,7 @@ class XClass:
         pass
 
     def pad(self):
+        # TODO: 何で拡張するかを決めればここで共通化できそう
         pass
 
     def nrm(self):
