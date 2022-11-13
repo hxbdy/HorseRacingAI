@@ -75,7 +75,7 @@ def db_race_list_race_data1(race_id):
     return netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id])
 
 def db_race_list_horse_id(race_id):
-    # 出走する馬のIDリストを返す
+    # 馬番でソートされた出走する馬のIDリストを返す
     return netkeibaDB.sql_mul_sortHorseNum(["race_info.horse_id"], "race_info.race_id", race_id)
 
 def db_horse_bod(horse_id):
@@ -147,3 +147,30 @@ def db_race_list_rank(race_id):
     for i in range(len(rankList)):
         rankList[i] = str(rankList[i])
     return rankList
+
+def db_race_last_3f(race_id, horse_id):
+    # 上がり3ハロンを返す
+    last_3f = netkeibaDB.sql_one_race_info(race_id, horse_id, "last_3f")
+    return last_3f
+
+def db_race_last_race(race_id, horse_id):
+    # horse_id が出走したレースのうち、race_idの直前に走ったレースIDを返す
+
+    # horse_idの重賞出走レース一覧を取得する
+    race_list = netkeibaDB.sql_mul_tbl_g1g2g3("race_info", ["race_id"], ["horse_id"], [horse_id])
+    # 昇順ソート
+    race_list.sort()
+
+    # 直前の重賞レースへのインデックス
+    last_race_id = race_list.index(race_id) - 1
+
+    if(last_race_id < 0):
+        # race_id が一番古い重賞レースだった
+        # race_id をそのまま返す
+        # ??? これは直前の調子をはかるために使う
+        # 直前のレースが重賞以外のとき、現状は重賞まで遡ってタイムを取得している。
+        # が、直前のレースのグレードは関係ないと思う。ラスト3ハロンタイムは
+        # グレードに関係なく取得したほうがいいのでは...?
+        return race_id
+
+    return race_list[last_race_id]

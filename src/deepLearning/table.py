@@ -32,11 +32,12 @@ XTbl = [
     encoder.Encoder_HorseAge.HorseAgeClass,
     encoder.Encoder_BurdenWeight.BurdenWeightClass,
     encoder.Encoder_PostPosition.PostPositionClass,
-    # encoder.Encoder_Jockey.JockeyClass, # エンコードにかなり時間がかかる.一旦おやすみ
+    # encoder.Encoder_Jockey.JockeyClass, # エンコードにかなり時間がかかる
     encoder.Encoder_CumPerform.CumPerformClass,
     encoder.Encoder_BradleyTerry.BradleyTerryClass,
     encoder.Encoder_Umamusume.UmamusumeClass,
     # encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
+    encoder.Encoder_Last3f.Last3fClass
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
@@ -55,6 +56,7 @@ chgXTbl = [
     None,
     None,
     # None,
+    None
 ]
 
 # 推論時の入力用テーブル
@@ -73,6 +75,7 @@ predict_XTbl = [
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
     # PredictParentBradleyTerryClass,
+    PredictLast3fClass
 ]
 
 # 正解用テーブル

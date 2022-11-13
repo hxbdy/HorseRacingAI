@@ -30,3 +30,4 @@ from . import Encoder_RaceStartTime
 from . import Encoder_RankOneHot
 from . import Encoder_Umamusume
 from . import Encoder_Weather
+from . import Encoder_Last3f

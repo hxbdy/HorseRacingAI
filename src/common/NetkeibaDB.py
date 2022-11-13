@@ -63,6 +63,24 @@ class NetkeibaDB:
 
         return retList
 
+    def sql_mul_tbl_g1g2g3(self, table_name, col_target_list, col_hint_list, data_list):
+        # 重賞のみを対象とした
+        # テーブル table_name から列 col_target を複数取得する
+        # 条件は 列 col_hint_list と値  data_list が一致する行
+        for idx in range(len(col_hint_list)):
+            col_hint_list[idx] = col_hint_list[idx] + " =?"
+
+        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list) + " AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\");"
+        self.cur.execute(sql, data_list)
+        retList = []
+        for i in self.cur.fetchall():
+            if len(col_target_list) == 1:
+                retList.append(i[0])
+            else:
+                retList.append(i)
+
+        return retList
+
     def sql_one_rowCnt(self, table_name, col_name, data):
         # テーブル table_name の 列 col_name が 値 data である行数を返す
 
