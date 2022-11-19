@@ -1,52 +1,42 @@
 # 数値微分の結果と偏微分の結果との差分を確認する
 # 差が大きい場合、誤差逆伝播計算式が誤っている可能性が高いことになる
 # 理想は 1e-10 以内に納めること
+# > python src/deepLearning/analysis/gradient_check.py
 
 import TwoLayerNet
 import numpy as np
-import pickle
 import configparser
-import itertools
 
-# 学習テーブル, 教師テーブル取得
-# 学習用データ生成条件取得
-# テスト用データ生成条件
-from table import *
+from encoding_common import encoding_load, dl_flat2d
 
 # load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
 path_learningList = config.get('nn', 'path_learningList')
+
+# 学習データの読込
+config = configparser.ConfigParser()
+config.read('./src/path.ini', 'UTF-8')
+path_learningList = config.get('nn', 'path_learningList')
+(x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
+
+# 多次元になっているリストを2次元にならす
+x_train = dl_flat2d(x_train)
+t_train = dl_flat2d(t_train)
+x_test = dl_flat2d(x_test)
+t_test = dl_flat2d(t_test)
     
 # ハイパーパラメータ
 iters_num     = 3     # 計算式チェック回数
 
-with open(path_learningList + t_train_file_name, 'rb') as f:
-    flat_pkl = []
-    flat_pkl_list = pickle.load(f)
-    for i in flat_pkl_list:
-        flat_pkl.append(list(itertools.chain.from_iterable(i)))
-    flat_pkl = np.array(flat_pkl)
-    tData = flat_pkl
-
-with open(path_learningList + X_train_file_name, 'rb') as f:
-    flat_pkl = []
-    flat_pkl_list = pickle.load(f)
-    for i in flat_pkl_list:
-        flat_pkl.append(list(itertools.chain.from_iterable(i)))
-    flat_pkl = np.array(flat_pkl)
-    xData = flat_pkl
-
-net = TwoLayerNet.TowLayerNet(155, 40, 24)
+net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
 
 for i in range(iters_num):
 
     # 学習データ取り出し
-    batch = np.random.randint(0, 4188)
-    
-    x = np.array(xData[batch])
-    x = x.reshape([1, -1])
-    t = np.array(tData[batch])
+    batch_mask = np.random.choice(x_train.shape[0], 5)
+    x = x_train[batch_mask]
+    t = t_train[batch_mask]
 
     # print("x = ", x)
     # print("t = ", t)
