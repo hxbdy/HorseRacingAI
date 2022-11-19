@@ -581,7 +581,11 @@ def url2raceID(url: str):
 def url2horseID(url: str):
     """urlからhorseIDを探して返す
     """
-    id = url[url.find("horse/")+6 : -1] # 最後の/を除去
+    # TODO: スマートな書き方募集中
+    if url[-1].isdigit():
+        id = url[url.find("horse/")+6 :]
+    else:
+        id = url[url.find("horse/")+6 : -1] # 最後の/を除去
     return id
 
 def url2jockeyID(url: str):
@@ -647,10 +651,10 @@ if __name__ == "__main__":
 
     """"""
     driver = wf.start_driver(browser)
-    #login(driver, mail_address, password)
+    login(driver, mail_address, password)
 
     #update_database(driver, "202012", "202012")
-    #update_horsedata_only(driver, ["2014100492"])
+    update_horsedata_only(driver, ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719'])
 
-    #a = scrape_race_today(driver, "202205040911")
-    #driver.close()
+    #a = scrape_race_today(driver, "202209050611")
+    driver.close()
