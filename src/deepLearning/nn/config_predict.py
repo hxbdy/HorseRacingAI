@@ -8,19 +8,19 @@ from datetime import date
 import encoder
 
 # 推測したいレース情報入力
-# 菊花賞
-# https://race.netkeiba.com/race/shutuba.html?race_id=202209040711
+# マイルCS
+# https://race.netkeiba.com/race/shutuba.html?race_id=202209050611&rf=top_pickup
 # 結果
-# https://race.netkeiba.com/special/index.html?id=0107&rf=link_news
+# https://race.netkeiba.com/special/index.html?id=0119&rf=top_pickup
 # ==========================================================================
 class PredictMoneyClass(encoder.Encoder_Money.MoneyClass):
     def get(self):
         # 賞金リスト
-        self.xList = [15000,6000,3800,2300,1500]
+        self.xList = ["18000","7200","4500","2700","1800"]
 class PredictHorseNumClass(encoder.Encoder_HorseNum.HorseNumClass):
     def get(self):
         # 出走する馬の頭数
-        self.xList = [18]
+        self.xList = [17]
 class PredictCourseConditionClass(encoder.Encoder_CourseCondition.CourseConditionClass):
     def get(self):
         # コース状態
@@ -29,7 +29,7 @@ class PredictCourseConditionClass(encoder.Encoder_CourseCondition.CourseConditio
 class PredictCourseDistanceClass(encoder.Encoder_CourseDistance.CourseDistanceClass):
     def get(self):
         # コース長
-        self.xList = [3000.0]
+        self.xList = [1600.0]
 class PredictRaceStartTimeClass(encoder.Encoder_RaceStartTime.RaceStartTimeClass):
     def get(self):
         # 出走時刻
@@ -38,64 +38,65 @@ class PredictWeatherClass(encoder.Encoder_Weather.WeatherClass):
     def get(self):
         # 天気
         # '晴', '曇', '小雨', '雨', '小雪', '雪' のいずれか
-        self.xList = '晴'
+        self.xList = '曇'
 class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
     def get(self):
         # 馬の誕生日
         self.xList = [
-            date(2019, 2, 21),
-            date(2019, 2, 3),
-            date(2019, 4, 3),
-            date(2019, 3, 23),
-            date(2019, 4, 16),
-            date(2019, 2, 28),
-            date(2019, 2, 23),
-            date(2019, 2, 16),
-            date(2019, 4, 19),
-            date(2019, 4, 8),
-            date(2019, 2, 23),
-            date(2019, 3, 25),
-            date(2019, 4, 17),
-            date(2019, 4, 1),
-            date(2019, 3, 9),
-            date(2019, 5, 15),
-            date(2019, 4, 12),
-            date(2019, 4, 4)
+            date(2019, 2, 20),
+            date(2017, 4, 16),
+            date(2018, 1, 29),
+            date(2018, 3, 23),
+            date(2017, 1, 23),
+            date(2018, 3, 8),
+            date(2018, 5, 18),
+            date(2017, 1, 31),
+            date(2019, 1, 7),
+            date(2019, 3, 7),
+            date(2018, 3, 28),
+            date(2018, 2, 12),
+            date(2017, 3, 6),
+            date(2012, 3, 4),
+            date(2019, 2, 22),
+            date(2016, 3, 18),
+            date(2017, 2, 10),
         ]
         # レース開催日
-        self.d0 = date(2022, 10, 23)
+        self.d0 = date(2022, 11, 20)
 class PredictBurdenWeightClass(encoder.Encoder_BurdenWeight.BurdenWeightClass):
     def get(self):
         # 斤量
-        self.xList = [57.0] * 18
+        self.xList = [56.0, 57.0, 57.0, 57.0, 57.0, 55.0, 57.0, 55.0, 56.0, 56.0, 57.0, 57.0, 57.0, 57.0, 56.0, 57.0, 57.0]
 class PredictPostPositionClass(encoder.Encoder_PostPosition.PostPositionClass):
     def get(self):
         # 枠番
-        self.xList = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 7, 8, 8, 8]
+        self.xList = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 8]
 class PredictJockeyClass(encoder.Encoder_Jockey.JockeyClass):
     def get(self):
         # jockey_id
-        self.xList =  ["01126","01030","01032","01095","00666","05203","01174","01091","01115","00732","01170","01088","01140","01075","01163","01154","01157","01014"]
+        self.xList =  ['00660', '01122', '01102', '05339', '05366', '01095', '01014', '01174', '05473', '05585', '01126', '01163', '00666', '01093', '01088', '01166', '01032']
 class PredictCumPerformClass(encoder.Encoder_CumPerform.CumPerformClass):
     def get(self):
         # horse_id
-        horse_list = ["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"]
+        horse_list = ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719']
         self.getForCalcPerformInfo(horse_list)
 class PredictBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
     def get(self):
         # horse_id
-        self.xList = ["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"]
+        self.xList = ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719']
         self.col_num = len(self.xList)
 class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
     def get(self):
         # horse_id
-        self.xList = ["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"]
+        self.xList = ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719']
 class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
     def get(self):
         # blood_f の horse_id
-        self.xList = ["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"]
+        self.xList = ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719']
         self.col_num = len(self.xList)
 class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
     def get(self):
+        # race_id
+        self.race_id = "202209050611"
         # horse_id
-        self.xList = ["2019104476","2019102531","2019100109","2019104909","2019100603","2019101348","2019104937","2019100790","2019105654","2019102632","2019105556","2019100126","2019101507","2019104706","2019104762","2019105366","2019105346","2019105168"]
+        self.xList = ['2019100965', '2017101429', '2018104963', '2018110007', '2017105327', '2018105233', '2018104576', '2017110144', '2019105318', '2019104462', '2018100382', '2018105192', '2017104685', '2012103405', '2019103034', '2016102692', '2017104719']

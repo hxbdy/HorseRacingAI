@@ -4,6 +4,7 @@
 
 import configparser
 import numpy as np
+from multiprocessing import Queue
 
 import TwoLayerNet
 
@@ -24,12 +25,15 @@ if __name__ == "__main__":
     x_test = dl_flat2d(x_test)
     t_test = dl_flat2d(t_test)
 
+    # logger
+    queue_log = Queue()
+
     # 推測用エンコード
     x = []
     for func in predict_XTbl:
         # インスタンス生成
         predict = func()
-        x.append(predict.adj())
+        x.append(predict.adj(queue_log))
     x = dl_flat2d([x])
 
     # 保存済みパラメータ読み込み
