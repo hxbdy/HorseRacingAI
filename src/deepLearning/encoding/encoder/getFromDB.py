@@ -4,6 +4,8 @@
 # エンコードに都合の良いように変換する作業は各クラスのget, fixで行う
 
 from datetime import date
+import re
+from typing import OrderedDict
 
 from NetkeibaDB import NetkeibaDB
 from debug import *
@@ -165,8 +167,11 @@ def db_race_last_race(race_id, horse_id):
 
     # horse_idの重賞出走レース一覧を取得する
     race_list = netkeibaDB.sql_mul_tbl_g1g2g3("race_result", ["race_id"], ["horse_id"], [horse_id])
+    
     # 昇順ソート
-    race_list.sort()
+    # race_id から開催日YYYYMMDD  が取得できるとは限らないため、
+    # race_resultテーブルのrace_data2列にある開催日を使ってソートする
+    race_list = db_race_list_sort(race_list)
 
     # 直前の重賞レースIDを返す
     if race_id in race_list:
@@ -182,3 +187,27 @@ def db_race_last_race(race_id, horse_id):
         # predict 時にはここを通過する (DBには無いレースを走るため)
         # race_id がなかった場合、最新のrace_idを返す
         return race_list[-1]
+
+def db_race_list_sort(race_id_list):
+    # race_id_list を開催日の昇順でソートする
+    # 開催日は race_result テーブルの race_data2 を参照する
+
+    # {race_id : 開催日} 辞書を作成
+    race_date_dict = OrderedDict()
+    for race_id in race_id_list:
+        race_data2 = netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id])
+        # 複数取れるけど1つで良い
+        race_data2 = race_data2[0]
+        # ex : "1988年11月13日 7回東京4日目 4歳以上オープン  (混)(指)(定量)" -> ['1988', '11', '13', '7', '4', '4']
+        num_list = re.findall('\d+', race_data2)
+        dt = date(int(num_list[0]), int(num_list[1]), int(num_list[2]))
+        race_date_dict.update({race_id : dt})
+
+    # アイテム(日付)でソート
+    race_id_list_sorted = sorted(race_date_dict.items(), key=lambda x: x[1])
+
+    # race_idのみ取り出す
+    # ex : [('202207010311', datetime.date(2022, 1, 9)), ('202206030511', datetime.date(2022, 4, 9)),  ... ]
+    race_id_list_sorted = list(map(lambda x: x[0], race_id_list_sorted))
+
+    return race_id_list_sorted
