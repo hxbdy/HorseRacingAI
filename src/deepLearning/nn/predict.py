@@ -42,6 +42,7 @@ if __name__ == "__main__":
 
     # 推測
     y = net.predict(x)
+    pre = np.argsort(y) + 1
 
     # ソート済みの各馬番が1位になる確率
-    print("predict = ", np.argsort(y) + 1)
+    print("predict = ", pre[0][::-1])
