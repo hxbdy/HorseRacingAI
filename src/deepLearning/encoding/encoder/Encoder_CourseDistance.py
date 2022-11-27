@@ -35,5 +35,8 @@ class CourseDistanceClass(XClass):
         # 最長距離で割って標準化
         MAX_DISTANCE = 3600.0
         npcdList = np.array(self.xList)
+        if np.max(npcdList / MAX_DISTANCE) > 1:
+            # TODO: [WARNING] npcdList = [23600.], race_id = 2013060501116
+            logger.warning("npcdList = {0}, race_id = {1}".format(npcdList, self.race_id))
         npcdList = npcdList / MAX_DISTANCE
         self.xList = npcdList.tolist()
