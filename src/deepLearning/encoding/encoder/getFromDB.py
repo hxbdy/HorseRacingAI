@@ -172,6 +172,9 @@ def db_race_last_race(race_id, horse_id):
     # race_id から開催日YYYYMMDD  が取得できるとは限らないため、
     # race_resultテーブルのrace_data2列にある開催日を使ってソートする
     race_list = db_race_list_sort(race_list)
+    if len(race_list) == 0:
+        # 見つからなかった場合、空のリストをそのまま返す
+        return race_list
 
     # 直前の重賞レースIDを返す
     if race_id in race_list:

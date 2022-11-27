@@ -17,13 +17,16 @@ class Last3fClass(XClass):
         for horse_id in self.xList:
             # 直前のレースIDを取得
             last_race_id = db_race_last_race(self.race_id, horse_id)
+            if len(last_race_id) == 0:
+                # 直前に重賞レースに出走していないもしくはデータがない
+                t = None
+            else:
+                # 直前のレースあがり3ハロンのタイムを取得
+                t = db_race_last_3f(last_race_id, horse_id)
 
-            # 直前のレースあがり3ハロンのタイムを取得
-            t = db_race_last_3f(last_race_id, horse_id)
             if (t == None) or (t.isspace()):
                 # 空白文字のみだった -> 該当のレースがなかった
                 t = float(0.0)
-                
             else:
                 t = float(t)
 
