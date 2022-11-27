@@ -1,9 +1,16 @@
 import numpy as np
 from Encoder_X import XClass
 from getFromDB import db_race_list_burden_weight
+from debug import stream_hdl, file_hdl
 
 import logging
-logger = logging.getLogger("BurdenWeightClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("BurdenWeightClass"))
 
 class BurdenWeightClass(XClass):
 

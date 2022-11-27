@@ -7,8 +7,18 @@ import numpy as np
 
 from iteration_utilities import deepflatten
 
-from debug import *
 from table import t_train_file_name, X_train_file_name, t_test_file_name, X_test_file_name
+
+from debug import stream_hdl, file_hdl
+
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 # 連番保存フォルダまでのパスを取得する
 def encoding_serial_dir_path(path_root):

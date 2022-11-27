@@ -1,8 +1,16 @@
 from Encoder_X import XClass
 from getFromDB import db_race_num_horse
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("HorseNumClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("HorseNumClass"))
 
 class HorseNumClass(XClass):
 

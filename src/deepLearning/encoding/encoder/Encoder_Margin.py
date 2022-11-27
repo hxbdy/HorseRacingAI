@@ -2,8 +2,16 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_margin
 import numpy as np
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("MarginClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("MarginClass"))
 
 class MarginClass(XClass):
 

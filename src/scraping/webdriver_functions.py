@@ -8,8 +8,16 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
 import time
+import logging
 
-from debug import logger
+from debug import stream_hdl, file_hdl
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 # webdriver を保存するディレクトリ
 DRIVER_DIRECTORY = 'src\\scraping'

@@ -1,7 +1,12 @@
+from debug import stream_hdl, file_hdl
 import logging
-import logging.handlers
-logger = logging.getLogger("XClass")
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 class XClass:
     # 全インスタンス共通の変数
@@ -39,20 +44,10 @@ class XClass:
     def nrm(self):
         pass
 
-    def adj(self, log_queue):
-        # ログハンドラ登録
-        h = logging.handlers.QueueHandler(log_queue)
-        root = logging.getLogger(self.__class__.__name__)
-        root.addHandler(h)
-        root.setLevel(logging.DEBUG)
-        
+    def adj(self):        
         # 各関数で self.xList を更新する
         self.get()
         self.fix()
         self.pad()
         self.nrm()
-
-        # TODO: 同じログが複数回出力されることがある
-        root.debug("{0:23} {1} {2}".format(self.__class__.__name__, XClass.race_id, self.xList))
-        
         return self.xList

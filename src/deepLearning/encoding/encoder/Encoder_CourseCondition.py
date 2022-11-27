@@ -1,9 +1,16 @@
 from Encoder_X import XClass
 from getFromDB import db_race_list_race_data1
 
-import logging
-logger = logging.getLogger("CourseConditionClass")
+from debug import stream_hdl, file_hdl
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("CourseConditionClass"))
 class CourseConditionClass(XClass):
 
     def get(self):

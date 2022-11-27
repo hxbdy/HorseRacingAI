@@ -1,8 +1,16 @@
 from Encoder_X import XClass
 from getFromDB import db_race_list_rank
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("RankOneHotClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("RankOneHotClass"))
 
 class RankOneHotClass(XClass):
 

@@ -2,15 +2,25 @@
 import time
 import configparser
 import datetime
+import logging
 from dateutil.relativedelta import relativedelta
 
 from selenium.webdriver.common.by import By
 
-from debug import config, logger
 import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
+from debug import stream_hdl, file_hdl
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 # load DB
+config = configparser.ConfigParser()
+config.read('./src/path.ini', 'UTF-8')
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
 netkeibaDB = NetkeibaDB(path_netkeibaDB)
 

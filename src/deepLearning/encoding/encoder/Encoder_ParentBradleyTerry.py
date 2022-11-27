@@ -1,8 +1,16 @@
 from Encoder_BradleyTerry import BradleyTerryClass
 from getFromDB import db_race_list_horse_id, db_horse_father
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("ParentBradleyTerryClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("ParentBradleyTerryClass"))
 
 class ParentBradleyTerryClass(BradleyTerryClass):
     def get(self):

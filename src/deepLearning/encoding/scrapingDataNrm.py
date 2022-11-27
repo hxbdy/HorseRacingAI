@@ -15,7 +15,22 @@ from table import start_year_train, end_year_train, \
                   X_train_file_name, t_train_file_name, \
                   X_test_file_name, t_test_file_name
 from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_save_condition, encoding_newest_dir_path
-from debug import *
+
+from debug import stream_hdl, file_hdl
+
+import logging
+import configparser
+
+# load config
+config = configparser.ConfigParser()
+config.read('./src/path.ini', 'UTF-8')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 if __name__ == "__main__":
     

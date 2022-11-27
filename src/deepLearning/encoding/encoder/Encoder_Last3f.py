@@ -2,8 +2,16 @@ from Encoder_X import XClass
 from getFromDB import db_race_list_horse_id, db_race_last_3f, db_race_last_race
 import numpy as np
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("Last3fClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("Last3fClass"))
 
 class Last3fClass(XClass):
 

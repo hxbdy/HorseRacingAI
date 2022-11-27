@@ -6,10 +6,16 @@ from multiprocessing import Process, Queue
 from getFromDB import db_race_list_id, db_race_1st_odds, db_race_grade
 from Encoder_X import XClass
 
-from debug_log import log_listener
+from debug import stream_hdl, file_hdl
 
 import logging
-logger = logging.getLogger("MgrClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("output"))
 
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):
@@ -64,7 +70,7 @@ class MgrClass:
                     return idx
         return -1
 
-    def encoding(self, queue, queue_log, encodeClass):
+    def encoding(self, queue, encodeClass):
         # 結果保存リスト
         result_list = []
         # エンコード実行するクラスが学習データなのか教師データなのか区別する
@@ -90,7 +96,7 @@ class MgrClass:
             XClass.race_id = self.totalRaceList[race]
 
             # データ取得から標準化まで行う
-            x_tmp = instance.adj(queue_log)
+            x_tmp = instance.adj()
 
             result_list.append(x_tmp)
         
@@ -101,23 +107,17 @@ class MgrClass:
         # エンコードデータ共有用キュー
         queue = Queue()
 
-        # ログ用キュー
-        queue_log = Queue()
-        process = Process(target = log_listener, args = (queue_log,),)
-        process.start()
-
         # 処理時間計測開始
         time_sta = time.perf_counter()
 
         # マルチプロセス実行
-        # マルチプロセス用ログ設定は debug_log.py 参照
         encode_list =      copy.copy(self.XclassTbl)
         encode_list.extend(copy.copy(self.tclassTbl))
         for encode in encode_list:
             if encode == None:
                 continue
             logger.info("encode {0} start".format(encode.__name__))
-            process = Process(target = self.encoding, args = (queue, queue_log, encode))
+            process = Process(target = self.encoding, args = (queue, encode))
             process.start()
 
         # 全エンコード終了フラグ

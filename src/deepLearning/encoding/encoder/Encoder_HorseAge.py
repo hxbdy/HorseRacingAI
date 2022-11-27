@@ -4,8 +4,16 @@ from dateutil.relativedelta import relativedelta
 from Encoder_X import XClass
 from getFromDB import db_race_list_horse_id, db_horse_bod, db_race_date
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("HorseAgeClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("HorseAgeClass"))
 
 class HorseAgeClass(XClass):
 

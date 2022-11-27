@@ -3,8 +3,16 @@ import re
 from getFromDB import db_horse_list_perform, db_race_list_horse_id
 import numpy as np
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("CumPerformClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("CumPerformClass"))
 
 class CumPerformClass(XClass):
 

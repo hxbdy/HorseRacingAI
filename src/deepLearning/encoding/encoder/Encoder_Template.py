@@ -11,8 +11,16 @@
 
 from Encoder_X import XClass
 
+from debug import stream_hdl, file_hdl
+
 import logging
-logger = logging.getLogger("XXXClass")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("XXXClass"))
 
 class XXXClass(XClass):
 
@@ -51,6 +59,4 @@ if __name__ == "__main__":
     test.pad()
     test.nrm()
     # 結果確認
-    # logger はキューでハンドルしてあるのでここでは使えない
-    # 代わりにprint を使う
-    print("result = {0}".format(test.xList))
+    logger.info("result = {0}".format(test.xList))

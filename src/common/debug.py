@@ -1,35 +1,46 @@
 import logging
 import configparser
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_log = config.get('common', 'path_log')
-
-# log出力ファイルのクリア
-with open(path_log, mode = 'w'):
-    pass
+import os
 
 # log フォーマット
 output_format = '%(asctime)s %(filename)18s PID:%(process)5d [%(levelname)s] %(message)s'
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-# コンソール用ハンドラ作成
-handler1 = logging.StreamHandler()
-# コンソール出力するログレベルの設定
-handler1.setLevel(logging.INFO)
-handler1.setFormatter(logging.Formatter(output_format))
+# コンソールにログを出力したいときはこれを呼んでハンドラをロガーに登録してください
+def stream_hdl(level):
+    # コンソール用ハンドラ作成
+    handler = logging.StreamHandler()
+    # コンソール出力するログレベルの設定
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter(output_format))
+    return handler
 
-# ファイル出力用ハンドラ作成
-handler2 = logging.FileHandler(filename=path_log)
-# ファイル出力するログレベルの設定
-handler2.setLevel(logging.DEBUG)
-handler2.setFormatter(logging.Formatter(output_format))
+# ファイルにログを出力したいときはこれを呼んでハンドラをロガーに登録してください
+def file_hdl(file_name, level = logging.DEBUG):
+    # load config
+    config = configparser.ConfigParser()
+    config.read('./src/path.ini', 'UTF-8')
+    
+    if file_name == "output":
+        path_log = config.get('common', 'path_log')
+    else:
+        path_log = config.get('common', 'path_root_log')
+        os.makedirs(path_log, exist_ok=True)
+        path_log += file_name + ".log"
 
-#loggerに2つのハンドラを設定
-logger.addHandler(handler1)
-logger.addHandler(handler2)
+
+    # log出力ファイルのクリア
+    # TODO: 現在、実行してもログはクリアされない
+    # if file_name == "output":
+    #     with open(path_log, mode = 'w'):
+    #         pass
+
+    # ファイル出力用ハンドラ作成
+    handler = logging.FileHandler(filename=path_log)
+    
+    # ファイル出力するログレベルの設定
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter(output_format))
+    return handler

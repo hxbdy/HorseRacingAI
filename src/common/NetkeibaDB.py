@@ -10,8 +10,16 @@
 
 import sqlite3
 
-# TODO: * インポートを辞める
-from debug import *
+from debug import stream_hdl, file_hdl
+
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
     def __init__(self, path_db):

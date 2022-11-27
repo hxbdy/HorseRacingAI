@@ -7,11 +7,23 @@ import TwoLayerNet
 import numpy as np
 
 from encoding_common import encoding_load, dl_flat2d
-from debug import logger
+from debug import stream_hdl, file_hdl
 
-# 学習データの読込
+import logging
+import configparser
+
+# load config
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+# logger.addHandler(file_hdl("output"))
+
+# 学習データの読込
 path_learningList = config.get('nn', 'path_learningList')
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 

@@ -8,7 +8,17 @@ import re
 from typing import OrderedDict
 
 from NetkeibaDB import NetkeibaDB
-from debug import *
+from debug import stream_hdl, file_hdl
+
+import logging
+import configparser
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+#loggerにハンドラを設定
+logger.addHandler(stream_hdl(logging.INFO))
+logger.addHandler(file_hdl("sql"))
 
 # load DB
 config = configparser.ConfigParser()
