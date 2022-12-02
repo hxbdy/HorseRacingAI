@@ -10,9 +10,12 @@
 # 6. 完
 
 from Encoder_X import XClass
+from getFromDB import db_race_list_id
+from selfcheck import selfcheck
 
 from debug import stream_hdl, file_hdl
 
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -50,13 +53,24 @@ class XXXClass(XClass):
 # 動作確認用
 # このファイルを直接実行することで,このクラスのエンコードのみ動かせる
 if __name__ == "__main__":
+    # コンソール表示上、有効桁数は2桁とする
+    np.set_printoptions(precision=2, linewidth=150)
+
+    # エンコーダをテストする関数
     test = XXXClass()
-    # レースIDセット
-    test.set("199405030210")
-    # エンコード実行
-    test.get()
-    test.fix()
-    test.pad()
-    test.nrm()
-    # 結果確認
-    logger.info("result = {0}".format(test.xList))
+
+    # テストに使うrace_id
+    race_id_list = db_race_list_id(1800, 2020, -1)
+    
+    result_list = []
+    for race_id in race_id_list:
+        # レースIDセット
+        test.set(race_id)
+        # エンコード実行
+        test.adj()
+        # 結果確認
+        logger.info("result = {0}".format(test.xList))
+        result_list.append(test.xList)
+    
+    # 結果の妥当性を確認する
+    selfcheck(result_list)

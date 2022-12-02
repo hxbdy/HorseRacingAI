@@ -2,14 +2,11 @@ import logging
 import configparser
 import os
 
-# log フォーマット
-output_format = '%(asctime)s %(filename)18s PID:%(process)5d [%(levelname)s] %(message)s'
-
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
 
 # コンソールにログを出力したいときはこれを呼んでハンドラをロガーに登録してください
-def stream_hdl(level):
+def stream_hdl(level, output_format='%(asctime)s %(filename)18s PID:%(process)5d [%(levelname)s] %(message)s'):
     # コンソール用ハンドラ作成
     handler = logging.StreamHandler()
     # コンソール出力するログレベルの設定
@@ -41,6 +38,8 @@ def file_hdl(file_name, level = logging.DEBUG):
     handler = logging.FileHandler(filename=path_log)
     
     # ファイル出力するログレベルの設定
+    # log フォーマット
+    output_format = '%(asctime)s %(filename)18s PID:%(process)5d [%(levelname)s] %(message)s'
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter(output_format))
     return handler
