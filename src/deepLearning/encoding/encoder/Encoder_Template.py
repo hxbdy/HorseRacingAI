@@ -72,4 +72,4 @@ if __name__ == "__main__":
         result_list.append(test.xList)
     
     # 結果の妥当性を確認する
-    selfcheck(result_list)
+    selfcheck("XXXClass", result_list)

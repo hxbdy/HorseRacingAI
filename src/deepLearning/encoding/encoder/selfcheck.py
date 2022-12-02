@@ -10,10 +10,10 @@ logger.setLevel(logging.DEBUG)
 #loggerにハンドラを設定
 logger.addHandler(stream_hdl(logging.INFO))
 
-def selfcheck(x):
+def selfcheck(class_name, x):
     # コンソール表示上、有効桁数は2桁とする
     np.set_printoptions(precision=2)
-    plt.title("HIST")
+    plt.title(class_name + " hist")
     # 最大値、最小値
     logger.info("MAX = {0}, MIN = {1}".format(np.max(x, axis=1), np.min(x, axis=1)))
     # メモリは0.1刻みで表示
