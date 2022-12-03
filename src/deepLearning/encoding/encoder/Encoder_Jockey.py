@@ -20,10 +20,15 @@ class JockeyClass(XClass):
         self.xList = jockeyIDList
 
     def fix(self):
-        # 騎手の総出場回数を求める
+        # 騎手のrace_id開催年までの総出場回数を求める
+        # lower_year年1月1日からupper_year年12月31日までの騎乗回数を求める
+        # (upper_year - 5) <= 取得する期間 <= (upper_year)
         jockeyIDList = self.xList
         for i in range(len(jockeyIDList)):
-            cnt = db_race_cnt_jockey(jockeyIDList[i])
+            upper_year = "{0:4d}".format(int(self.race_id[0:4]) - 1)
+            lower_year = "{0:4d}".format(int(upper_year) - 5)
+            cnt = db_race_cnt_jockey(jockeyIDList[i], lower_year, upper_year)
+            logger.debug("jockey_id = {0}, lower_year = {1}, upper_year = {2}, cnt = {3}".format(jockeyIDList[i], lower_year, upper_year, cnt))
             jockeyIDList[i] = cnt
         self.xList = jockeyIDList
 

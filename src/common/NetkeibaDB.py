@@ -97,6 +97,13 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
+    def sql_one_rowCnt_range(self, table_name, col_name, data, lower, upper):
+        # テーブル table_name の 列 col_name が 値 data である行数を返す(条件 : lower <= race_id <= upper)
+        # COUNTは!NULLレコード数を返すため, 条件に OR NULL を付加する
+        sql = "SELECT COUNT(" + col_name + "=? OR NULL) FROM " + table_name + " WHERE ((race_id <= \"" + upper + "\") AND (race_id >= \""+ lower + "\"));"
+        self.cur.execute(sql, [data])
+        return int(self.cur.fetchone()[0])
+
     def sql_mul_distinctColCnt_G1G2G3(self, lower, upper, limit):
         # !!注意!! ソートは行っていないので必ず lower から順に limit 件取り出しているとは限らない
         # DISTINCT を使用して

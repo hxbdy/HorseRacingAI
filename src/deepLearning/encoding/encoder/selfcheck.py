@@ -15,7 +15,7 @@ def selfcheck(class_name, x):
     np.set_printoptions(precision=2)
     plt.title(class_name + " hist")
     # 最大値、最小値
-    logger.info("MAX = {0}, MIN = {1}".format(np.max(x, axis=1), np.min(x, axis=1)))
+    logger.info("MAX = {0}, MIN = {1}".format(np.max(x), np.min(x)))
     # メモリは0.1刻みで表示
     range_tick = [i / 10 for i in range(0, 11)]
     plt.xticks(range_tick)
