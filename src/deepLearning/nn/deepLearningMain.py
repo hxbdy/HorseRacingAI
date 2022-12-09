@@ -6,7 +6,7 @@ import configparser
 import TwoLayerNet
 import numpy as np
 
-from encoding_common import encoding_load, dl_flat2d
+from encoding_common import encoding_load
 from debug import stream_hdl, file_hdl
 
 import logging
@@ -26,12 +26,6 @@ logger.addHandler(stream_hdl(logging.INFO))
 # 学習データの読込
 path_learningList = config.get('nn', 'path_learningList')
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
-
-# 多次元になっているリストを2次元にならす
-x_train = dl_flat2d(x_train)
-t_train = dl_flat2d(t_train)
-x_test = dl_flat2d(x_test)
-t_test = dl_flat2d(t_test)
 
 # ハイパーパラメータ
 iters_num     = 30000

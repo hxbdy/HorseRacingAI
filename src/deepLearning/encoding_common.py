@@ -65,12 +65,21 @@ def encoding_save_nn_data(save_dir_path, file_name, data):
 def encoding_load(dir_path):
     with open(dir_path + t_train_file_name, 'rb') as f:
         t_train = pickle.load(f)
+        len_row = len(t_train)
+        t_train = np.array(list(deepflatten(t_train))).reshape(len_row, -1)
     with open(dir_path + X_train_file_name, 'rb') as f:
         x_train = pickle.load(f)
+        len_row =len(x_train)
+        x_train = np.array(list(deepflatten(x_train))).reshape(len_row, -1)
     with open(dir_path + t_test_file_name, 'rb') as f:
         t_test = pickle.load(f)
+        len_row =len(t_test)
+        t_test = np.array(list(deepflatten(t_test))).reshape(len_row, -1)
     with open(dir_path + X_test_file_name, 'rb') as f:
         x_test = pickle.load(f)
+        len_row =len(x_test)
+        x_test = np.array(list(deepflatten(x_test))).reshape(len_row, -1)
+    logger.info("x_train = {0}, t_train = {1}, x_test = {2}, t_test = {3}".format(x_train.shape, t_train.shape, x_test.shape, t_test.shape))
     return (x_train, t_train), (x_test, t_test)
 
 # スタート年、終了年、件数、生成に使ったクラスや条件を保存しておく
@@ -81,14 +90,3 @@ def encoding_load(dir_path):
 # TODO:生成条件txtを作る
 def encoding_save_condition(dir_path):
     shutil.copy("./src/deepLearning/table.py", dir_path)
-
-# multi_x をnumpy 2次元にして返す
-# TODO: 外部ライブラリに頼らずに書けるのでは
-def dl_flat2d(multi_x):
-    flat_x = []
-    for i in multi_x:
-        flat_x.append(list(deepflatten(i)))
-        col_num = len(flat_x[-1])
-    flat_x = np.array(flat_x).reshape(-1, col_num)
-    return flat_x
-    

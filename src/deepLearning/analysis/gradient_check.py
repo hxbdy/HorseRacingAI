@@ -7,7 +7,7 @@ import TwoLayerNet
 import numpy as np
 import configparser
 
-from encoding_common import encoding_load, dl_flat2d
+from encoding_common import encoding_load
 
 # load config
 config = configparser.ConfigParser()
@@ -19,12 +19,6 @@ config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
 path_learningList = config.get('nn', 'path_learningList')
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
-
-# 多次元になっているリストを2次元にならす
-x_train = dl_flat2d(x_train)
-t_train = dl_flat2d(t_train)
-x_test = dl_flat2d(x_test)
-t_test = dl_flat2d(t_test)
     
 # ハイパーパラメータ
 iters_num     = 3     # 計算式チェック回数
