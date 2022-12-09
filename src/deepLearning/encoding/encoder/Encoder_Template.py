@@ -62,11 +62,17 @@ if __name__ == "__main__":
     race_id_list = db_race_list_id(1800, 2020, -1)
     
     result_list = []
+    # エンコード結果は固定長である必要があるので確認
+    before_len = 0
     for race_id in race_id_list:
         # レースIDセット
         test.set(race_id)
         # エンコード実行
         test.adj()
+        # 要素数チェック
+        if ((before_len != len(test.xList)) and (before_len != 0)):
+            logger.critical("CHECK ARRAY SIZE !! before = {0}, after = {1}".format(before_len, len(test.xList)))
+        before_len = len(test.xList)
         # 結果確認
         logger.info("result = {0}".format(np.array(test.xList)))
         result_list.append(test.xList)

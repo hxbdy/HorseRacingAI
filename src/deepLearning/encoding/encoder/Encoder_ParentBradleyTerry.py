@@ -22,6 +22,3 @@ class ParentBradleyTerryClass(BradleyTerryClass):
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)
-
-    def pad(self):
-        pass
