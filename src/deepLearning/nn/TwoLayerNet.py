@@ -138,7 +138,10 @@ class TowLayerNet:
         self.params['W2']=weight_init_std*np.random.randn(hidden_size,output_size)
         self.params['b2']=np.zeros(output_size)
 
-        # レイヤ
+        # レイヤ初期化
+        self._init_layer()
+
+    def _init_layer(self):
         self.layers = OrderedDict()
         self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
         self.layers['Relu1']   = Relu()
@@ -278,10 +281,5 @@ class TowLayerNet:
         with open(newest_dir_path + "b2.pickle", 'rb') as f:
             self.params['b2'] = pickle.load(f)
 
-        # レイヤ
-        # TODO:コンストラクタでも同じことをしているので要リファクタ
-        self.layers = OrderedDict()
-        self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
-        self.layers['Relu1']   = Relu()
-        self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
-        self.lastLayer = SoftmaxWithLoss()
+        # レイヤ初期化
+        self._init_layer()
