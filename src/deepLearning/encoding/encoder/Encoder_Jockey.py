@@ -42,5 +42,6 @@ class JockeyClass(XClass):
         # 最高値ですべてを割る
         njockeyList = np.array(self.xList)
         maxJockey = np.max(njockeyList)
+        logger.debug("njockeyList = {0}, maxJockey = {1}".format(njockeyList, maxJockey))
         njockeyList = njockeyList / maxJockey
         self.xList = njockeyList.tolist()
