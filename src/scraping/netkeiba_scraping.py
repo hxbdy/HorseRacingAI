@@ -48,30 +48,16 @@ def login(driver, mail_address, password):
         raise ValueError(err_msg)
 
 
-import sqlite3
 def create_table():
-    """
-    現状からの変更メモ
-    race_idテーブルを実装．race_idを保持しておく用．レース結果をスクレイプしたかのフラグ管理も一応入れてある．
-    horse_profテーブル：horse_title列(馬の名前や英名など)，owner_info列(馬主の募集情報なのでなくてもOK)を追加
-    race_infoテーブル：corner_pos列(通過順位)，pace列(レース全体前半3ハロン-レース全体上がり3ハロン)，last_3f列(上がり3ハロン)を追加
-    ※paceについて https://oshiete.goo.ne.jp/qa/3358577.html
-    race_resultテーブル：result列追加．レース順位を記録．
+    import sqlite3
+    """データベースの作成
+    データベースを新規作成するときに実行する。
+    race_idテーブル: race_idを一時的に保持しておく用
+    horse_profテーブル: 馬のページにある馬名などの情報と、生年月日などの表・血統の表の情報
+    race_infoテーブル: 馬のページにある出走レース情報
+    race_resultテーブル: レースのページにあるレース名やレース結果の情報(オッズは含まず)
     """
 
-    """更新用メモ
-    netkeibaDB.cur.execute("CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)")
-    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN owner_info")
-    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN horse_title")
-    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN corner_pos")
-    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN pace")
-    netkeibaDB.cur.execute("ALTER TABLE race_info ADD COLUMN last_3f")
-    netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN result")
-    netkeibaDB.conn.commit()
-    # さらに追加2022/10/25
-    netkeibaDB.cur.execute("ALTER TABLE race_result ADD COLUMN post_position")
-    netkeibaDB.cur.execute("ALTER TABLE horse_prof ADD COLUMN retired_flg")
-    """
     dbname = config.get("common", "path_netkeibaDB")
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
