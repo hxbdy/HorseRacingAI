@@ -140,7 +140,7 @@ def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade="4"):
         raceID_list = []
         for i in range(len(race_column_html)):
             race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-            raceID_list.append(url2raceID(race_url_str))
+            raceID_list.append(url2ID(race_url_str, "race"))
         # raceID_listが日付降順なので、昇順にする
         raceID_list = raceID_list[::-1]
         # dbのrace_idテーブルに保存
@@ -217,7 +217,7 @@ def scrape_racedata(driver, raceID_list):
             for i in col_idx_id:
                 try:
                     horse_url_str = race_table_row[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-                    race_contents_row[i] = url2horseID(horse_url_str)
+                    race_contents_row[i] = url2ID(horse_url_str, "horse")
                 except:
                     pass
             # 必要部分だけ取り出して追加
@@ -296,7 +296,7 @@ def scrape_horsedata(driver, horseID_list):
             if row_name[row] == "調教師":
                 try:
                     trainer_url_str = prof_contents_data[row].find_element(By.TAG_NAME, "a").get_attribute("href")
-                    prof_contents.append(url2trainerID(trainer_url_str))
+                    prof_contents.append(url2ID(trainer_url_str, "trainer"))
                 except:
                     prof_contents.append(prof_contents_data[row].text)
             else:
@@ -359,9 +359,9 @@ def scrape_horsedata(driver, horseID_list):
                     url_str_id = perform_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
                     # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
                     if "jockey/result/recent/" in url_str_id:
-                        id = url2jockeyID(url_str_id)
+                        id = url2ID(url_str_id, "recent")
                     elif "race/" in url_str_id:
-                        id = url2raceID(url_str_id)
+                        id = url2ID(url_str_id, "race")
                     perform_contents_row[i] = id
                 except:
                     pass
@@ -443,9 +443,9 @@ def scrape_race_today(driver, raceID):
                 url_str_id = shutuba_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
                 # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
                 if "jockey/result/recent/" in url_str_id:
-                    id = url2jockeyID(url_str_id)
+                    id = url2ID(url_str_id, "recent")
                 elif "horse/" in url_str_id:
-                    id = url2horseID(url_str_id)
+                    id = url2ID(url_str_id, "horse")
                 shutuba_contents_row[i] = id
             except:
                 pass
@@ -581,35 +581,12 @@ def string2grade(grade_str, distance_str):
     
     return str(grade)
 
-
-def url2raceID(url: str):
-    """urlからraceIDを探して返す
-    """
-    id = url[url.find("race/")+5 : -1] # 最後の/を除去
-    return id
-
-def url2horseID(url: str):
-    """urlからhorseIDを探して返す
-    """
-    # TODO: スマートな書き方募集中
-    if url[-1].isdigit():
-        id = url[url.find("horse/")+6 :]
-    else:
-        id = url[url.find("horse/")+6 : -1] # 最後の/を除去
-    return id
-
-def url2jockeyID(url: str):
-    """urlからjockeyIDを探して返す
-    """
-    id = url[url.find("jockey/result/recent/")+21 : -1] # 最後の/を除去
-    return id
-
-def url2trainerID(url: str):
-    """urlからtrainerIDを探して返す
-    """
-    id = url[url.find("trainer/")+8 : -1] # 最後の/を除去
-    return id
-
+def url2ID(url, search):
+    # urlからsearchの1つ下の階層の文字列を返す
+    dom = url.split('/')
+    if search in dom:
+        return dom[dom.index(search) + 1]
+    logger.critical("{0} is not found in {1}".format(search, url))
 
 def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     """データベース全体を更新する
