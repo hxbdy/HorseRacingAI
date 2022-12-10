@@ -3,6 +3,7 @@ import time
 import configparser
 import datetime
 import logging
+import re
 from dateutil.relativedelta import relativedelta
 
 from selenium.webdriver.common.by import By
@@ -403,7 +404,7 @@ def scrape_horsedata(driver, horseID_list):
 
 
 def scrape_race_today(driver, raceID):
-    """まだ競争が始まっていないレースのデータをスクレイプする
+    """まだ競走が始まっていないレースのデータをスクレイプする
     driver: webdriver
     raceID: レースid
     """
@@ -412,6 +413,20 @@ def scrape_race_today(driver, raceID):
     wf.access_page(driver, url)
 
     # 予測に必要なデータをスクレイプ
+    # 文中から
+    racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
+    racedata01 = racedata01.split("/")
+    start_time = racedata01[0][:racedata01[0].find("発走")]        # '14:50'
+    distance = [float(re.sub(r"\D", "", racedata01[1]))]       # [1200.0]
+    weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
+    course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
+
+    racedata02 = driver.find_element(By.CLASS_NAME, "RaceData02").find_elements(By.TAG_NAME, "span")
+    #venue = racedata02[1].text            # '中山'
+    prize_str = racedata02[-1].text       # '本賞金:1840,740,460,280,184万円'
+    prize = re.findall(r"\d+", prize_str) # ['1840', '740', '460', '280', '184']
+
+    # テーブルから
     shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
 
     COL_NAME_TEXT = ["枠", "馬番", "斤量"]
@@ -462,6 +477,17 @@ def scrape_race_today(driver, raceID):
     print(list(map(lambda x: float(x[3]), contents)))
     print("jockey id")
     print(list(map(lambda x: x[4], contents)))
+
+    print("発走時刻")
+    print(start_time)
+    print("距離")
+    print(distance)
+    print("天候")
+    print(weather)
+    print("馬場状態")
+    print(course_condition)
+    print("本賞金")
+    print(prize)
     return contents
     
 
@@ -638,15 +664,15 @@ if __name__ == "__main__":
 
     """"""
     driver = wf.start_driver(browser)
-    login(driver, mail_address, password)
+    #login(driver, mail_address, password)
 
     # STEP 0. 定期的なDBアップデート
     # update_database(driver, "202012", "202012")
 
     # STEP 1. 当日予想したいレースIDから馬の情報をコンソール出力
-    a = scrape_race_today(driver, "202205050812")
+    #a = scrape_race_today(driver, "202205050812")
 
     # STEP 2. 出走する馬のDB情報をアップデートする
     # update_horsedata_only(driver, ['2019190003', '2019190002', '2017105567', '2015100831', '2016190001', '2017105082', '2019190004', '2017100720', '2016110103', '2016104887', '2016106606', '2016104791', '2018106545', '2019105195', '2018105165', '2013103569', '2018102167', '2016104618'])
 
-    driver.close()
+    #driver.close()
