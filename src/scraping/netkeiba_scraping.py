@@ -22,7 +22,7 @@ logger.addHandler(file_hdl("output"))
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
-netkeibaDB = NetkeibaDB(path_netkeibaDB)
+netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
 col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \

@@ -86,6 +86,17 @@ net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db �
 |dst\trainedParam\newest|NNによって学習した行列パラメータを保存します|
 |dst\output.log|直前に実行したプログラムのログを保存します|
 
+# About DB
+* DBをROM実行、RAM実行の2種類で使い分けています。
+## ROM exe
+* DBの更新時はROM実行します。RAM実行するとDBへの変更がセーブされないためです。
+
+## RAM exe
+* エンコード時はRAM実行します。エンコード高速化のためです。
+* ただし、プロセス毎にDRAMへ展開するため、(DBの容量 * エンコード数) 分のメモリを必要とします。
+* 2022/12/11 現在 約 2 [GB] 消費します。
+* 展開せずに実行することも可能です。設定方法は NetkeibaDBクラス を確認してください。
+
 # 参考
 - [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
 - [海外競馬英和辞典　ＪＲＡ](https://www.jra.go.jp/keiba/overseas/yougo/index.html)

@@ -24,7 +24,7 @@ logger.addHandler(file_hdl("sql"))
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
-netkeibaDB = NetkeibaDB(path_netkeibaDB)
+netkeibaDB = NetkeibaDB(path_netkeibaDB, "RAM")
 
 def db_race_1st_odds(race_id):
     # 指定レースの1位オッズをfloatで返す
