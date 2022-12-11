@@ -649,6 +649,12 @@ def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     # データ整合性チェック
     #reconfirm_check()
 
+    # 騎手の騎乗回数を更新
+    head_year = datetime.datetime.strptime(start_YYMM, '%Y%m').year
+    tail_year = datetime.datetime.strptime(end_YYMM, '%Y%m').year
+    update_jockey_info(head_year, tail_year)
+
+
     logger.info("update_database comp")
 
 def update_horsedata_only(driver, horseID_list):
