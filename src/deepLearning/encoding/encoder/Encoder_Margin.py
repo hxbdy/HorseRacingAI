@@ -87,5 +87,5 @@ class MarginClass(XClass):
         y = ny.tolist()
         # リストを逆順にする。元のリストを破壊するため注意。
         # 戻り値はNoneであることも注意
-        y.reverse()
+        # y.reverse()
         self.xList = y

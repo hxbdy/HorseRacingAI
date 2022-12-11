@@ -142,6 +142,7 @@ def db_race_list_margin(race_id):
     marginList = netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id])
     for i in range(len(marginList)):
         marginList[i] = str(marginList[i])
+    return marginList
 
 def db_race_rank(race_id, horse_id):
     # race_id で horse_id は何位だったか取得
