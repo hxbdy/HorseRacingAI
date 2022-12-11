@@ -9,6 +9,7 @@
 # {B} = 関数名
 
 import sqlite3
+import copy
 
 from debug import stream_hdl, file_hdl
 
@@ -57,10 +58,11 @@ class NetkeibaDB:
     def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list):
         # テーブル table_name から列 col_target を複数取得する
         # 条件は 列 col_hint_list と値  data_list が一致する行
-        for idx in range(len(col_hint_list)):
-            col_hint_list[idx] = col_hint_list[idx] + " =?"
+        col_hint_list_copied = copy.copy(col_hint_list)
+        for idx in range(len(col_hint_list_copied)):
+            col_hint_list_copied[idx] = col_hint_list_copied[idx] + " =?"
 
-        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list) + ";"
+        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + ";"
         self.cur.execute(sql, data_list)
         retList = []
         for i in self.cur.fetchall():
@@ -75,10 +77,11 @@ class NetkeibaDB:
         # 重賞のみを対象とした
         # テーブル table_name から列 col_target を複数取得する
         # 条件は 列 col_hint_list と値  data_list が一致する行
-        for idx in range(len(col_hint_list)):
-            col_hint_list[idx] = col_hint_list[idx] + " =?"
+        col_hint_list_copied = copy.copy(col_hint_list)
+        for idx in range(len(col_hint_list_copied)):
+            col_hint_list_copied[idx] = col_hint_list_copied[idx] + " =?"
 
-        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list) + " AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\");"
+        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + " AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\");"
         self.cur.execute(sql, data_list)
         retList = []
         for i in self.cur.fetchall():
@@ -190,19 +193,20 @@ class NetkeibaDB:
         conditon: 条件式がない場合は[]
         """
 
-        for i in range(len(target_col_list)):
-            target_col_list[i] = target_col_list[i] + "=?"
-        
+        target_col_list_copied = copy.copy(target_col_list)
+        for i in range(len(target_col_list_copied)):
+            target_col_list_copied[i] = target_col_list_copied[i] + "=?"
+
         for data in data_list:
             # シングルクォーテーションのエスケープ処理
             for i in range(len(data)):
                 if "'" in data[i]:
                     data[i] = data[i].replace("'", "''")
-                
+
             if condition == []:
-                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list)
+                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list_copied)
             else:
-                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list) + " WHERE " + " AND ".join(condition)
+                sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list_copied) + " WHERE " + " AND ".join(condition)
             self.cur.execute(sql, data)
 
         self.conn.commit()
