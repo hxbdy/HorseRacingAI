@@ -15,6 +15,7 @@
 * cuda 11.7.0
 * cupy 8.3.0
 * selenium 4.2.0
+* sqlite3 3.8.6
 
 ## conda installation
 ### app
