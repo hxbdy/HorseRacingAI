@@ -178,6 +178,8 @@ def db_race_last_race(race_id, horse_id):
     # TODO: グレードに関係なく取得したほうがいいのでは...?
 
     # horse_idの重賞出走レース一覧を取得する
+    # TODO: race_infoテーブルからも取得できるはず。
+    # ラスト3fエンコードはrace_infoテーブルで完結できないか。
     race_list = netkeibaDB.sql_mul_tbl_g1g2g3("race_result", ["race_id"], ["horse_id"], [horse_id])
     
     # 昇順ソート
@@ -189,6 +191,7 @@ def db_race_last_race(race_id, horse_id):
         return race_list
 
     # 直前の重賞レースIDを返す
+    # TODO: 地方競馬の場合、ラスト3fが記録されていない場合がある。それの回避策
     if race_id in race_list:
         last_race_id = race_list.index(race_id) - 1
         if(last_race_id < 0):
