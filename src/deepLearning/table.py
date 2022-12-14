@@ -39,25 +39,6 @@ XTbl = [
     encoder.Encoder_Last3f.Last3fClass                           # Encoding takes too long
 ]
 
-# 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
-chgXTbl = [
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None
-]
-
 # 正解用テーブル
 # !! 1つしか入れないで !!
 tTbl = [

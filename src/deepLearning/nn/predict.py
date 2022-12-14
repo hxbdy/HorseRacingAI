@@ -115,9 +115,6 @@ if __name__ == "__main__":
     path_learningList = config.get('nn', 'path_learningList')
     path_tmp          = config.get('common', 'path_tmp')
 
-    # 行列サイズ取得のため学習データの読込
-    (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
-
     with open(path_tmp, 'rb') as f:
         tmp_param = pickle.load(f)
 
@@ -167,6 +164,9 @@ if __name__ == "__main__":
         PredictParentBradleyTerryClass,
         PredictLast3fClass
     ]
+
+    # 行列サイズ取得のため学習データの読込
+    (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 
     # 推測用エンコード
     x = []
