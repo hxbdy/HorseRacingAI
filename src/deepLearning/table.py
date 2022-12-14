@@ -1,5 +1,4 @@
 import encoder
-from config_predict import *
 
 # 学習用データ生成条件
 start_year_train = 1800 # 開始年
@@ -57,25 +56,6 @@ chgXTbl = [
     None,
     None,
     None
-]
-
-# 推論時の入力用テーブル
-predict_XTbl = [
-    PredictMoneyClass,
-    PredictHorseNumClass,
-    PredictCourseConditionClass,
-    PredictCourseDistanceClass,
-    PredictRaceStartTimeClass,
-    PredictWeatherClass,
-    PredictHorseAgeClass,
-    PredictBurdenWeightClass,
-    PredictPostPositionClass,
-    PredictJockeyClass,
-    PredictCumPerformClass,
-    PredictBradleyTerryClass,
-    PredictUmamusumeClass,
-    PredictParentBradleyTerryClass,
-    PredictLast3fClass
 ]
 
 # 正解用テーブル

@@ -4,6 +4,8 @@ import configparser
 import datetime
 import logging
 import re
+import argparse
+import pickle
 from dateutil.relativedelta import relativedelta
 
 from selenium.webdriver.common.by import By
@@ -661,26 +663,56 @@ def update_horsedata_only(driver, horseID_list):
     logger.info("update_horsedata_only comp")
 
 if __name__ == "__main__":
+    # netkeiba ログイン情報読み込み
     config_scraping = configparser.ConfigParser()
-    config_scraping.read("src\\private.ini")
+    config_scraping.read("./src/private.ini", 'UTF-8')
     browser = config_scraping.get("scraping", "browser")
     mail_address = config_scraping.get("scraping", "mail")
     password = config_scraping.get("scraping", "pass")
-    
-    # 後々別のところで管理．
-    #create_table()
 
+    # tmpファイルパス読み込み
+    config_tmp = configparser.ConfigParser()
+    config_tmp.read("./src/path.ini", 'UTF-8')
+    path_tmp = config_tmp.get("common", "path_tmp")
+
+    # 引数パース
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--init', action='store_true', default=False, help='init database')
+    parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
+    parser.add_argument('-r','--race_id', help='scrape race_id info')
+    args = parser.parse_args()
+    
     """"""
     driver = wf.start_driver(browser)
-    #login(driver, mail_address, password)
+    login(driver, mail_address, password)
 
-    # STEP 0. 定期的なDBアップデート
-    # update_database(driver, "202012", "202012")
+    # DB初期化
+    if args.init:
+        # DB 作成
+        create_table()
+        # 今日までの情報をスクレイピング
+        start = "195601"
+        end = datetime.datetime.now()
+        update_database(driver, start, end)
 
-    # STEP 1. 当日予想したいレースIDから馬の情報をコンソール出力
-    #a = scrape_race_today(driver, "202205050812")
+    # 定期的なDBアップデート
+    elif args.db:
+        end = datetime.datetime.now()
+        start = end - relativedelta(months=1)
+        update_database(driver, start, end)
+    
+    elif args.race_id:
+        # 当日予想したいレースIDから馬の情報をコンソール出力
+        a = scrape_race_today(driver, args.race_id)
 
-    # STEP 2. 出走する馬のDB情報をアップデートする
-    # update_horsedata_only(driver, ['2019190003', '2019190002', '2017105567', '2015100831', '2016190001', '2017105082', '2019190004', '2017100720', '2016110103', '2016104887', '2016106606', '2016104791', '2018106545', '2019105195', '2018105165', '2013103569', '2018102167', '2016104618'])
+        # 出走する馬のDB情報をアップデート
+        update_horsedata_only(driver, a.horse_id)
 
-    #driver.close()
+        # 推測用に取得したレース情報を一時保存
+        with open(path_tmp, 'wb') as f:
+            pickle.dump(a, f)
+    
+    else:
+        logger.error("read usage: netkeiba_scraping.py -h")
+
+    driver.close()
