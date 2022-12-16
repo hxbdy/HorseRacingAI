@@ -116,7 +116,7 @@ if __name__ == "__main__":
     path_tmp          = config.get('common', 'path_tmp')
 
     with open(path_tmp, 'rb') as f:
-        tmp_param = pickle.load(f)
+        tmp_param: RaceInfo = pickle.load(f)
 
     # レース当日入力フィールド
     # horse_id
