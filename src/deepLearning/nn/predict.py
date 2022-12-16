@@ -11,7 +11,7 @@ from iteration_utilities import deepflatten
 
 import encoder
 import TwoLayerNet
-from netkeiba_scraping import RaceInfo
+from RaceInfo import RaceInfo
 from encoding_common   import encoding_load
 from getFromDB         import db_horse_bod, db_horse_father
 

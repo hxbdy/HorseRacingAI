@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
+from RaceInfo import RaceInfo
 from debug import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
@@ -389,21 +390,6 @@ def scrape_horsedata(driver, horseID_list):
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
     logger.info("scrape_horsedata comp")
-
-class RaceInfo():
-    def __init__(self):
-        self.start_time = ""
-        self.distance = []
-        self.weather = ""
-        self.course_condition = ""
-        self.prize = []
-
-        self.post_position = []
-        self.horse_number = []
-        self.burden_weight = []
-
-        self.horse_id = []
-        self.jockey_id = []
 
 
 def scrape_race_today(driver, raceID):
