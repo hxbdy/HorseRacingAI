@@ -32,12 +32,12 @@ XTbl = [
     encoder.Encoder_HorseAge.HorseAgeClass,
     encoder.Encoder_BurdenWeight.BurdenWeightClass,
     encoder.Encoder_PostPosition.PostPositionClass,
-    encoder.Encoder_Jockey.JockeyClass,                          # Encoding takes too long
+    encoder.Encoder_Jockey.JockeyClass,
     encoder.Encoder_CumPerform.CumPerformClass,
     encoder.Encoder_BradleyTerry.BradleyTerryClass,
     encoder.Encoder_Umamusume.UmamusumeClass,
     encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
-    encoder.Encoder_Last3f.Last3fClass                           # Encoding takes too long
+    encoder.Encoder_Last3f.Last3fClass # Encoding takes too long
 ]
 
 # 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
