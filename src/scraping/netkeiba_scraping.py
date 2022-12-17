@@ -691,13 +691,13 @@ if __name__ == "__main__":
         # DB 作成
         create_table()
         # 今日までの情報をスクレイピング
-        start = "195601"
-        end = datetime.datetime.now()
+        start = "198601"
+        end = datetime.datetime.now().strftime("%Y%m")
         update_database(driver, start, end)
 
     # 定期的なDBアップデート
     elif args.db:
-        end = datetime.datetime.now()
+        end = datetime.datetime.now().strftime("%Y%m")
         start = end - relativedelta(months=1)
         update_database(driver, start, end)
     
