@@ -102,6 +102,7 @@ class CumPerformClass(XClass):
                 # コースの距離
                 dis_str = horse_info[DISTANCE]
                 try:
+                    # TODO: race_id = 201306050111 のような距離の近くに別な数字があるときも問題ないか確認
                     distance = float(re.sub(r'\D', '', dis_str).replace(" ", ""))
                 except:
                     distance = "E"

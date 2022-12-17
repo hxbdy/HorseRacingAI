@@ -23,16 +23,34 @@ logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
-    def __init__(self, path_db):
+    def __init__(self, path_db, loc):
         self.conn = sqlite3.connect(path_db)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
+        if loc == "RAM":
+            logger.info("DB will be located in RAM")
+            self._switch_RAM()
+        else:
+            logger.info("DB will be located in ROM")
         logger.info("Database {0} loading complete".format(path_db))
 
     def __del__(self):
         # データベースへのコネクションを閉じる
         self.cur.close()
         self.conn.close()
+
+    # DBをRAM上に移して、以降の操作をRAM上で行う
+    def _switch_RAM(self):
+        # RAM DBへのコネクション作成
+        dest = sqlite3.connect(':memory:')
+        self.conn.backup(dest)
+        # ROM DBへのコネクションを閉じる
+        self.cur.close()
+        self.conn.close()
+        # コネクション変数譲渡
+        self.conn = dest
+        # sqliteを操作するカーソルオブジェクトを作成
+        self.cur = self.conn.cursor()
 
     def sql_one_horse_prof(self, horse_id, col_name):
         # horse_prof テーブルから指定列の要素を一つ取り出す

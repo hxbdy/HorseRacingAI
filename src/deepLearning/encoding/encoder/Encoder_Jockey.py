@@ -7,7 +7,7 @@ from debug import stream_hdl, file_hdl
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 #loggerにハンドラを設定
 logger.addHandler(stream_hdl(logging.INFO))

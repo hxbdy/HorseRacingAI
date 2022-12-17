@@ -1,5 +1,4 @@
 import encoder
-from config_predict import *
 
 # 学習用データ生成条件
 start_year_train = 1800 # 開始年
@@ -38,44 +37,6 @@ XTbl = [
     encoder.Encoder_Umamusume.UmamusumeClass,
     encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
     encoder.Encoder_Last3f.Last3fClass # Encoding takes too long
-]
-
-# 生成済み入力用テーブルから一部挿げ替えを行えるテーブル
-chgXTbl = [
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None
-]
-
-# 推論時の入力用テーブル
-predict_XTbl = [
-    PredictMoneyClass,
-    PredictHorseNumClass,
-    PredictCourseConditionClass,
-    PredictCourseDistanceClass,
-    PredictRaceStartTimeClass,
-    PredictWeatherClass,
-    PredictHorseAgeClass,
-    PredictBurdenWeightClass,
-    PredictPostPositionClass,
-    PredictJockeyClass,
-    PredictCumPerformClass,
-    PredictBradleyTerryClass,
-    PredictUmamusumeClass,
-    PredictParentBradleyTerryClass,
-    PredictLast3fClass
 ]
 
 # 正解用テーブル

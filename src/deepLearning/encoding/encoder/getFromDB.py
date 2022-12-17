@@ -24,7 +24,7 @@ logger.addHandler(file_hdl("sql"))
 config = configparser.ConfigParser()
 config.read('./src/path.ini', 'UTF-8')
 path_netkeibaDB = config.get('common', 'path_netkeibaDB')
-netkeibaDB = NetkeibaDB(path_netkeibaDB)
+netkeibaDB = NetkeibaDB(path_netkeibaDB, "RAM")
 
 def db_race_1st_odds(race_id):
     # 指定レースの1位オッズをfloatで返す
@@ -140,6 +140,7 @@ def db_race_list_margin(race_id):
     marginList = netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id])
     for i in range(len(marginList)):
         marginList[i] = str(marginList[i])
+    return marginList
 
 def db_race_rank(race_id, horse_id):
     # race_id で horse_id は何位だったか取得
@@ -176,6 +177,8 @@ def db_race_last_race(race_id, horse_id):
     # TODO: グレードに関係なく取得したほうがいいのでは...?
 
     # horse_idの重賞出走レース一覧を取得する
+    # TODO: race_infoテーブルからも取得できるはず。
+    # ラスト3fエンコードはrace_infoテーブルで完結できないか。
     race_list = netkeibaDB.sql_mul_tbl_g1g2g3("race_result", ["race_id"], ["horse_id"], [horse_id])
     
     # 昇順ソート
@@ -187,6 +190,7 @@ def db_race_last_race(race_id, horse_id):
         return race_list
 
     # 直前の重賞レースIDを返す
+    # TODO: 地方競馬の場合、ラスト3fが記録されていない場合がある。それの回避策
     if race_id in race_list:
         last_race_id = race_list.index(race_id) - 1
         if(last_race_id < 0):
