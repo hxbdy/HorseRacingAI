@@ -409,13 +409,13 @@ def scrape_race_today(driver, raceID):
     year = int(raceID[:4])
     month = int(race_date_raw[:race_date_raw.find("月")])
     day = int(race_date_raw[race_date_raw.find("月")+1:race_date_raw.find("日")])
-    raceInfo.date = datetime(year, month, day)
+    raceInfo.date = datetime.date(year, month, day)
 
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
     racedata01 = racedata01.split("/")
     raceInfo.start_time = racedata01[0][:racedata01[0].find("発走")]        # '14:50'
-    raceInfo.distance = [float(re.sub(r"\D", "", racedata01[1]))]           # [1200.0]
+    raceInfo.distance = [float(re.findall('\d{3,4}', racedata01[1])[0])]    # [1200.0]
     raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
     raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
 
@@ -697,7 +697,7 @@ if __name__ == "__main__":
 
         end = end.strftime("%Y%m")
         start = start.strftime("%Y%m")
-        
+
         logger.info("start = {0}, end = {1}".format(start, end))
         update_database(driver, start, end)
     

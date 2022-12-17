@@ -5,7 +5,6 @@
 import configparser
 import pickle
 import numpy as np
-from datetime import date
 
 from iteration_utilities import deepflatten
 
@@ -28,71 +27,71 @@ from getFromDB         import db_horse_bod, db_horse_father
 class PredictMoneyClass(encoder.Encoder_Money.MoneyClass):
     def get(self):
         # 賞金リスト
-        self.xList = money_list
+        self.xList = tmp_param.prize
 class PredictHorseNumClass(encoder.Encoder_HorseNum.HorseNumClass):
     def get(self):
         # 出走する馬の頭数
-        self.xList = horse_num
+        self.xList = [tmp_param.horse_num]
 class PredictCourseConditionClass(encoder.Encoder_CourseCondition.CourseConditionClass):
     def get(self):
         # コース状態
         # '良', '稍重', '重', '不良' のいずれか
-        self.xList = course_condition
+        self.xList = tmp_param.course_condition
 class PredictCourseDistanceClass(encoder.Encoder_CourseDistance.CourseDistanceClass):
     def get(self):
         # コース長
-        self.xList = course_distance
+        self.xList = tmp_param.distance
 class PredictRaceStartTimeClass(encoder.Encoder_RaceStartTime.RaceStartTimeClass):
     def get(self):
         # 出走時刻
-        self.xList = start_time
+        self.xList = tmp_param.start_time
 class PredictWeatherClass(encoder.Encoder_Weather.WeatherClass):
     def get(self):
         # 天気
         # '晴', '曇', '小雨', '雨', '小雪', '雪' のいずれか
-        self.xList = weather
+        self.xList = tmp_param.weather
 class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
     def get(self):
         # レース開催日
-        self.d0 = race_date
+        self.d0 = tmp_param.date
 
         # 誕生日をDBから取得
         bdList = []
-        for horse_id in horse_id_list:
+        for horse_id in tmp_param.horse_id:
             bod = db_horse_bod(horse_id)
             bdList.append(bod)
         self.xList = bdList        
 class PredictBurdenWeightClass(encoder.Encoder_BurdenWeight.BurdenWeightClass):
     def get(self):
         # 斤量
-        self.xList = burden_weight
+        self.xList = tmp_param.burden_weight
 class PredictPostPositionClass(encoder.Encoder_PostPosition.PostPositionClass):
     def get(self):
         # 枠番
-        self.xList = post_position
+        self.xList = tmp_param.post_position
 class PredictJockeyClass(encoder.Encoder_Jockey.JockeyClass):
     def get(self):
         # jockey_id
-        self.xList = jockey_id_list
+        self.xList = tmp_param.jockey_id
         # race_id
-        self.race_id = today_race_id
+        self.race_id = tmp_param.race_id
 class PredictCumPerformClass(encoder.Encoder_CumPerform.CumPerformClass):
     def get(self):
         # horse_id
-        self.getForCalcPerformInfo(horse_id_list)
+        self.getForCalcPerformInfo(tmp_param.horse_id)
 class PredictBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
     def get(self):
         # horse_id
-        self.xList = horse_id_list
+        self.xList = tmp_param.horse_id
         self.col_num = len(self.xList)
 class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
     def get(self):
         # horse_id
-        self.xList = horse_id_list
+        self.xList = tmp_param.horse_id
 class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
     def get(self):
         # horse_id
-        childList = horse_id_list
+        childList = tmp_param.horse_id
         parentList = []
         for i in range(len(childList)):
             # 父のidを取得
@@ -103,9 +102,9 @@ class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBr
 class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
     def get(self):
         # race_id
-        self.race_id = today_race_id
+        self.race_id = tmp_param.race_id
         # horse_id
-        self.xList = horse_id_list
+        self.xList = tmp_param.horse_id
 
 
 if __name__ == "__main__":
@@ -115,36 +114,9 @@ if __name__ == "__main__":
     path_learningList = config.get('nn', 'path_learningList')
     path_tmp          = config.get('common', 'path_tmp')
 
+    # TODO: 読み込みに失敗したとき、情報をスクレイピングしておく旨を表示して終了する対応
     with open(path_tmp, 'rb') as f:
         tmp_param: RaceInfo = pickle.load(f)
-
-    # レース当日入力フィールド
-    # horse_id
-    horse_id_list = tmp_param.horse_id
-    # 賞金リスト
-    money_list = tmp_param.prize
-    # 出走する馬の頭数
-    horse_num = [len(tmp_param.horse_id)]
-    # コース状態
-    # '良', '稍重', '重', '不良' のいずれか
-    course_condition = tmp_param.course_condition
-    # コース長
-    course_distance = tmp_param.distance
-    # 出走時刻
-    start_time = tmp_param.start_time
-    # 天気
-    # '晴', '曇', '小雨', '雨', '小雪', '雪' のいずれか
-    weather = tmp_param.weather
-    # レース開催日
-    race_date = date(2022, 11, 27)
-    # 斤量
-    burden_weight = tmp_param.burden_weight
-    # 枠番
-    post_position = tmp_param.post_position
-    # 騎手ID
-    jockey_id_list =  tmp_param.jockey_id
-    # レースID
-    today_race_id = "202205050812"
 
     # 推論時の入力用テーブル
     predict_XTbl = [
