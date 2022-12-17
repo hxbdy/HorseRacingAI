@@ -405,11 +405,10 @@ def scrape_race_today(driver, raceID):
     wf.access_page(driver, url)
 
     # 予測に必要なデータをスクレイプ
-    race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)'
+    race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)' or '12/17'
     year = int(raceID[:4])
-    month = int(race_date_raw[:race_date_raw.find("月")])
-    day = int(race_date_raw[race_date_raw.find("月")+1:race_date_raw.find("日")])
-    raceInfo.date = datetime.date(year, month, day)
+    month_day = re.findall(r"\d+", race_date_raw)
+    raceInfo.date = datetime(year, int(month_day[0]), int(month_day[1]))
 
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
