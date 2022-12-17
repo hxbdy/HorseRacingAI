@@ -73,7 +73,7 @@ if __name__ == "__main__":
             logger.critical("CHECK ARRAY SIZE !! before = {0}, after = {1}".format(before_len, len(test.xList)))
         before_len = len(test.xList)
         # 結果確認
-        logger.info("result = {0}".format(np.array(test.xList)))
+        logger.info("race_id = {0} | result = {1}".format(race_id, np.array(test.xList)))
         result_list.append(test.xList)
     
     # 結果の妥当性を確認する

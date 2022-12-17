@@ -119,11 +119,9 @@ def db_race_list_jockey(race_id):
         jockeyIDList[i] = str(jockeyIDList[i])
     return jockeyIDList
 
-def db_race_cnt_jockey(jockey_id, lower_year = "0000", upper_year = "9999"):
+def db_race_cnt_jockey(jockey_id, lower_year, upper_year):
     # 騎手の lower_year から upper_year までの総出場回数を求める
-    lower_year += "00000000"
-    upper_year += "99999999"
-    return netkeibaDB.sql_one_rowCnt_range("race_info", "jockey_id", jockey_id, lower_year, upper_year)
+    return netkeibaDB.sql_one_jockey_total(jockey_id, str(lower_year), str(upper_year))
 
 def db_horse_list_parent(horse_id):
     # 親馬のIDリストを返す
