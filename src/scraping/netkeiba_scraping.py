@@ -4,12 +4,15 @@ import configparser
 import datetime
 import logging
 import re
+import argparse
+import pickle
 from dateutil.relativedelta import relativedelta
 
 from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
+from RaceInfo import RaceInfo
 from debug import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
@@ -388,21 +391,6 @@ def scrape_horsedata(driver, horseID_list):
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
     logger.info("scrape_horsedata comp")
 
-class RaceInfo():
-    def __init__(self):
-        self.start_time = ""
-        self.distance = []
-        self.weather = ""
-        self.course_condition = ""
-        self.prize = []
-
-        self.post_position = []
-        self.horse_number = []
-        self.burden_weight = []
-
-        self.horse_id = []
-        self.jockey_id = []
-
 
 def scrape_race_today(driver, raceID):
     """まだ競走が始まっていないレースのデータをスクレイプする
@@ -410,17 +398,24 @@ def scrape_race_today(driver, raceID):
     raceID: レースid
     """
     raceInfo = RaceInfo()
+    raceInfo.race_id = raceID
     
     # サイトにアクセス
     url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
     wf.access_page(driver, url)
 
     # 予測に必要なデータをスクレイプ
+    race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)'
+    year = int(raceID[:4])
+    month = int(race_date_raw[:race_date_raw.find("月")])
+    day = int(race_date_raw[race_date_raw.find("月")+1:race_date_raw.find("日")])
+    raceInfo.date = datetime.date(year, month, day)
+
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
     racedata01 = racedata01.split("/")
     raceInfo.start_time = racedata01[0][:racedata01[0].find("発走")]        # '14:50'
-    raceInfo.distance = [float(re.sub(r"\D", "", racedata01[1]))]           # [1200.0]
+    raceInfo.distance = [float(re.findall('\d{3,4}', racedata01[1])[0])]    # [1200.0]
     raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
     raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
 
@@ -470,6 +465,7 @@ def scrape_race_today(driver, raceID):
         # 必要部分だけ取り出して追加
         contents.append(list(map(lambda x: shutuba_contents_row[x], col_idx)))
     
+    raceInfo.horse_num = len(shutuba_table)
     raceInfo.post_position = list(map(lambda x: int(x[0]), contents))
     raceInfo.horse_number = list(map(lambda x: int(x[1]), contents))
     raceInfo.horse_id = list(map(lambda x: x[2], contents))
@@ -661,26 +657,66 @@ def update_horsedata_only(driver, horseID_list):
     logger.info("update_horsedata_only comp")
 
 if __name__ == "__main__":
+    # netkeiba ログイン情報読み込み
     config_scraping = configparser.ConfigParser()
-    config_scraping.read("src\\private.ini")
-    browser = config_scraping.get("scraping", "browser")
+    config_scraping.read("./src/private.ini", 'UTF-8')
+    browser      = config_scraping.get("scraping", "browser")
     mail_address = config_scraping.get("scraping", "mail")
-    password = config_scraping.get("scraping", "pass")
+    password     = config_scraping.get("scraping", "pass")
+
+    # tmpファイルパス読み込み
+    config_tmp = configparser.ConfigParser()
+    config_tmp.read("./src/path.ini", 'UTF-8')
+    path_tmp = config_tmp.get("common", "path_tmp")
+
+    # 引数パース
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--init', action='store_true', default=False, help='init database and scrape until today')
+    parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
+    parser.add_argument('-r','--race_id', help='scrape race_id info')
+    args = parser.parse_args()
+
+    # DB初期化
+    if args.init:
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+        
+        create_table()
+        start = "198601"
+        end = datetime.datetime.now().strftime("%Y%m")
+        update_database(driver, start, end)
+
+    # 定期的なDBアップデート
+    # 1ヶ月間隔更新前提
+    elif args.db:
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+
+        end = datetime.datetime.now()
+        start = end - relativedelta(months=1)
+
+        end = end.strftime("%Y%m")
+        start = start.strftime("%Y%m")
+
+        logger.info("start = {0}, end = {1}".format(start, end))
+        update_database(driver, start, end)
     
-    # 後々別のところで管理．
-    #create_table()
+    elif args.race_id:
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
 
-    """"""
-    driver = wf.start_driver(browser)
-    #login(driver, mail_address, password)
+        # 当日予想したいレースIDから馬の情報をコンソール出力
+        a = scrape_race_today(driver, args.race_id)
 
-    # STEP 0. 定期的なDBアップデート
-    # update_database(driver, "202012", "202012")
+        # 出走する馬のDB情報をアップデート
+        update_horsedata_only(driver, a.horse_id)
 
-    # STEP 1. 当日予想したいレースIDから馬の情報をコンソール出力
-    #a = scrape_race_today(driver, "202205050812")
+        # 推測用に取得したレース情報を一時保存
+        with open(path_tmp, 'wb') as f:
+            pickle.dump(a, f)
+    
+    else:
+        logger.error("read usage: netkeiba_scraping.py -h")
+        exit(-1)
 
-    # STEP 2. 出走する馬のDB情報をアップデートする
-    # update_horsedata_only(driver, ['2019190003', '2019190002', '2017105567', '2015100831', '2016190001', '2017105082', '2019190004', '2017100720', '2016110103', '2016104887', '2016106606', '2016104791', '2018106545', '2019105195', '2018105165', '2013103569', '2018102167', '2016104618'])
-
-    #driver.close()
+    driver.close()
