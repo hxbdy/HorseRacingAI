@@ -11,7 +11,7 @@ from iteration_utilities import deepflatten
 
 import encoder
 import TwoLayerNet
-from netkeiba_scraping import RaceInfo
+from RaceInfo import RaceInfo
 from encoding_common   import encoding_load
 from getFromDB         import db_horse_bod, db_horse_father
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     path_tmp          = config.get('common', 'path_tmp')
 
     with open(path_tmp, 'rb') as f:
-        tmp_param = pickle.load(f)
+        tmp_param: RaceInfo = pickle.load(f)
 
     # レース当日入力フィールド
     # horse_id

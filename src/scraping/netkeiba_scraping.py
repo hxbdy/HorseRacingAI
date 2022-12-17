@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
+from RaceInfo import RaceInfo
 from debug import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
@@ -390,21 +391,6 @@ def scrape_horsedata(driver, horseID_list):
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
     logger.info("scrape_horsedata comp")
 
-class RaceInfo():
-    def __init__(self):
-        self.start_time = ""
-        self.distance = []
-        self.weather = ""
-        self.course_condition = ""
-        self.prize = []
-
-        self.post_position = []
-        self.horse_number = []
-        self.burden_weight = []
-
-        self.horse_id = []
-        self.jockey_id = []
-
 
 def scrape_race_today(driver, raceID):
     """まだ競走が始まっていないレースのデータをスクレイプする
@@ -412,12 +398,19 @@ def scrape_race_today(driver, raceID):
     raceID: レースid
     """
     raceInfo = RaceInfo()
+    raceInfo.race_id = raceID
     
     # サイトにアクセス
     url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
     wf.access_page(driver, url)
 
     # 予測に必要なデータをスクレイプ
+    race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)'
+    year = int(raceID[:4])
+    month = int(race_date_raw[:race_date_raw.find("月")])
+    day = int(race_date_raw[race_date_raw.find("月")+1:race_date_raw.find("日")])
+    raceInfo.date = datetime(year, month, day)
+
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
     racedata01 = racedata01.split("/")
@@ -472,6 +465,7 @@ def scrape_race_today(driver, raceID):
         # 必要部分だけ取り出して追加
         contents.append(list(map(lambda x: shutuba_contents_row[x], col_idx)))
     
+    raceInfo.horse_num = len(shutuba_table)
     raceInfo.post_position = list(map(lambda x: int(x[0]), contents))
     raceInfo.horse_number = list(map(lambda x: int(x[1]), contents))
     raceInfo.horse_id = list(map(lambda x: x[2], contents))
@@ -671,6 +665,7 @@ if __name__ == "__main__":
     password = config_scraping.get("scraping", "pass")
 
     # tmpファイルパス読み込み
+    """
     config_tmp = configparser.ConfigParser()
     config_tmp.read("./src/path.ini", 'UTF-8')
     path_tmp = config_tmp.get("common", "path_tmp")
@@ -716,3 +711,4 @@ if __name__ == "__main__":
         logger.error("read usage: netkeiba_scraping.py -h")
 
     driver.close()
+    """
