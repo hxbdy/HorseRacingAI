@@ -660,43 +660,51 @@ if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
     config_scraping = configparser.ConfigParser()
     config_scraping.read("./src/private.ini", 'UTF-8')
-    browser = config_scraping.get("scraping", "browser")
+    browser      = config_scraping.get("scraping", "browser")
     mail_address = config_scraping.get("scraping", "mail")
-    password = config_scraping.get("scraping", "pass")
+    password     = config_scraping.get("scraping", "pass")
 
     # tmpファイルパス読み込み
-    """
     config_tmp = configparser.ConfigParser()
     config_tmp.read("./src/path.ini", 'UTF-8')
     path_tmp = config_tmp.get("common", "path_tmp")
 
     # 引数パース
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--init', action='store_true', default=False, help='init database')
+    parser.add_argument('-i','--init', action='store_true', default=False, help='init database and scrape until today')
     parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
     parser.add_argument('-r','--race_id', help='scrape race_id info')
     args = parser.parse_args()
-    
-    """"""
-    driver = wf.start_driver(browser)
-    login(driver, mail_address, password)
 
     # DB初期化
     if args.init:
-        # DB 作成
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+        
         create_table()
-        # 今日までの情報をスクレイピング
         start = "198601"
         end = datetime.datetime.now().strftime("%Y%m")
         update_database(driver, start, end)
 
     # 定期的なDBアップデート
+    # 1ヶ月間隔更新前提
     elif args.db:
-        end = datetime.datetime.now().strftime("%Y%m")
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+
+        end = datetime.datetime.now()
         start = end - relativedelta(months=1)
+
+        end = end.strftime("%Y%m")
+        start = start.strftime("%Y%m")
+        
+        logger.info("start = {0}, end = {1}".format(start, end))
         update_database(driver, start, end)
     
     elif args.race_id:
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+
         # 当日予想したいレースIDから馬の情報をコンソール出力
         a = scrape_race_today(driver, args.race_id)
 
@@ -709,6 +717,6 @@ if __name__ == "__main__":
     
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
+        exit(-1)
 
     driver.close()
-    """
