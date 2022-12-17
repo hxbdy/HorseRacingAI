@@ -662,18 +662,6 @@ def update_horsedata_only(driver, horseID_list):
     scrape_horsedata(driver, horseID_list)
     #reconfirm_check()
     logger.info("update_horsedata_only comp")
-
-
-def transition_func():
-    """現行からの移行用の関数。
-    TODO: リリース時には削除する
-    """
-    # テーブル作成
-    netkeibaDB.cur.execute('CREATE TABLE jockey_info(jockey_id, year, num, PRIMARY KEY(jockey_id, year))')
-    netkeibaDB.conn.commit()
-    
-    # 騎手カウント
-    update_jockey_info(1980, 2021)
     
 def update_jockey_info(lower_year=1980, upper_year=2021):
     """jockey_infoテーブルの更新
