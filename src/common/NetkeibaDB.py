@@ -107,6 +107,12 @@ class NetkeibaDB:
         self.cur.execute(sql, [data])
         return int(self.cur.fetchone()[0])
 
+    def sql_one_jockey_total(self, jockey_id, lower, upper):
+        # 指定騎手の騎乗回数をfloatで返す
+        sql = "SELECT TOTAL(num) FROM jockey_info WHERE ((jockey_id = \"" + jockey_id +"\" ) AND ( year BETWEEN \"" + lower + "\" AND \"" + lower + "\" ));"
+        self.cur.execute(sql)
+        return self.cur.fetchone()[0]
+
     def sql_mul_distinctColCnt_G1G2G3(self, lower, upper, limit):
         # !!注意!! ソートは行っていないので必ず lower から順に limit 件取り出しているとは限らない
         # DISTINCT を使用して
