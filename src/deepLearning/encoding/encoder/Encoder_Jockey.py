@@ -25,7 +25,7 @@ class JockeyClass(XClass):
         # (upper_year - 5) <= 取得する期間 <= (upper_year)
         jockeyIDList = self.xList
         for i in range(len(jockeyIDList)):
-            upper_year = "{0:4d}".format(int(self.race_id[0:4]) - 1)
+            upper_year = "{0:4d}".format(int(self.race_id[0:4]))
             lower_year = "{0:4d}".format(int(upper_year) - 5)
             cnt = db_race_cnt_jockey(jockeyIDList[i], lower_year, upper_year)
             logger.debug("jockey_id = {0}, lower_year = {1}, upper_year = {2}, cnt = {3}".format(jockeyIDList[i], lower_year, upper_year, cnt))
