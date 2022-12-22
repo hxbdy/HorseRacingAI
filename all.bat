@@ -14,6 +14,6 @@ REM predict
 python ./src/deepLearning/nn/predict.py
 
 REM clean
-DEL /F ".\dst\tmp.pickle"
+REM DEL /F ".\dst\tmp.pickle"
 
 pause
