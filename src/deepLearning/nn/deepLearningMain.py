@@ -28,9 +28,9 @@ path_learningList = config.get('nn', 'path_learningList')
 (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
 
 # ハイパーパラメータ
-iters_num     = 30000
+iters_num     = 50000
 train_size    = x_train.shape[0]
-learning_rate = 0.1   # 勾配更新単位
+learning_rate = 0.01   # 勾配更新単位
 batch_size    = 5     # 1度に学習するレース数
 
 train_loss_list = []
