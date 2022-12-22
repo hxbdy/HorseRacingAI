@@ -87,15 +87,36 @@ net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db �
 |dst\output.log|直前に実行したプログラムのログを保存します|
 
 # About DB
+ * エンコード高速化のため、以下の事をしています。
+## LOCATE
 * DBをROM実行、RAM実行の2種類で使い分けています。
-## ROM exe
+### ROM exe
 * DBの更新時はROM実行します。RAM実行するとDBへの変更がセーブされないためです。
 
-## RAM exe
-* エンコード時はRAM実行します。エンコード高速化のためです。
+### RAM exe
+* エンコード時はRAM実行します。
 * ただし、プロセス毎にDRAMへ展開するため、(DBの容量 * エンコード数) 分のメモリを必要とします。
 * 2022/12/11 現在 約 2 [GB] 消費します。
 * 展開せずに実行することも可能です。設定方法は NetkeibaDBクラス を確認してください。
+
+## SCHEMA
+* DB用意後、インデックスを追加してください。
+* 現在、自動で追加しないため手動で以下を実行してください。
+
+```bash:
+      > sqlite3 resrc\netkeibaDB\netkeiba.db
+sqlite> CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);
+sqlite> CREATE INDEX race_result_grade ON race_result(horse_id, race_id, grade);
+sqlite> CREATE INDEX race_result_race_data2 on race_result(race_id, race_data2);
+```
+
+* 追加できたかは以下コマンドで確認できます。
+```bash:
+sqlite> .indices
+race_info_grade
+race_result_grade
+race_result_race_data2
+```
 
 # 参考
 - [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)

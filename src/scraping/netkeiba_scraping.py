@@ -59,6 +59,7 @@ def create_table():
     horse_profテーブル: 馬のページにある馬名などの情報と、生年月日などの表・血統の表の情報
     race_infoテーブル: 馬のページにある出走レース情報
     race_resultテーブル: レースのページにあるレース名やレース結果の情報(オッズは含まず)
+    jockey_infoテーブル: 騎手の騎乗回数を1年ごとに計上してまとめたテーブル
     """
 
     dbname = config.get("common", "path_netkeibaDB")
@@ -68,6 +69,7 @@ def create_table():
     cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
     cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
     cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
+    cur.execute('CREATE TABLE jockey_info(jockey_id, year, num, PRIMARY KEY(jockey_id, year))')
     conn.commit()
 
     cur.close()
@@ -408,7 +410,7 @@ def scrape_race_today(driver, raceID):
     race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)' or '12/17'
     year = int(raceID[:4])
     month_day = re.findall(r"\d+", race_date_raw)
-    raceInfo.date = datetime(year, int(month_day[0]), int(month_day[1]))
+    raceInfo.date = datetime.date(year, int(month_day[0]), int(month_day[1]))
 
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
@@ -642,6 +644,12 @@ def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     # データ整合性チェック
     #reconfirm_check()
 
+    # 騎手の騎乗回数を更新
+    head_year = datetime.datetime.strptime(start_YYMM, '%Y%m').year
+    tail_year = datetime.datetime.strptime(end_YYMM, '%Y%m').year
+    update_jockey_info(head_year, tail_year)
+
+
     logger.info("update_database comp")
 
 def update_horsedata_only(driver, horseID_list):
@@ -654,6 +662,50 @@ def update_horsedata_only(driver, horseID_list):
     scrape_horsedata(driver, horseID_list)
     #reconfirm_check()
     logger.info("update_horsedata_only comp")
+    
+def update_jockey_info(lower_year=1980, upper_year=2021):
+    """jockey_infoテーブルの更新
+    開始年から終了年までの各年で、騎手の騎乗回数をカウントしてテーブルを更新。
+    騎乗回数はrace_infoテーブルから計上する。
+    lower_year: 開始年
+    upper_year: 終了年
+    """
+    # 各年30秒ほどかかる
+
+    for year in list(range(lower_year, upper_year+1)):
+        year = str(year)
+        year0 = year + "00000000"
+        year1 = year + "99999999"
+
+        # (year)年に騎乗した騎手のリスト
+        jockey_list_raw = netkeibaDB.cur.execute("SELECT DISTINCT jockey_id FROM race_info WHERE race_id>'{0}' AND race_id<'{1}'".format(year0,year1)).fetchall()
+        jockey_list = list(map(lambda x: x[0], jockey_list_raw))
+        
+        logger.info("year {}, #jockey = {}".format(year, len(jockey_list)))
+        col_list = ["jockey_id", "year", "num"]
+        data_list_update = []
+        data_list_insert = []
+        for jockey_id in jockey_list:
+            # 騎乗回数のカウント
+            cnt = netkeibaDB.sql_one_rowCnt_range("race_info", "jockey_id", jockey_id, year0, year1)
+            data_list = [jockey_id, year, str(cnt)]
+            condition_list = ["jockey_id='{}'".format(data_list[0]), "year='{}'".format(data_list[1])]
+            if netkeibaDB.sql_isIn("jockey_info", condition_list):
+                data_list_update.append(data_list)
+            else:
+                data_list_insert.append(data_list)
+        
+        # dbの更新
+        if len(data_list_update) > 0:
+            for data_list in data_list_update:
+                condition_list = ["jockey_id='{}'".format(data_list[0]), "year='{}'".format(data_list[1])]
+                netkeibaDB.sql_update_Row("jockey_info", col_list, [data_list], condition_list)
+        if len(data_list_insert) > 0:
+            netkeibaDB.sql_insert_Row("jockey_info", col_list, data_list_insert)
+
+        logger.info("year {} end".format(year))
+    
+
 
 if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
