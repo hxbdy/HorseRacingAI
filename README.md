@@ -37,15 +37,15 @@ conda 仮想環境上で各フォルダへパスを通す作業が必要です�
 
 ```bash:
 > conda env config vars set PYTHONPATH=\
-src;\
-src/common;\
-src/deepLearning;\
+src/deepLearning/encoding/encoder;\
 src/deepLearning/analysis;\
 src/deepLearning/encoding;\
-src/deepLearning/encoding/encoder;\
 src/deepLearning/nn;\
+src/deepLearning;\
+src/common;\
 src/sample;\
 src/scraping;\
+src;\
 ```
 
 パスを追加できたかは以下コマンドで確認できます。
