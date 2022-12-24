@@ -619,7 +619,8 @@ def url2ID(url, search):
         return dom[dom.index(search) + 1]
     logger.critical("{0} is not found in {1}".format(search, url))
 
-def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
+
+def update_database_all(driver, start_YYMM, end_YYMM, race_grade="4"):
     """データベース全体を更新する
     driver: webdriver
     start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
@@ -652,10 +653,9 @@ def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
 
     logger.info("update_database comp")
 
-def update_horsedata_only(driver, horseID_list):
-    """レース直前にレースに出走する馬に関係する情報のみ集める
-    レースの予想に必要なのはrace_infoテーブル。
-    scrape_horsedataを実行し、race_infoとhorse_profを更新する。
+def update_database_predict(driver, horseID_list):
+    """レース直前に、レース結果の予想に必要なデータのみを集める。
+    レースに出走する馬に対して、scrape_horsedataを実行し、race_infoとhorse_profを更新する。
     driver: webdriver
     horseID_list: レースに出走する馬のhorse idのリスト
     """
@@ -735,7 +735,7 @@ if __name__ == "__main__":
         create_table()
         start = "198601"
         end = datetime.datetime.now().strftime("%Y%m")
-        update_database(driver, start, end)
+        update_database_all(driver, start, end)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
@@ -750,7 +750,7 @@ if __name__ == "__main__":
         start = start.strftime("%Y%m")
 
         logger.info("start = {0}, end = {1}".format(start, end))
-        update_database(driver, start, end)
+        update_database_all(driver, start, end)
     
     elif args.race_id:
         driver = wf.start_driver(browser)
@@ -760,7 +760,7 @@ if __name__ == "__main__":
         a = scrape_race_today(driver, args.race_id)
 
         # 出走する馬のDB情報をアップデート
-        update_horsedata_only(driver, a.horse_id)
+        update_database_predict(driver, a.horse_id)
 
         # 推測用に取得したレース情報を一時保存
         with open(path_tmp, 'wb') as f:
