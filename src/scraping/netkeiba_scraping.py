@@ -714,6 +714,22 @@ def update_database_learning(driver, start_YYMM, end_YYMM, race_grade="-1"):
     tail_year = datetime.datetime.strptime(end_YYMM, '%Y%m').year
     update_jockey_info(head_year, tail_year)
 
+def update_database_stdTime(driver, start_YYMM, end_YYMM, race_grade="4"):
+    """基準タイム推定に使用する情報の取得
+    3着タイムを使用するため、race_resultテーブルを更新する
+    driver: webdriver
+    start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
+    end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, -1: G1&G2&G3
+    """
+    # 期間内のrace_idを取得してrace_idテーブルへ保存
+    scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
+
+    # 未調査のrace_idのリストを作成
+    raceID_list = make_raceID_list()
+
+    # レース結果をスクレイプしてrace_resultテーブルへ保存
+    a = scrape_racedata(driver, raceID_list)
 
     
 def update_jockey_info(lower_year=1980, upper_year=2021):
