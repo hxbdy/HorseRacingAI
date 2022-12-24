@@ -145,15 +145,18 @@ def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade="4"):
 
 
 def scrape_racedata(driver, raceID_list):
-    """horseIDを取得する & race情報を得る。
+    """horseIDを取得する & race情報を得る。レースに出走した馬のリストを返す。
     driver: webdriver
     raceID_list: 調べるraceIDのリスト
     """
+    horseID_list = []
+
     # 進捗表示の間隔
     progress_notice_cycle = 10
 
     for iter_num in range(len(raceID_list)):
         raceID = str(raceID_list[iter_num])
+        horseID_list_race = []
 
         ## race_resultテーブル内に既に存在しているか判定
         if netkeibaDB.sql_isIn("race_result",["race_id='{}'".format(raceID)]):
@@ -199,6 +202,8 @@ def scrape_racedata(driver, raceID_list):
                 col_idx_id.append(i)
                 col_idx.append(i)
                 target_col.append(col_name_dict[cname])
+                if cname == "馬名":
+                    horse_id_col_idx = i #horse idの列
         # 各順位のデータを取得
         race_contents = []
         for row in range(1, len(race_table)):
@@ -206,12 +211,16 @@ def scrape_racedata(driver, raceID_list):
             race_table_row = race_table[row].find_elements(By.TAG_NAME, "td")
             race_contents_row = list(map(lambda x: x.text, race_table_row))
             # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
+            # 現在は馬名のみに対応。他を追加する場合はtry文に変更が必要
             for i in col_idx_id:
                 try:
                     horse_url_str = race_table_row[i].find_element(By.TAG_NAME,"a").get_attribute("href")
                     race_contents_row[i] = url2ID(horse_url_str, "horse")
                 except:
                     pass
+            
+            # horse id を別のリストでも記録する
+            horseID_list_race.append(row[horse_id_col_idx])
             # 必要部分だけ取り出して追加
             race_contents.append(list(map(lambda x: race_contents_row[x], col_idx)))
 
@@ -224,11 +233,17 @@ def scrape_racedata(driver, raceID_list):
         netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
         logger.debug("save race data on race_result table, raceID={}".format(raceID))
 
+        # horseID_listの更新とレースに出走した馬のhorse idをdebugに書き込み
+        for i in range(len(horseID_list_race)):
+            horseID_list.append(horseID_list_race[i])
+        logger.debug(horseID_list_race)
+
         # 進捗表示
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("scrape_racedata {0} / {1} finished.".format(iter_num+1, len(raceID_list)))
     
     logger.info("scrape_racedata comp")
+    return horseID_list
 
 
 def scrape_horsedata(driver, horseID_list):
@@ -634,7 +649,7 @@ def update_database_all(driver, start_YYMM, end_YYMM, race_grade="4"):
     raceID_list = make_raceID_list()
 
     # レース結果をスクレイプしてrace_resultテーブルへ保存
-    scrape_racedata(driver, raceID_list)
+    a = scrape_racedata(driver, raceID_list)
 
     # 前回調査時点で引退していない馬のみのhorse_idリストを作成
     horseID_list = make_horseID_list()
