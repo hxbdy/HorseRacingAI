@@ -414,12 +414,21 @@ def scrape_race_today(driver, raceID):
 
     # 文中から
     racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
+    logger.debug("racedata01 = {0}".format(racedata01))
+
     racedata01 = racedata01.split("/")
     raceInfo.start_time = racedata01[0][:racedata01[0].find("発走")]        # '14:50'
-    raceInfo.distance = [float(re.findall('\d{3,4}', racedata01[1])[0])]    # [1200.0]
-    raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
-    raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
+    raceInfo.distance = [float(re.findall('\d{3,4}', racedata01[1])[0])]   # [1200.0]
 
+    try:
+        # レース前に天候, 馬場が取得できない時は晴、良とする
+        raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
+        raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
+    except IndexError:
+        logger.error("!!! IndexError : racedata01 = {0}".format(racedata01))
+        raceInfo.weather = '晴'
+        raceInfo.course_condition = '良'
+    
     racedata02 = driver.find_element(By.CLASS_NAME, "RaceData02").find_elements(By.TAG_NAME, "span")
     #venue = racedata02[1].text            # '中山'
     prize_str = racedata02[-1].text       # '本賞金:1840,740,460,280,184万円'
