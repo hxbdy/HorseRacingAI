@@ -13,6 +13,7 @@ import TwoLayerNet
 from RaceInfo import RaceInfo
 from encoding_common   import encoding_load
 from getFromDB         import db_horse_bod, db_horse_father
+from make_RaceInfo import raceinfo_by_raceID
 
 # 推測したいレース情報入力
 # ジャパンカップ
@@ -118,6 +119,20 @@ def prob_win(value_list):
     print(prob_disp)
     #return list(ls_sorted_idx), prob
 
+def read_RaceInfo(race_id = ""):
+    """推測するレースのRaceInfoオブジェクトを読み込む
+    race_id: 指定した場合、データベースから読込。無指定ならばpickleを読込
+    """
+    if race_id == "":
+        # TODO: 読み込みに失敗したとき、情報をスクレイピングしておく旨を表示して終了する対応
+        with open(path_tmp, 'rb') as f:
+            tmp_param: RaceInfo = pickle.load(f)
+        return tmp_param
+    else:
+        param = raceinfo_by_raceID(str(race_id))
+        return param
+
+
 if __name__ == "__main__":
     # パス読み込み
     config = configparser.ConfigParser()
@@ -125,9 +140,8 @@ if __name__ == "__main__":
     path_learningList = config.get('nn', 'path_learningList')
     path_tmp          = config.get('common', 'path_tmp')
 
-    # TODO: 読み込みに失敗したとき、情報をスクレイピングしておく旨を表示して終了する対応
-    with open(path_tmp, 'rb') as f:
-        tmp_param: RaceInfo = pickle.load(f)
+    #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
+    tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
 
     # 推論時の入力用テーブル
     predict_XTbl = [

@@ -1,8 +1,10 @@
+from datetime import date
+
 class RaceInfo():
     """レースデータを引き渡すための構造体
     """
     def __init__(self):
-        self.date = ""
+        self.date: date = date(1900, 1, 1)
         self.horse_num = 0
         self.race_id = ""
 
