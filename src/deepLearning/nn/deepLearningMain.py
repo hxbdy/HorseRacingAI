@@ -30,12 +30,64 @@ path_learningList = config.get('nn', 'path_learningList')
 # ハイパーパラメータ
 iters_num     = 50000
 train_size    = x_train.shape[0]
-learning_rate = 0.01   # 勾配更新単位
 batch_size    = 5     # 1度に学習するレース数
 
 train_loss_list = []
 train_acc_list = []
 test_acc_list = []
+
+# 確率的勾配降下法(SGD)
+def grad_SGD(net, grad):
+    learning_rate = 0.01
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        net.params[key] -= learning_rate * grad[key]
+
+# Momentum法
+velocity = {}
+def grad_Momentum(net, grad):
+    global velocity
+    momentum =  0.9
+    learning_rate = 1
+    if(len(velocity)==0):
+        for key in ('W1', 'b1', 'W2', 'b2'):
+            velocity[key] = np.zeros_like(net.params[key])
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        velocity[key] = momentum * velocity[key] - learning_rate * grad[key]
+        net.params[key] += velocity[key]
+
+# AdaGrad法
+d = {}
+def grad_AdaGrad(net, grad):
+    global d
+    learning_rate = 0.01
+    if(len(d)==0):
+        for key in ('W1', 'b1', 'W2', 'b2'):
+            d[key] = np.zeros_like(net.params[key])
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        d[key] += grad[key] ** 2
+        net.params[key] -= learning_rate * grad[key] / (np.sqrt(d[key]) + 1e-8)
+
+# Adam法
+mean = {}
+variance = {}
+def grad_Adam(net, grad):
+    global mean
+    global variance
+    beta1 = 0.9
+    beta2 = 0.999
+    learning_rate = 1
+    if(len(mean)==0):
+        for key in ('W1', 'b1', 'W2', 'b2'):
+            mean[key] = np.zeros_like(net.params[key])
+    if(len(variance)==0):
+        for key in ('W1', 'b1', 'W2', 'b2'):
+            variance[key] = np.zeros_like(net.params[key])
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        mean[key] = beta1 * mean[key] + (1 - beta1) * grad[key]
+        variance[key] = beta2 * variance[key] + (1 - beta2) * grad[key] ** 2
+        m = mean[key] / (1 - beta1)
+        v = variance[key] / (1 - beta2)
+        net.params[key] -= learning_rate * m / (np.sqrt(v) + 1e-8)
 
 # 解析用に学習途中のデータを確認したいのでジェネレータ関数としている
 # iter_per_epoch 毎に yeild する
@@ -53,8 +105,9 @@ def deep_learning_main():
 
         # 勾配計算
         grad = net.gradient(x,t)
-        for key in ('W1', 'b1', 'W2', 'b2'):
-            net.params[key] -= learning_rate * grad[key]
+
+        # 確率的勾配降下法(SGD)
+        grad_SGD(net, grad)
 
         # 教師tとの誤差確認
         loss = net.loss(x,t)
