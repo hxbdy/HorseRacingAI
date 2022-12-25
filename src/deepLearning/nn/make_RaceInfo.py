@@ -1,5 +1,5 @@
 from RaceInfo import RaceInfo
-from encoder import *
+import encoder
 import getFromDB
 
 # horse_number別で実装
@@ -28,8 +28,9 @@ def raceinfo_by_raceID(race_id: str):
     
     for i in range(len(classList)):
         name = classList[i]
-        module = local_dict["Encoder_" + name]
-        class_obj = getattr(module, name + "Class")
+        file_module = local_dict["encoder"]
+        class_module = getattr(file_module, "Encoder_" + name)
+        class_obj = getattr(class_module, name + "Class")
         class_obj.set(class_obj, race_id)
         class_obj.get(class_obj)
         setattr(raceInfo, varList[i], class_obj.xList)
