@@ -145,15 +145,18 @@ def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade="4"):
 
 
 def scrape_racedata(driver, raceID_list):
-    """horseIDを取得する & race情報を得る。
+    """horseIDを取得する & race情報を得る。レースに出走した馬のリストを返す。
     driver: webdriver
     raceID_list: 調べるraceIDのリスト
     """
+    horseID_list = []
+
     # 進捗表示の間隔
     progress_notice_cycle = 10
 
     for iter_num in range(len(raceID_list)):
         raceID = str(raceID_list[iter_num])
+        horseID_list_race = []
 
         ## race_resultテーブル内に既に存在しているか判定
         if netkeibaDB.sql_isIn("race_result",["race_id='{}'".format(raceID)]):
@@ -199,6 +202,8 @@ def scrape_racedata(driver, raceID_list):
                 col_idx_id.append(i)
                 col_idx.append(i)
                 target_col.append(col_name_dict[cname])
+                if cname == "馬名":
+                    horse_id_col_idx = i #horse idの列
         # 各順位のデータを取得
         race_contents = []
         for row in range(1, len(race_table)):
@@ -206,12 +211,16 @@ def scrape_racedata(driver, raceID_list):
             race_table_row = race_table[row].find_elements(By.TAG_NAME, "td")
             race_contents_row = list(map(lambda x: x.text, race_table_row))
             # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
+            # 現在は馬名のみに対応。他を追加する場合はtry文に変更が必要
             for i in col_idx_id:
                 try:
                     horse_url_str = race_table_row[i].find_element(By.TAG_NAME,"a").get_attribute("href")
                     race_contents_row[i] = url2ID(horse_url_str, "horse")
                 except:
                     pass
+            
+            # horse id を別のリストでも記録する
+            horseID_list_race.append(race_contents_row[horse_id_col_idx])
             # 必要部分だけ取り出して追加
             race_contents.append(list(map(lambda x: race_contents_row[x], col_idx)))
 
@@ -224,11 +233,17 @@ def scrape_racedata(driver, raceID_list):
         netkeibaDB.sql_insert_Row("race_result", target_col, data_list)
         logger.debug("save race data on race_result table, raceID={}".format(raceID))
 
+        # horseID_listの更新とレースに出走した馬のhorse idをdebugに書き込み
+        for i in range(len(horseID_list_race)):
+            horseID_list.append(horseID_list_race[i])
+        logger.debug(horseID_list_race)
+
         # 進捗表示
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("scrape_racedata {0} / {1} finished.".format(iter_num+1, len(raceID_list)))
     
     logger.info("scrape_racedata comp")
+    return horseID_list
 
 
 def scrape_horsedata(driver, horseID_list):
@@ -628,8 +643,9 @@ def url2ID(url, search):
         return dom[dom.index(search) + 1]
     logger.critical("{0} is not found in {1}".format(search, url))
 
-def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
-    """データベース全体を更新する
+
+def update_database_all(driver, start_YYMM, end_YYMM, race_grade="4"):
+    """指定期間内のレース情報を取得し、データベース全体を更新する。
     driver: webdriver
     start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
     end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
@@ -642,7 +658,7 @@ def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
     raceID_list = make_raceID_list()
 
     # レース結果をスクレイプしてrace_resultテーブルへ保存
-    scrape_racedata(driver, raceID_list)
+    a = scrape_racedata(driver, raceID_list)
 
     # 前回調査時点で引退していない馬のみのhorse_idリストを作成
     horseID_list = make_horseID_list()
@@ -661,16 +677,69 @@ def update_database(driver, start_YYMM, end_YYMM, race_grade="4"):
 
     logger.info("update_database comp")
 
-def update_horsedata_only(driver, horseID_list):
-    """レース直前にレースに出走する馬に関係する情報のみ集める
-    レースの予想に必要なのはrace_infoテーブル。
-    scrape_horsedataを実行し、race_infoとhorse_profを更新する。
+def update_database_predict(driver, horseID_list):
+    """レース直前に、レース結果の予想に必要なデータのみを集める。
+    レースに出走する馬に対して、scrape_horsedataを実行し、race_infoとhorse_profを更新する。
     driver: webdriver
     horseID_list: レースに出走する馬のhorse idのリスト
     """
     scrape_horsedata(driver, horseID_list)
     #reconfirm_check()
     logger.info("update_horsedata_only comp")
+
+def update_database_learning(driver, start_YYMM, end_YYMM, race_grade="-1"):
+    """指定期間内の学習に関係するデータベース情報を更新する。
+    学習データの更新に利用する。
+    driver: webdriver
+    start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
+    end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, -1: G1&G2&G3
+    """
+
+    # 期間内のrace_idを取得してrace_idテーブルへ保存
+    if race_grade== "-1":
+        for i in [1, 2, 3]:
+            scrape_raceID(driver, start_YYMM, end_YYMM, str(i))
+    else:
+        scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
+    
+    # 未調査のrace_idのリストを作成
+    raceID_list = make_raceID_list()
+    # レース結果をスクレイプしてrace_resultテーブルへ保存。レースで出走した馬のリストを得る。
+    horseID_list = scrape_racedata(driver, raceID_list)
+
+    # 馬のリストから重複とhorse idが数字になっていない馬を削除
+    horseID_list = list(set(horseID_list))
+    horseID_list_cleaned = []
+    for horseID in horseID_list:
+        if horseID.isdecimal():
+            horseID_list_cleaned.append(horseID)
+
+    # 馬の情報をスクレイプしてhorse_profテーブルとrace_infoテーブルへ保存
+    scrape_horsedata(driver, horseID_list_cleaned)
+
+    # 騎手の騎乗回数を更新
+    head_year = datetime.datetime.strptime(start_YYMM, '%Y%m').year
+    tail_year = datetime.datetime.strptime(end_YYMM, '%Y%m').year
+    update_jockey_info(head_year, tail_year)
+
+def update_database_stdTime(driver, start_YYMM, end_YYMM, race_grade="4"):
+    """基準タイム推定に使用する情報の取得
+    3着タイムを使用するため、race_resultテーブルを更新する
+    driver: webdriver
+    start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
+    end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, -1: G1&G2&G3
+    """
+    # 期間内のrace_idを取得してrace_idテーブルへ保存
+    scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
+
+    # 未調査のrace_idのリストを作成
+    raceID_list = make_raceID_list()
+
+    # レース結果をスクレイプしてrace_resultテーブルへ保存
+    a = scrape_racedata(driver, raceID_list)
+
     
 def update_jockey_info(lower_year=1980, upper_year=2021):
     """jockey_infoテーブルの更新
@@ -744,7 +813,7 @@ if __name__ == "__main__":
         create_table()
         start = "198601"
         end = datetime.datetime.now().strftime("%Y%m")
-        update_database(driver, start, end)
+        update_database_learning(driver, start, end)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
@@ -759,7 +828,7 @@ if __name__ == "__main__":
         start = start.strftime("%Y%m")
 
         logger.info("start = {0}, end = {1}".format(start, end))
-        update_database(driver, start, end)
+        update_database_learning(driver, start, end)
     
     elif args.race_id:
         driver = wf.start_driver(browser)
@@ -769,7 +838,7 @@ if __name__ == "__main__":
         a = scrape_race_today(driver, args.race_id)
 
         # 出走する馬のDB情報をアップデート
-        update_horsedata_only(driver, a.horse_id)
+        update_database_predict(driver, a.horse_id)
 
         # 推測用に取得したレース情報を一時保存
         with open(path_tmp, 'wb') as f:
