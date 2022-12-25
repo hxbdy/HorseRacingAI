@@ -7,7 +7,7 @@ import TwoLayerNet
 import numpy as np
 import shutil
 
-from encoding_common import encoding_load, encoding_serial_dir_path
+from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
 from debug import stream_hdl, file_hdl
 
 import logging
@@ -102,6 +102,8 @@ def grad_Adam(net, grad):
 # iter_per_epoch 毎に yeild する
 def deep_learning_main():
     net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
+    # 初期化時点のパラメータをセーブ
+    net.seveParam(serial_dir_path + "init/")
 
     # iter_per_epoch = int(max(train_size / batch_size, 1))
     iter_per_epoch = 100
@@ -142,6 +144,9 @@ def deep_learning_main():
     net.seveParam(serial_dir_path)
     logger.info("Finish")
     logger.info("========================================")
+    
+    # 最新フォルダにも結果をコピー
+    dl_copy2newest(serial_dir_path)
 
 if __name__ == "__main__":
     for i in deep_learning_main():

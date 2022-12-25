@@ -1,8 +1,8 @@
 from typing import OrderedDict
 import numpy as np
 import configparser
-import shutil
 import pickle
+import os
 
 from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, dl_newest_dir_path
 
@@ -253,23 +253,23 @@ class TowLayerNet:
 
     def seveParam(self, serial_dir_path):
         '''各パラメータを保存する'''
+        os.makedirs(serial_dir_path, exist_ok=True)
         # 連番フォルダに保存
         encoding_save_nn_data(serial_dir_path, "W1.pickle", self.params['W1'])
         encoding_save_nn_data(serial_dir_path, "b1.pickle", self.params['b1'])
         encoding_save_nn_data(serial_dir_path, "W2.pickle", self.params['W2'])
         encoding_save_nn_data(serial_dir_path, "b2.pickle", self.params['b2'])
 
-        # 最新フォルダにもコピー
-        # 最新フォルダまでのパスを取得
-        newest_dir_path = dl_newest_dir_path()
-        # newestフォルダ削除
-        shutil.rmtree(newest_dir_path)
-        # 最新フォルダに結果をコピー
-        shutil.copytree(serial_dir_path, newest_dir_path)
+    def loadParam(self, flg="newest"):
+        # 学習パラメータ読み込み
+        # デフォルトでは最新フォルダから読み込む
+        if flg == "newest":
+            newest_dir_path = dl_newest_dir_path()
+        elif flg == "init":
+            newest_dir_path = dl_newest_dir_path() + "init/"
+        else:
+            pass
 
-    def loadParam(self):
-        '''最新フォルダから各パラメータを読み込む'''
-        newest_dir_path = dl_newest_dir_path()
         with open(newest_dir_path + "W1.pickle", 'rb') as f:
             self.params['W1'] = pickle.load(f)
         with open(newest_dir_path + "b1.pickle", 'rb') as f:

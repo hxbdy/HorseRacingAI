@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     # 保存済みパラメータ読み込み
     net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
-    net.loadParam()
+    net.loadParam("newest")
 
     # 推測
     y = list(deepflatten(net.predict(x)))

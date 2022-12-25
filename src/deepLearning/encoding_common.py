@@ -54,6 +54,15 @@ def dl_newest_dir_path():
     os.makedirs(path_learningList, exist_ok=True)
     return path_learningList
 
+# 今回の結果を最新フォルダにもコピーする
+def dl_copy2newest(serial_dir_path):
+    # 最新フォルダまでのパスを取得
+    newest_dir_path = dl_newest_dir_path()
+    # newestフォルダ削除
+    shutil.rmtree(newest_dir_path)
+    # 最新フォルダにコピー
+    shutil.copytree(serial_dir_path, newest_dir_path)
+
 def encoding_save_nn_data(save_dir_path, file_name, data): 
     # 保存先フォルダの存在確認
     os.makedirs(save_dir_path, exist_ok=True)
