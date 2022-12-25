@@ -83,10 +83,10 @@ def encoding_load(dir_path):
     return (x_train, t_train), (x_test, t_test)
 
 # スタート年、終了年、件数、生成に使ったクラスや条件を保存しておく
-# !! 現状生成に使ったtable.pyをそのままコピーしているだけ
-# !! 通常生成, クラス追加, 差し替え のどれから実行されたかが不明になっている
 # TODO:コピーのタイミングを早める。
 # エンコード中にtable.pyを編集する可能性があるため
-# TODO:生成条件txtを作る
 def encoding_save_condition(dir_path):
     shutil.copy("./src/deepLearning/table.py", dir_path)
+    # 保管場所もtxtで保持しておく
+    with open(dir_path + "original_path.txt", 'w') as f:
+        f.write("original_path = " + dir_path)

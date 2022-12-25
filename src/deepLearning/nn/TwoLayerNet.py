@@ -251,10 +251,8 @@ class TowLayerNet:
         y=self.predict(x)
         return self.lastLayer.forward(y, t)
 
-    def seveParam(self):
+    def seveParam(self, serial_dir_path):
         '''各パラメータを保存する'''
-        # 連番取得
-        serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
         # 連番フォルダに保存
         encoding_save_nn_data(serial_dir_path, "W1.pickle", self.params['W1'])
         encoding_save_nn_data(serial_dir_path, "b1.pickle", self.params['b1'])
