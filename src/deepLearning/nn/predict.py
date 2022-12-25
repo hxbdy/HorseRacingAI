@@ -141,7 +141,7 @@ if __name__ == "__main__":
     path_tmp          = config.get('common', 'path_tmp')
 
     #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
-    tmp_param = read_RaceInfo('') # 当日推測用(pickleファイルから)
+    tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
 
     # 推論時の入力用テーブル
     predict_XTbl = [
