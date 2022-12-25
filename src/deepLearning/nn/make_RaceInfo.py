@@ -4,14 +4,11 @@ import getFromDB
 
 # horse_number別で実装
 
-# 利用するEncoderクラス名
-classList = ["HorseNum", "RaceStartTime", "CourseDistance", "Weather",\
-    "CourseCondition", "Money", "PostPosition", "BurdenWeight",\
-        "BradleyTerry", "Jockey"]
-# RaceInfoクラスの変数名
-varList = ["horse_num", "start_time", "distance", "weather",\
-    "course_condition", "prize", "post_position", "burden_weight",\
-        "horse_id", "jockey_id"]
+# encoder内のclass名とRaceInfoクラスのメンバー名の対応
+class_var_dict = {"HorseNum": "horse_num", "RaceStartTime": "start_time", "CourseDistance": "distance",\
+    "Weather": "weather", "CourseCondition": "course_condition", "Money": "prize",\
+        "PostPosition": "post_position", "BurdenWeight": "burden_weight", "BradleyTerry": "horse_id",\
+            "Jockey": "jockey_id"}
 
 # 関数にlocal情報を渡す
 local_dict = locals()
@@ -26,14 +23,14 @@ def raceinfo_by_raceID(race_id: str):
     raceInfo.race_id = race_id
     raceInfo.date = getFromDB.db_race_date(race_id)
     
-    for i in range(len(classList)):
-        name = classList[i]
+    dict_key = list(class_var_dict.keys())
+    for name in dict_key:
         file_module = local_dict["encoder"]
         class_module = getattr(file_module, "Encoder_" + name)
         class_obj = getattr(class_module, name + "Class")
         class_obj.set(class_obj, race_id)
         class_obj.get(class_obj)
-        setattr(raceInfo, varList[i], class_obj.xList)
+        setattr(raceInfo, class_var_dict[name], class_obj.xList)
 
     # 馬番
     raceInfo.horse_number = list(range(1, len(raceInfo.post_position)+1))
