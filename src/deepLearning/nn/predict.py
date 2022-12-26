@@ -106,6 +106,10 @@ class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
         self.race_id = tmp_param.race_id
         # horse_id
         self.xList = tmp_param.horse_id
+class PredictHorseWeight(encoder.Encoder_HorseWeight.HorseWeightClass):
+    def get(self):
+        # 馬体重リスト
+        self.xList = tmp_param.horse_weight
 
 def prob_win(value_list):
     # 勝つ可能性 (ロジットモデル)
@@ -159,7 +163,8 @@ if __name__ == "__main__":
         PredictBradleyTerryClass,
         PredictUmamusumeClass,
         PredictParentBradleyTerryClass,
-        PredictLast3fClass
+        PredictLast3fClass,
+        PredictHorseWeight
     ]
 
     # 行列サイズ取得のため学習データの読込

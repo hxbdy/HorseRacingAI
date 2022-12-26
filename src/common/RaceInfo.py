@@ -17,6 +17,7 @@ class RaceInfo():
         self.post_position = []
         self.horse_number = []
         self.burden_weight = []
+        self.horse_weight = []
 
         self.horse_id = []
         self.jockey_id = []
