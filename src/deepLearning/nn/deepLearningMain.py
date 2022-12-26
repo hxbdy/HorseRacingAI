@@ -4,7 +4,9 @@
 
 import configparser
 import TwoLayerNet
-import numpy as np
+import time
+import xross
+np = xross.facttory_xp()
 import shutil
 
 from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
@@ -127,10 +129,10 @@ def deep_learning_main():
         if i % iter_per_epoch == 0:
             # 精度確認
 
-            train_acc = net.accuracy(x_train, t_train)
+            train_acc = net.accuracy(x_train, t_train).item()
             train_acc_list.append(train_acc)
 
-            test_acc  = net.accuracy(x_test, t_test)
+            test_acc  = net.accuracy(x_test, t_test).item()
             test_acc_list.append(test_acc)
 
             logger.info("progress {0} / {1}".format(i, iters_num))
@@ -149,5 +151,11 @@ def deep_learning_main():
     dl_copy2newest(serial_dir_path)
 
 if __name__ == "__main__":
+    time_sta = time.perf_counter()
+
     for i in deep_learning_main():
-        None
+        pass
+    
+    time_end = time.perf_counter()
+
+    logger.info("Learning Time = {0}".format(time_end - time_sta))

@@ -75,6 +75,10 @@ src;\
 browser = Chrome or FireFox
 mail = hogehoge@mail.com
 pass = password
+
+[nn]
+# 行列演算ハード指定 GPU or CPU
+calculator = GPU
 ```
 ## resrc
 net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db に保存します  

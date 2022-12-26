@@ -1,10 +1,12 @@
 from typing import OrderedDict
-import numpy as np
 import configparser
 import pickle
 import os
 
-from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, dl_newest_dir_path
+import xross
+np = xross.facttory_xp()
+
+from encoding_common import encoding_save_nn_data, dl_newest_dir_path
 
 # load config
 config = configparser.ConfigParser()

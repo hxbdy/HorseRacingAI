@@ -3,7 +3,8 @@ import os
 import shutil
 import configparser
 import datetime
-import numpy as np
+import xross
+np = xross.facttory_xp()
 
 from iteration_utilities import deepflatten
 
