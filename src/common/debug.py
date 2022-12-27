@@ -1,6 +1,7 @@
 import logging
-import configparser
 import os
+
+from file_path_mgr import path_ini
 
 # debug initialize
 # LEVEL : DEBUG < INFO < WARNING < ERROR < CRITICAL
@@ -15,15 +16,11 @@ def stream_hdl(level, output_format='%(asctime)s %(filename)18s PID:%(process)5d
     return handler
 
 # ファイルにログを出力したいときはこれを呼んでハンドラをロガーに登録してください
-def file_hdl(file_name, level = logging.DEBUG):
-    # load config
-    config = configparser.ConfigParser()
-    config.read('./src/path.ini', 'UTF-8')
-    
+def file_hdl(file_name, level = logging.DEBUG):  
     if file_name == "output":
-        path_log = config.get('common', 'path_log')
+        path_log = path_ini('common', 'path_log')
     else:
-        path_log = config.get('common', 'path_root_log')
+        path_log = path_ini('common', 'path_root_log')
         os.makedirs(path_log, exist_ok=True)
         path_log += file_name + ".log"
 

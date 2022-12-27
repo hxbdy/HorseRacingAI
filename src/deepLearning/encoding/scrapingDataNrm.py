@@ -5,6 +5,7 @@
 # > python ./src/deepLearning/encoding/scrapingDataNrm.py
 
 import shutil
+import logging
 
 from Encoder_Mgr import MgrClass
 from table import start_year_train, end_year_train, \
@@ -14,15 +15,8 @@ from table import start_year_train, end_year_train, \
                   analysis_train_file_name, analysis_test_file_name, \
                   encoded_file_name_list
 from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_save_condition, encoding_newest_dir_path
-
 from debug import stream_hdl, file_hdl
-
-import logging
-import configparser
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
+from file_path_mgr import path_ini
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -49,9 +43,7 @@ if __name__ == "__main__":
     logger.info("========================================")
 
     # 保存先パス取得
-    config = configparser.ConfigParser()
-    config.read('./src/path.ini', 'UTF-8')
-    path_root = config.get('nn', 'path_root_learningList')
+    path_root = path_ini('nn', 'path_root_learningList')
 
     # 連番取得
     serial_dir_path = encoding_serial_dir_path(path_root)

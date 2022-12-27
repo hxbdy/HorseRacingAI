@@ -2,7 +2,6 @@
 # 予測したいレース情報は src\deepLearning\nn\config_predict.py で入力してください
 # > python ./src/deepLearning/nn/predict.py
 
-import configparser
 import pickle
 import numpy as np
 
@@ -14,6 +13,7 @@ from RaceInfo import RaceInfo
 from encoding_common   import encoding_load
 from getFromDB         import db_horse_bod, db_horse_father
 from make_RaceInfo import raceinfo_by_raceID
+from file_path_mgr import path_ini
 
 # 推測したいレース情報入力
 # ジャパンカップ
@@ -135,9 +135,7 @@ def read_RaceInfo(race_id = ""):
 
 if __name__ == "__main__":
     # パス読み込み
-    config = configparser.ConfigParser()
-    config.read('./src/path.ini', 'UTF-8')
-    path_tmp = config.get('common', 'path_tmp')
+    path_tmp = path_ini('common', 'path_tmp')
 
     #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
     tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)

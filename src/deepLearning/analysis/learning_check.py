@@ -1,22 +1,20 @@
 # NN学習を呼び出す。学習途中の情報を使ってグラフを描画したりもする
 # > python ./src/deepLearning/analysis/learning_check.py
 
-import configparser
 import numpy as np
 import pickle
 import os
 
 from matplotlib import pyplot as plt
 
+from file_path_mgr import path_ini
 from table import analysis_train_file_name, analysis_test_file_name
 from deepLearningMain import *
 
 # load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
-path_learningList = config.get('nn', 'path_learningList')
-path_graph = config.get('nn', 'path_graph')
+path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
+path_learningList      = path_ini('nn', 'path_learningList')
+path_graph             = path_ini('nn', 'path_graph')
 
 def get_analysis_info(analysis_data, mask):
     # 解析データ取り出し

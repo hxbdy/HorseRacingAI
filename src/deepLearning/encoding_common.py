@@ -1,18 +1,16 @@
 import pickle
 import os
 import shutil
-import configparser
 import datetime
-import xross
-np = xross.facttory_xp()
+import logging
 
 from iteration_utilities import deepflatten
 
+from file_path_mgr import path_ini
 from table import encoded_file_name_list
-
 from debug import stream_hdl, file_hdl
-
-import logging
+import xross
+np = xross.facttory_xp()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -39,19 +37,13 @@ def encoding_serial_dir_path(path_root):
 
 # 学習済みデータの最新フォルダまでのパスを返す
 def encoding_newest_dir_path():
-    # newest フォルダパス取得
-    config = configparser.ConfigParser()
-    config.read('./src/path.ini', 'UTF-8')
-    path_learningList = config.get('nn', 'path_learningList')
+    path_learningList = path_ini('nn', 'path_learningList')
     os.makedirs(path_learningList, exist_ok=True)
     return path_learningList
 
 # 学習済みパラメータの最新フォルダまでのパスを返す
 def dl_newest_dir_path():
-    # newest フォルダパス取得
-    config = configparser.ConfigParser()
-    config.read('./src/path.ini', 'UTF-8')
-    path_learningList = config.get('nn', 'path_trainedParam')
+    path_learningList = path_ini('nn', 'path_trainedParam')
     os.makedirs(path_learningList, exist_ok=True)
     return path_learningList
 
@@ -79,9 +71,7 @@ def encoding_load(dir_path=""):
     
     # パス読み込み
     if dir_path == "":
-        config = configparser.ConfigParser()
-        config.read('./src/path.ini', 'UTF-8')
-        path_learningList = config.get('nn', 'path_learningList')
+        path_learningList = path_ini('nn', 'path_learningList')
     else:
         path_learningList = dir_path
     

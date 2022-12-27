@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-import configparser
 import datetime
 import logging
 import re
@@ -14,6 +13,7 @@ import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
 from RaceInfo import RaceInfo
 from debug import stream_hdl, file_hdl
+from file_path_mgr import path_ini, private_ini
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,9 +23,7 @@ logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
 
 # load DB
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_netkeibaDB = config.get('common', 'path_netkeibaDB')
+path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
 netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
@@ -787,16 +785,12 @@ def update_jockey_info(lower_year=1980, upper_year=2021):
 
 if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
-    config_scraping = configparser.ConfigParser()
-    config_scraping.read("./src/private.ini", 'UTF-8')
-    browser      = config_scraping.get("scraping", "browser")
-    mail_address = config_scraping.get("scraping", "mail")
-    password     = config_scraping.get("scraping", "pass")
+    browser      = private_ini("scraping", "browser")
+    mail_address = private_ini("scraping", "mail")
+    password     = private_ini("scraping", "pass")
 
     # tmpファイルパス読み込み
-    config_tmp = configparser.ConfigParser()
-    config_tmp.read("./src/path.ini", 'UTF-8')
-    path_tmp = config_tmp.get("common", "path_tmp")
+    path_tmp = path_ini("common", "path_tmp")
 
     # 引数パース
     parser = argparse.ArgumentParser()

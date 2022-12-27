@@ -1,17 +1,15 @@
 from typing import OrderedDict
-import configparser
 import pickle
 import os
 
+from file_path_mgr import path_ini
 import xross
 np = xross.facttory_xp()
 
 from encoding_common import encoding_save_nn_data, dl_newest_dir_path
 
 # load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
+path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
 
 def softmax(x):
     x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策

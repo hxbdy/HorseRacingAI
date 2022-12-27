@@ -2,22 +2,16 @@
 # 学習済みパラメータは dst\trainedParam\newest に保存する
 # > python ./src/deepLearning/nn/deepLearningMain.py
 
-import configparser
-import TwoLayerNet
+import logging
 import time
-import xross
-np = xross.facttory_xp()
 import shutil
 
+import TwoLayerNet
 from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
 from debug import stream_hdl, file_hdl
-
-import logging
-import configparser
-
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
+from file_path_mgr import path_ini
+import xross
+np = xross.facttory_xp()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -27,12 +21,12 @@ logger.addHandler(stream_hdl(logging.INFO))
 # logger.addHandler(file_hdl("output"))
 
 # 学習パラメータの保存先取得
-path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
+path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
 serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
 
 # 学習に使うエンコードを学習済みのパラメータを保存するフォルダにもコピーしておく
 # newest学習データの読込
-path_learningList = config.get('nn', 'path_learningList')
+path_learningList = path_ini('nn', 'path_learningList')
 shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
 x_train, t_train, x_test, t_test = encoding_load(path_learningList)

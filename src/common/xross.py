@@ -3,9 +3,9 @@
 # どちらを使うかは private.ini で設定
 
 import importlib
-import configparser
 import logging
 
+from file_path_mgr import private_ini
 from debug import stream_hdl
 
 logger = logging.getLogger(__name__)
@@ -26,11 +26,7 @@ def facttory_xp():
     """ Returns: imported instance of cupy or numpy.
     hint: write private.ini/nn/calculator
     """
-
-    # load config
-    config = configparser.ConfigParser()
-    config.read('./src/private.ini', 'UTF-8')
-    calculator = config.get('nn', 'calculator')
+    calculator = private_ini('nn', 'calculator')
 
     if calculator == "GPU":
         logger.debug("matrix calculator -> GPU")

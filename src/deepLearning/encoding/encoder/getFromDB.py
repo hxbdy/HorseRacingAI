@@ -3,15 +3,14 @@
 # ここで行って良い変換処理はDBから取得したデータの変換のみ
 # エンコードに都合の良いように変換する作業は各クラスのget, fixで行う
 
-from datetime import date
 import re
+import logging
+from datetime import date
 from typing import OrderedDict
 
 from NetkeibaDB import NetkeibaDB
 from debug import stream_hdl, file_hdl
-
-import logging
-import configparser
+from file_path_mgr import path_ini
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -21,9 +20,7 @@ logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("sql"))
 
 # load DB
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_netkeibaDB = config.get('common', 'path_netkeibaDB')
+path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
 netkeibaDB = NetkeibaDB(path_netkeibaDB, "RAM")
 
 def db_race_1st_odds(race_id):
