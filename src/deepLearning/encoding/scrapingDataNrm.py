@@ -12,8 +12,7 @@ from table import start_year_train, end_year_train, \
                   start_year_test, end_year_test, \
                   limit_train, limit_test, \
                   analysis_train_file_name, analysis_test_file_name, \
-                  X_train_file_name, t_train_file_name, \
-                  X_test_file_name, t_test_file_name
+                  encoded_file_name_list
 from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_save_condition, encoding_newest_dir_path
 
 from debug import stream_hdl, file_hdl
@@ -53,14 +52,17 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('./src/path.ini', 'UTF-8')
     path_root = config.get('nn', 'path_root_learningList')
+
     # 連番取得
     serial_dir_path = encoding_serial_dir_path(path_root)
-    # 連番フォルダに保存
-    encoding_save_nn_data(serial_dir_path, X_train_file_name, x_train)
-    encoding_save_nn_data(serial_dir_path, t_train_file_name, t_train)
+    
+    # 連番フォルダにエンコード済みデータ保存
+    encoded_list = [x_train, t_train, x_test, t_test]
+    for i in range(len(encoded_file_name_list)):
+        encoding_save_nn_data(serial_dir_path, encoded_file_name_list[i], encoded_list[i])
+
+    # 連番フォルダに解析用データ保存
     encoding_save_nn_data(serial_dir_path, analysis_train_file_name, analysis_train)
-    encoding_save_nn_data(serial_dir_path, X_test_file_name, x_test)
-    encoding_save_nn_data(serial_dir_path, t_test_file_name, t_test)
     encoding_save_nn_data(serial_dir_path, analysis_test_file_name, analysis_test)
 
     # 生成条件の保存

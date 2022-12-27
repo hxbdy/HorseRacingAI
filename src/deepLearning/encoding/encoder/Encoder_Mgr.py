@@ -173,11 +173,11 @@ class MgrClass:
 
         # 解析用情報取得
         analysis_train = []
-        for i in range(len(self.totalRaceList)):
-            odds = db_race_1st_odds(self.totalRaceList[i])
-            grade = db_race_grade(self.totalRaceList[i])
-            analysis_train.append([odds, grade])
-            logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
+        # for i in range(len(self.totalRaceList)):
+        #     odds = db_race_1st_odds(self.totalRaceList[i])
+        #     grade = db_race_grade(self.totalRaceList[i])
+        #     analysis_train.append([odds, grade])
+        #     logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
 
         # 計測終了
         time_end = time.perf_counter()
