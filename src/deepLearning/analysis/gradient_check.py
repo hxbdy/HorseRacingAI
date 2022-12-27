@@ -5,20 +5,10 @@
 
 import TwoLayerNet
 import numpy as np
-import configparser
 
 from encoding_common import encoding_load
 
-# load config
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_learningList = config.get('nn', 'path_learningList')
-
-# 学習データの読込
-config = configparser.ConfigParser()
-config.read('./src/path.ini', 'UTF-8')
-path_learningList = config.get('nn', 'path_learningList')
-(x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
+x_train, t_train, x_test, t_test = encoding_load()
     
 # ハイパーパラメータ
 iters_num     = 3     # 計算式チェック回数

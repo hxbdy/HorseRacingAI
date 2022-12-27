@@ -137,8 +137,7 @@ if __name__ == "__main__":
     # パス読み込み
     config = configparser.ConfigParser()
     config.read('./src/path.ini', 'UTF-8')
-    path_learningList = config.get('nn', 'path_learningList')
-    path_tmp          = config.get('common', 'path_tmp')
+    path_tmp = config.get('common', 'path_tmp')
 
     #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
     tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
@@ -163,7 +162,7 @@ if __name__ == "__main__":
     ]
 
     # 行列サイズ取得のため学習データの読込
-    (x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
+    x_train, t_train, x_test, t_test = encoding_load()
 
     # 推測用エンコード
     x = []

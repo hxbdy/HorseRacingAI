@@ -26,17 +26,16 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 # logger.addHandler(file_hdl("output"))
 
-# newest学習データの読込
-path_learningList = config.get('nn', 'path_learningList')
-
 # 学習パラメータの保存先取得
 path_root_trainedParam = config.get('nn', 'path_root_trainedParam')
 serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
 
 # 学習に使うエンコードを学習済みのパラメータを保存するフォルダにもコピーしておく
+# newest学習データの読込
+path_learningList = config.get('nn', 'path_learningList')
 shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
-(x_train, t_train), (x_test, t_test) = encoding_load(path_learningList)
+x_train, t_train, x_test, t_test = encoding_load(path_learningList)
 
 # ハイパーパラメータ
 iters_num     = 50000

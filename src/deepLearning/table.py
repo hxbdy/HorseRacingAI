@@ -5,19 +5,21 @@ start_year_train = 1800 # 開始年
 end_year_train   = 2020 # 終了年
 limit_train      = -1   # 取得件数 -1 なら全件
 
-# 学習データファイル名フォーマット
-X_train_file_name = "x_train.pickle"
-t_train_file_name = "t_train.pickle"
-analysis_train_file_name = "analysis_train.pickle"
-
 # テスト用データ生成条件
 start_year_test = 2021 # 開始年
 end_year_test   = 2021 # 終了年
 limit_test      = -1   # 取得件数 -1 なら全件
 
+# 学習データファイル名フォーマット
+encoded_file_name_list = [
+    "x_train.pickle",
+    "t_train.pickle",
+    "x_test.pickle",
+    "t_test.pickle"
+]
+
 # テストファイル名フォーマット
-X_test_file_name = "x_test.pickle"
-t_test_file_name = "t_test.pickle"
+analysis_train_file_name = "analysis_train.pickle"
 analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル

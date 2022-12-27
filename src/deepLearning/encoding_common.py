@@ -8,7 +8,7 @@ np = xross.facttory_xp()
 
 from iteration_utilities import deepflatten
 
-from table import t_train_file_name, X_train_file_name, t_test_file_name, X_test_file_name
+from table import encoded_file_name_list
 
 from debug import stream_hdl, file_hdl
 
@@ -71,26 +71,31 @@ def encoding_save_nn_data(save_dir_path, file_name, data):
     with open(save_dir_path + file_name, 'wb') as f:
         pickle.dump(data, f)
 
-# 指定パスから学習データを読み込む
-def encoding_load(dir_path):
-    with open(dir_path + t_train_file_name, 'rb') as f:
-        t_train = pickle.load(f)
-        len_row = len(t_train)
-        t_train = np.array(list(deepflatten(t_train))).reshape(len_row, -1)
-    with open(dir_path + X_train_file_name, 'rb') as f:
-        x_train = pickle.load(f)
-        len_row =len(x_train)
-        x_train = np.array(list(deepflatten(x_train))).reshape(len_row, -1)
-    with open(dir_path + t_test_file_name, 'rb') as f:
-        t_test = pickle.load(f)
-        len_row =len(t_test)
-        t_test = np.array(list(deepflatten(t_test))).reshape(len_row, -1)
-    with open(dir_path + X_test_file_name, 'rb') as f:
-        x_test = pickle.load(f)
-        len_row =len(x_test)
-        x_test = np.array(list(deepflatten(x_test))).reshape(len_row, -1)
-    logger.info("x_train = {0}, t_train = {1}, x_test = {2}, t_test = {3}".format(x_train.shape, t_train.shape, x_test.shape, t_test.shape))
-    return (x_train, t_train), (x_test, t_test)
+def encoding_load(dir_path=""):
+    '''エンコード済み学習データを読み込む
+    パスを指定しない時はpath.iniのpath_learningListから読み込む
+    ATTENTION: パスを指定するときは最後にスラッシュをつけてください
+    '''
+    
+    # パス読み込み
+    if dir_path == "":
+        config = configparser.ConfigParser()
+        config.read('./src/path.ini', 'UTF-8')
+        path_learningList = config.get('nn', 'path_learningList')
+    else:
+        path_learningList = dir_path
+    
+    # エンコード済みデータ読み込み
+    encoding_data_list = []
+    for name in encoded_file_name_list:
+        with open(path_learningList + name, 'rb') as f:
+            logger.info("load learningList = {0}".format(path_learningList + name))
+            e = pickle.load(f)
+            data = np.array(list(deepflatten(e))).reshape(len(e), -1)
+            logger.info("{0} = {1}".format(name, data.shape))
+            encoding_data_list.append(data)
+    
+    return encoding_data_list
 
 # スタート年、終了年、件数、生成に使ったクラスや条件を保存しておく
 # TODO:コピーのタイミングを早める。
