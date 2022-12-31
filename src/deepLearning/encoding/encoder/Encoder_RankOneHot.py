@@ -1,9 +1,10 @@
+import logging
+
+import numpy as np
+
 from Encoder_X import XClass
 from getFromDB import db_race_list_rank
-
 from debug import stream_hdl, file_hdl
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -36,17 +37,7 @@ class RankOneHotClass(XClass):
         super().pad(99)
 
     def nrm(self):
-        # 最小値の順位を取得
-        rank_min = min(self.xList)
-
-        if rank_min != 1:
-            # pad処理により1位の馬がリストから無くなってしまった。
-            # 残っている馬の中で一番順位がよかった馬を正解とする
-            logger.info("Fastest rank : 1 -> {0} | https://db.netkeiba.com/race/{1}/".format(rank_min, self.race_id))
-
-        # 最高順位を1とする
-        for i in range(len(self.xList)):
-            if self.xList[i] == rank_min:
-                self.xList[i] = 1
-            else:
-                self.xList[i] = 0
+        '''1位を1としたone-hotラベルを作成'''
+        sorted_x = sorted(self.xList)
+        min_x = sorted_x[0]
+        self.xList = np.where(np.array(self.xList) == min_x, 1, 0)
