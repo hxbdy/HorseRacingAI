@@ -130,6 +130,89 @@ class SoftmaxWithLoss:
             dx = dx / batch_size
         
         return dx
+
+class BatchNormalization:
+    """
+    http://arxiv.org/abs/1502.03167
+    """
+    def __init__(self, gamma, beta, momentum=0.9, running_mean=None, running_var=None):
+        self.gamma = gamma
+        self.beta = beta
+        self.momentum = momentum
+        self.input_shape = None # Conv層の場合は4次元、全結合層の場合は2次元  
+
+        # テスト時に使用する平均と分散
+        self.running_mean = running_mean
+        self.running_var = running_var  
+        
+        # backward時に使用する中間データ
+        self.batch_size = None
+        self.xc = None
+        self.std = None
+        self.dgamma = None
+        self.dbeta = None
+
+    def forward(self, x, train_flg=True):
+        self.input_shape = x.shape
+        if x.ndim != 2:
+            N, C, H, W = x.shape
+            x = x.reshape(N, -1)
+
+        out = self.__forward(x, train_flg)
+        
+        return out.reshape(*self.input_shape)
+            
+    def __forward(self, x, train_flg):
+        if self.running_mean is None:
+            N, D = x.shape
+            self.running_mean = np.zeros(D)
+            self.running_var = np.zeros(D)
+                        
+        if train_flg:
+            mu = x.mean(axis=0)
+            xc = x - mu
+            var = np.mean(xc**2, axis=0)
+            std = np.sqrt(var + 10e-7)
+            xn = xc / std
+            
+            self.batch_size = x.shape[0]
+            self.xc = xc
+            self.xn = xn
+            self.std = std
+            self.running_mean = self.momentum * self.running_mean + (1-self.momentum) * mu
+            self.running_var = self.momentum * self.running_var + (1-self.momentum) * var            
+        else:
+            xc = x - self.running_mean
+            xn = xc / ((np.sqrt(self.running_var + 10e-7)))
+            
+        out = self.gamma * xn + self.beta 
+        return out
+
+    def backward(self, dout):
+        if dout.ndim != 2:
+            N, C, H, W = dout.shape
+            dout = dout.reshape(N, -1)
+
+        dx = self.__backward(dout)
+
+        dx = dx.reshape(*self.input_shape)
+        return dx
+
+    def __backward(self, dout):
+        dbeta = dout.sum(axis=0)
+        dgamma = np.sum(self.xn * dout, axis=0)
+        dxn = self.gamma * dout
+        dxc = dxn / self.std
+        dstd = -np.sum((dxn * self.xc) / (self.std * self.std), axis=0)
+        dvar = 0.5 * dstd / self.std
+        dxc += (2.0 / self.batch_size) * self.xc * dvar
+        dmu = np.sum(dxc, axis=0)
+        dx = dxc - dmu / self.batch_size
+        
+        self.dgamma = dgamma
+        self.dbeta = dbeta
+        
+        return dx
 class TowLayerNet:
     def __init__(self,input_size,hidden_size,output_size):
         self.params={}
@@ -148,12 +231,19 @@ class TowLayerNet:
         self.params['W2']=np.random.randn(hidden_size, output_size) * np.sqrt(2.0 / hidden_size)
         self.params['b2']=np.zeros(output_size)
 
+        # BatchNormalization用パラメータ初期化
+        # TODO: 有効無効切り替え可能にする
+        # self.params['gamma1'] = np.ones(hidden_size)
+        # self.params['beta1'] = np.zeros(hidden_size)
+
         # レイヤ初期化
         self._init_layer()
 
     def _init_layer(self):
         self.layers = OrderedDict()
         self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
+        # TODO: 有効無効切り替え可能にする
+        # self.layers['BatchNorm1'] = BatchNormalization(self.params['gamma1'], self.params['beta1'])
         self.layers['Relu1']   = Relu()
         self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
         self.lastLayer = SoftmaxWithLoss()
@@ -215,6 +305,9 @@ class TowLayerNet:
         grads['b1'] = self.layers['Affine1'].db
         grads['W2'] = self.layers['Affine2'].dW
         grads['b2'] = self.layers['Affine2'].db
+        # TODO: 有効無効切り替え可能にする
+        # grads['gamma1'] = self.layers['BatchNorm1'].dgamma
+        # grads['beta1'] = self.layers['BatchNorm1'].dbeta
 
         return grads
 
@@ -259,7 +352,20 @@ class TowLayerNet:
 
     def loss(self,x,t):
         y=self.predict(x)
-        return self.lastLayer.forward(y, t)
+
+        # weight decay
+        # 過学習抑制
+        # 抑制有効時はBatchNormalizationは無効が一般的？
+        weight_decay = 0
+        weight_decay_lambda = 0.1 # 係数, 0なら抑制しない
+
+        W1 = self.params['W1']
+        weight_decay += 0.5 * weight_decay_lambda * np.sum(W1 ** 2)
+
+        W2 = self.params['W2']
+        weight_decay += 0.5 * weight_decay_lambda * np.sum(W2 ** 2)
+
+        return self.lastLayer.forward(y, t) + weight_decay
 
     def seveParam(self, serial_dir_path):
         '''各パラメータを保存する'''

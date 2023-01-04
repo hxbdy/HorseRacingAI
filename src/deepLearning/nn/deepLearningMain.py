@@ -35,6 +35,8 @@ x_train, t_train, x_test, t_test = encoding_load(path_learningList)
 iters_num     = 50000
 train_size    = x_train.shape[0]
 batch_size    = 5     # 1度に学習するレース数
+# param_keys = ('W1', 'b1', 'W2', 'b2', 'gamma1', 'beta1') # BatchNormalization有効時のキー
+param_keys = ('W1', 'b1', 'W2', 'b2')
 
 train_loss_list = []
 train_acc_list = []
@@ -43,7 +45,7 @@ test_acc_list = []
 # 確率的勾配降下法(SGD)
 def grad_SGD(net, grad):
     learning_rate = 0.01
-    for key in ('W1', 'b1', 'W2', 'b2'):
+    for key in param_keys:
         net.params[key] -= learning_rate * grad[key]
 
 # Momentum法
@@ -53,9 +55,9 @@ def grad_Momentum(net, grad):
     momentum =  0.9
     learning_rate = 1
     if(len(velocity)==0):
-        for key in ('W1', 'b1', 'W2', 'b2'):
+        for key in param_keys:
             velocity[key] = np.zeros_like(net.params[key])
-    for key in ('W1', 'b1', 'W2', 'b2'):
+    for key in param_keys:
         velocity[key] = momentum * velocity[key] - learning_rate * grad[key]
         net.params[key] += velocity[key]
 
@@ -65,9 +67,9 @@ def grad_AdaGrad(net, grad):
     global d
     learning_rate = 0.01
     if(len(d)==0):
-        for key in ('W1', 'b1', 'W2', 'b2'):
+        for key in param_keys:
             d[key] = np.zeros_like(net.params[key])
-    for key in ('W1', 'b1', 'W2', 'b2'):
+    for key in param_keys:
         d[key] += grad[key] ** 2
         net.params[key] -= learning_rate * grad[key] / (np.sqrt(d[key]) + 1e-8)
 
@@ -81,12 +83,12 @@ def grad_Adam(net, grad):
     beta2 = 0.999
     learning_rate = 1
     if(len(mean)==0):
-        for key in ('W1', 'b1', 'W2', 'b2'):
+        for key in param_keys:
             mean[key] = np.zeros_like(net.params[key])
     if(len(variance)==0):
-        for key in ('W1', 'b1', 'W2', 'b2'):
+        for key in param_keys:
             variance[key] = np.zeros_like(net.params[key])
-    for key in ('W1', 'b1', 'W2', 'b2'):
+    for key in param_keys:
         mean[key] = beta1 * mean[key] + (1 - beta1) * grad[key]
         variance[key] = beta2 * variance[key] + (1 - beta2) * grad[key] ** 2
         m = mean[key] / (1 - beta1)
