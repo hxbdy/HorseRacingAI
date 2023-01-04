@@ -131,11 +131,21 @@ class SoftmaxWithLoss:
         
         return dx
 class TowLayerNet:
-    def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
+    def __init__(self,input_size,hidden_size,output_size):
         self.params={}
-        self.params['W1']=weight_init_std*np.random.randn(input_size,hidden_size)
+
+        # 標準偏差weight_init_stdで各パラメータ初期化
+        # 過去のパラメータの互換のため残しておく
+        # weight_init_std=0.01
+        # self.params['W1']=weight_init_std*np.random.randn(input_size,hidden_size)
+        # self.params['b1']=np.zeros(hidden_size)
+        # self.params['W2']=weight_init_std*np.random.randn(hidden_size,output_size)
+        # self.params['b2']=np.zeros(output_size)
+
+        # He の初期化
+        self.params['W1']=np.random.randn(input_size, hidden_size) * np.sqrt(2.0 / input_size)
         self.params['b1']=np.zeros(hidden_size)
-        self.params['W2']=weight_init_std*np.random.randn(hidden_size,output_size)
+        self.params['W2']=np.random.randn(hidden_size, output_size) * np.sqrt(2.0 / hidden_size)
         self.params['b2']=np.zeros(output_size)
 
         # レイヤ初期化
