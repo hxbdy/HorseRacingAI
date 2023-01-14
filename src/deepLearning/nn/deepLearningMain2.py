@@ -4,6 +4,7 @@
 # TODO: パラメータのセーブ、ロード機能
 
 import shutil
+from matplotlib import pyplot as plt
 
 from multi_layer_net_extend import MultiLayerNetExtend
 from trainer import Trainer
@@ -40,3 +41,11 @@ lr           = 0.0018246327811189563
 
 test_acc_list, train_acc_list = __train(lr, weight_decay)
 print("test acc:" + str(test_acc_list[-1]))
+
+plt.figure() # 新規ウインドウ
+plt.title("acc")
+plt.plot(train_acc_list, label="train")
+plt.plot(test_acc_list, label="test")
+plt.legend() # 凡例表示(labelで指定したテキストの表示)
+
+plt.show()
