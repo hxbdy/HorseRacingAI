@@ -9,7 +9,7 @@ from multi_layer_net_extend import MultiLayerNetExtend
 from trainer import Trainer
 
 from file_path_mgr import path_ini
-from encoding_common import encoding_load, encoding_serial_dir_path
+from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
@@ -39,6 +39,9 @@ def __train(lr, weight_decay, epocs=100):
     # 学習後のパラメータを保存
     network.save(serial_dir_path)
 
+    # 最新フォルダにも結果をコピー
+    dl_copy2newest(serial_dir_path)
+
     return trainer.test_acc_list, trainer.train_acc_list
 
 # 探索したハイパーパラメータの範囲を指定===============
@@ -48,7 +51,7 @@ lr           = 0.0018246327811189563
 # ================================================
 
 test_acc_list, train_acc_list = __train(lr, weight_decay)
-print("test acc:" + str(test_acc_list[-1]))
+print("train acc:" + str(train_acc_list[-1]))
 
 plt.figure() # 新規ウインドウ
 plt.title("acc")
