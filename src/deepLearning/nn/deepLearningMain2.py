@@ -1,7 +1,6 @@
 # coding: utf-8
 
 # マルチレイヤ対応版学習
-# TODO: パラメータのセーブ、ロード機能
 
 import shutil
 from matplotlib import pyplot as plt
@@ -26,10 +25,19 @@ x_train, t_train, x_test, t_test = encoding_load(path_learningList)
 def __train(lr, weight_decay, epocs=100):
     network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[40],
                             output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True)
+
+    network.save(serial_dir_path + "init/")              # 学習前のパラメータを保存
+    # network.load("dst/trainedParam/YYYYMMDD/XX/init/") # 学習前のパラメータを読み込み, 以前の学習を再現する
+
     trainer = Trainer(network, x_train, t_train, x_test, t_test,
                       epochs=epocs, mini_batch_size=5,
                       optimizer='sgd', optimizer_param={'lr': lr}, verbose=True)
+    
+    # 学習
     trainer.train()
+
+    # 学習後のパラメータを保存
+    network.save(serial_dir_path)
 
     return trainer.test_acc_list, trainer.train_acc_list
 

@@ -1,4 +1,6 @@
 # coding: utf-8
+import os
+
 import numpy as np
 from collections import OrderedDict
 from layers import *
@@ -29,6 +31,8 @@ class MultiLayerNetExtend:
         self.input_size = input_size
         self.output_size = output_size
         self.hidden_size_list = hidden_size_list
+        self.activation = activation
+        self.dropout_ration = dropout_ration
         self.hidden_layer_num = len(hidden_size_list)
         self.use_dropout = use_dropout
         self.weight_decay_lambda = weight_decay_lambda
@@ -39,20 +43,24 @@ class MultiLayerNetExtend:
         self.__init_weight(weight_init_std)
 
         # レイヤの生成
+        self.__init_layer()
+
+    def __init_layer(self):
+        # レイヤの生成
         activation_layer = {'sigmoid': Sigmoid, 'relu': Relu}
         self.layers = OrderedDict()
         for idx in range(1, self.hidden_layer_num+1):
             self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)],
                                                       self.params['b' + str(idx)])
             if self.use_batchnorm:
-                self.params['gamma' + str(idx)] = np.ones(hidden_size_list[idx-1])
-                self.params['beta' + str(idx)] = np.zeros(hidden_size_list[idx-1])
+                self.params['gamma' + str(idx)] = np.ones(self.hidden_size_list[idx-1])
+                self.params['beta' + str(idx)] = np.zeros(self.hidden_size_list[idx-1])
                 self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gamma' + str(idx)], self.params['beta' + str(idx)])
                 
-            self.layers['Activation_function' + str(idx)] = activation_layer[activation]()
+            self.layers['Activation_function' + str(idx)] = activation_layer[self.activation]()
             
             if self.use_dropout:
-                self.layers['Dropout' + str(idx)] = Dropout(dropout_ration)
+                self.layers['Dropout' + str(idx)] = Dropout(self.dropout_ration)
 
         idx = self.hidden_layer_num + 1
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
@@ -77,6 +85,21 @@ class MultiLayerNetExtend:
                 scale = np.sqrt(1.0 / all_size_list[idx - 1])  # sigmoidを使う場合に推奨される初期値
             self.params['W' + str(idx)] = scale * np.random.randn(all_size_list[idx-1], all_size_list[idx])
             self.params['b' + str(idx)] = np.zeros(all_size_list[idx])
+
+    def save(self, path):
+        """save npy param
+        """
+        os.makedirs(path, exist_ok=True)
+        for key_name in self.params.keys():
+            np.save(path + key_name, self.params[key_name])
+
+    def load(self, path):
+        """load npy param
+        """
+        for key_name in self.params.keys():
+            file_name = path + key_name + ".npy"
+            self.params[key_name] = np.load(file_name)
+        self.__init_layer()
 
     def predict(self, x, train_flg=False):
         for key, layer in self.layers.items():
