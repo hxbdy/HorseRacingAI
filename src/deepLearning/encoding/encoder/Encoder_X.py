@@ -51,6 +51,6 @@ class XClass:
         self.fix()
         self.pad()
         self.nrm()
-        if (np.max(self.xList) > 1) or (np.min(self.xList) < 0):
-            logger.warning("CHECK encoded value !! , max = {0:4.2f}, min = {1:4.2f}, encoder = {2}".format(np.max(self.xList), np.min(self.xList), self.__class__))
+        if (np.max(self.xList) > 1.1) or (np.min(self.xList) < -0.1):
+            logger.debug("CHECK encoded value !! , max = {0:4.2f}, min = {1:4.2f}, encoder = {2}".format(np.max(self.xList), np.min(self.xList), self.__class__))
         return self.xList

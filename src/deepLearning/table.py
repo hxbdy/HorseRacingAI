@@ -38,7 +38,8 @@ XTbl = [
     encoder.Encoder_BradleyTerry.BradleyTerryClass,
     encoder.Encoder_Umamusume.UmamusumeClass,
     encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
-    encoder.Encoder_Last3f.Last3fClass # Encoding takes too long
+    encoder.Encoder_Last3f.Last3fClass,
+    encoder.Encoder_HorseWeight.HorseWeightClass
 ]
 
 # 正解用テーブル

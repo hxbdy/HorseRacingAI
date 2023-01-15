@@ -225,3 +225,7 @@ def db_race_list_sort(race_id_list):
     race_id_list_sorted = list(map(lambda x: x[0], race_id_list_sorted))
 
     return race_id_list_sorted
+
+def db_horse_weight(race_id, horse_id):
+    '''race_resultテーブルから馬体重を取得する'''
+    return netkeibaDB.sql_one_race_result(race_id, horse_id, "horse_weight")
