@@ -9,7 +9,7 @@ from multi_layer_net_extend import MultiLayerNetExtend
 from trainer import Trainer
 
 from file_path_mgr import path_ini
-from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
+from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
@@ -26,8 +26,8 @@ def __train(lr, weight_decay, epocs=100):
     network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[40],
                             output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True)
 
-    network.save(serial_dir_path + "init/")              # 学習前のパラメータを保存
-    # network.load("dst/trainedParam/YYYYMMDD/XX/init/") # 学習前のパラメータを読み込み, 以前の学習を再現する
+    # 学習前のパラメータをnpy形式で保存
+    network.save(serial_dir_path + "init/")
 
     trainer = Trainer(network, x_train, t_train, x_test, t_test,
                       epochs=epocs, mini_batch_size=5,
@@ -36,8 +36,11 @@ def __train(lr, weight_decay, epocs=100):
     # 学習
     trainer.train()
 
-    # 学習後のパラメータを保存
-    network.save(serial_dir_path)
+    # 学習後のパラメータをnpy形式で保存
+    network.save(serial_dir_path + "final/")
+
+    # networkをpickle形式で保存
+    encoding_save_nn_data(serial_dir_path, "network.pickle", network)
 
     # 最新フォルダにも結果をコピー
     dl_copy2newest(serial_dir_path)
@@ -45,7 +48,7 @@ def __train(lr, weight_decay, epocs=100):
     return trainer.test_acc_list, trainer.train_acc_list
 
 # 探索したハイパーパラメータの範囲を指定===============
-# パラメータの最適値は analysis_hyperParamOpt.py で探索可能です
+# パラメータの最適値は analysis_hyperParamOpt.py で探索可能
 weight_decay = 1.506259451432141e-06
 lr           = 0.0018246327811189563
 # ================================================
