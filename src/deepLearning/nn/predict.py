@@ -134,6 +134,8 @@ if __name__ == "__main__":
     #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
     tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
 
+    print("predict race_id = ", tmp_param.race_id)
+
     # 推論時の入力用テーブル
     predict_XTbl = [
         PredictMoneyClass,
