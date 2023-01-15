@@ -452,7 +452,7 @@ def scrape_race_today(driver, raceID):
     # テーブルから
     shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
 
-    COL_NAME_TEXT = ["枠", "馬番", "斤量"]
+    COL_NAME_TEXT = ["枠", "馬番", "斤量", "馬体重(増減)"]
     COL_NAME_ID = ["馬名", "騎手"]
     column_name_data = shutuba_table.find_elements(By.TAG_NAME, "th")
     col_idx = []
@@ -496,6 +496,7 @@ def scrape_race_today(driver, raceID):
     raceInfo.horse_id = list(map(lambda x: x[2], contents))
     raceInfo.burden_weight = list(map(lambda x: float(x[3]), contents))
     raceInfo.jockey_id = list(map(lambda x: x[4], contents))
+    raceInfo.horse_weight = list(map(lambda x: x[5], contents))
     
     print("枠")
     print(raceInfo.post_position)
@@ -507,6 +508,8 @@ def scrape_race_today(driver, raceID):
     print(raceInfo.burden_weight)
     print("jockey id")
     print(raceInfo.jockey_id)
+    print("馬体重")
+    print(raceInfo.horse_weight)
     print("発走時刻")
     print(raceInfo.start_time)
     print("距離")
