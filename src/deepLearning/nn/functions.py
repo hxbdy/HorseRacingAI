@@ -1,5 +1,6 @@
 # coding: utf-8
-import numpy as np
+import xross
+np = xross.facttory_xp()
 
 
 def identity_function(x):

@@ -1,5 +1,8 @@
 # coding: utf-8
-import numpy as np
+import time
+
+import xross
+np = xross.facttory_xp()
 from optimizer import *
 
 class Trainer:
@@ -29,6 +32,7 @@ class Trainer:
         self.max_iter = int(epochs * self.iter_per_epoch)
         self.current_iter = 0
         self.current_epoch = 0
+        self.time_now = time.perf_counter()
         
         self.train_loss_list = []
         self.train_acc_list = []
@@ -61,11 +65,15 @@ class Trainer:
             self.train_acc_list.append(train_acc)
             self.test_acc_list.append(test_acc)
 
-            if self.verbose: print("=== epoch:" + str(self.current_epoch) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc) + " ===")
+            if self.verbose:
+                time_epoch = time.perf_counter()
+                print("=== epoch:" + str(self.current_epoch) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc) + ", time:" + str(time_epoch - self.time_now) + " ===")
+                self.time_now = time_epoch
+
         self.current_iter += 1
 
     def train(self):
-        for i in range(self.max_iter):
+        for _ in range(self.max_iter):
             self.train_step()
 
         test_acc = self.network.accuracy(self.x_test, self.t_test)

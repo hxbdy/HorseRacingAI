@@ -1,5 +1,6 @@
 # coding: utf-8
-import numpy as np
+import xross
+np = xross.facttory_xp()
 from functions import *
 from util import im2col, col2im
 

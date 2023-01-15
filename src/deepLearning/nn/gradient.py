@@ -1,5 +1,6 @@
 # coding: utf-8
-import numpy as np
+import xross
+np = xross.facttory_xp()
 
 def _numerical_gradient_1d(f, x):
     h = 1e-4 # 0.0001

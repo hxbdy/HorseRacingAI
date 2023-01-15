@@ -1,7 +1,8 @@
 # coding: utf-8
 import os
 
-import numpy as np
+import xross
+np = xross.facttory_xp()
 from collections import OrderedDict
 from layers import *
 from gradient import numerical_gradient
