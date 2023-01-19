@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 
+def get_calc_device():
+    return private_ini('nn', 'calculator')
+
 def factory_np():
     return importlib.import_module('numpy')
 
@@ -26,7 +29,7 @@ def facttory_xp():
     """ Returns: imported instance of cupy or numpy.
     hint: write private.ini/nn/calculator
     """
-    calculator = private_ini('nn', 'calculator')
+    calculator = get_calc_device()
 
     if calculator == "GPU":
         logger.debug("matrix calculator -> GPU")
@@ -34,3 +37,23 @@ def facttory_xp():
     else:
         logger.debug("matrix calculator -> CPU")
         return factory_np()
+
+def move2RAM(data):
+    """計算結果をRAMで保持できる型に変換する
+    cupyで計算した場合、GPU RAMで保持しているため
+    グラフ描画時などはデータをGPU RAMからRAMへ移動させる変換が必要
+    """
+    calculator = get_calc_device()
+    if calculator == "GPU":
+        if type(data) == int:
+            return data.get()
+        elif type(data) == list:
+            ret = []
+            for i in data:
+                ret.append(i.get())
+            return ret
+        else:
+            logger.warn("Unknown Type : {0}".format(type(data)))
+            return data
+    else:
+        return data

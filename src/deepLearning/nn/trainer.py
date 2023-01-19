@@ -78,7 +78,11 @@ class Trainer:
 
         test_acc = self.network.accuracy(self.x_test, self.t_test)
 
+        # データをRAMへ移動
+        self.train_loss_list = xross.move2RAM(self.train_loss_list)
+        self.train_acc_list  = xross.move2RAM(self.train_acc_list)
+        self.test_acc_list   = xross.move2RAM(self.test_acc_list)
+
         if self.verbose:
             print("=============== Final Test Accuracy ===============")
             print("test acc:" + str(test_acc))
-
