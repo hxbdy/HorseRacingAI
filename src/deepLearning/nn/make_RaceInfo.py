@@ -35,7 +35,4 @@ def raceinfo_by_raceID(race_id: str):
     # 馬番
     raceInfo.horse_number = list(range(1, len(raceInfo.post_position)+1))
 
-    # TODO: predictHorseNumClassを調整してこの処理は削除したい
-    raceInfo.horse_num = raceInfo.horse_num[0]
-
     return raceInfo

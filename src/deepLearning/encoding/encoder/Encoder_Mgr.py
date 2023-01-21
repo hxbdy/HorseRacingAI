@@ -85,7 +85,7 @@ class MgrClass:
         comp_cnt = 1
         # エンコードクラス生成
         instance = encodeClass()
-        for race in range(len(self.totalRaceList)):
+        for race in range(self.totalRaceNum):
 
             # エンコード進捗状況送信
             queue.put(["progress", cat, encodeClass.__name__, comp_cnt])

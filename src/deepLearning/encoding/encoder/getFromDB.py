@@ -77,7 +77,7 @@ def db_race_list_prize(race_id):
 
 def db_race_num_horse(race_id):
     # 出走する頭数を返す
-    return [netkeibaDB.sql_one_rowCnt("race_result", "race_id", race_id)]
+    return netkeibaDB.sql_one_rowCnt("race_result", "race_id", race_id)
 
 def db_race_list_race_data1(race_id):
     # race_result テーブルの race_data1 列のデータを取得する

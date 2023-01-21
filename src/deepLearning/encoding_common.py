@@ -7,8 +7,10 @@ import logging
 from iteration_utilities import deepflatten
 
 from file_path_mgr import path_ini
-from table import encoded_file_name_list
-from debug import stream_hdl, file_hdl
+from table         import encoded_file_name_list
+from debug         import stream_hdl, file_hdl
+from make_RaceInfo import raceinfo_by_raceID
+import RaceInfo
 import xross
 np = xross.facttory_xp()
 
@@ -95,3 +97,37 @@ def encoding_save_condition(dir_path):
     # 保管場所もtxtで保持しておく
     with open(dir_path + "original_path.txt", 'w') as f:
         f.write("original_path = " + dir_path)
+
+def prob_win(value_list):
+    # 勝つ可能性 (ロジットモデル)
+
+    ls = np.array(value_list)
+    ls_sorted_idx = np.argsort(-ls) # 降順のソート
+    ls_sorted = ls[ls_sorted_idx]
+    prob = np.exp(ls_sorted)/sum(np.exp(ls_sorted)) # 確率計算
+
+    # cupy は format に対応していないためそのまま出力する
+    # TODO: cupy 使用時の出力フォーマット整形
+    if xross.isCPU():
+        prob_disp = ["{:.3f}".format(i) for i in prob] # 表示桁数を制限
+
+        print(["{:^5d}".format(i) for i in ls_sorted_idx+1])
+        print(prob_disp)
+        #return list(ls_sorted_idx), prob
+    else:
+        print(ls_sorted_idx+1)
+        print(prob)
+
+def read_RaceInfo(race_id = ""):
+    """推測するレースのRaceInfoオブジェクトを読み込む
+    race_id: 指定した場合、データベースから読込。無指定ならばpickleを読込
+    """
+    if race_id == "":
+        # TODO: 読み込みに失敗したとき、情報をスクレイピングしておく旨を表示して終了する対応
+        path_tmp = path_ini('common', 'path_tmp')
+        with open(path_tmp, 'rb') as f:
+            tmp_param: RaceInfo = pickle.load(f)
+        return tmp_param
+    else:
+        param = raceinfo_by_raceID(str(race_id))
+        return param

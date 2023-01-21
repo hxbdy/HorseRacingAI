@@ -2,6 +2,8 @@ from debug import stream_hdl, file_hdl
 import logging
 import numpy as np
 
+from RaceInfo import RaceInfo
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -11,9 +13,9 @@ logger.addHandler(file_hdl("output"))
 
 class XClass:
     # 全インスタンス共通の変数
-    race_id = '0'
-
-    pad_size = 18
+    race_id:str        = '0'
+    pad_size:int       = 18
+    race_info:RaceInfo = RaceInfo()
 
     def __init__(self):
         self.xList = []

@@ -15,6 +15,13 @@ logger.addHandler(stream_hdl(logging.INFO))
 def get_calc_device():
     return private_ini('nn', 'calculator')
 
+def isCPU():
+    calculator = get_calc_device()
+    if calculator == "GPU":
+        return False
+    else:
+        return True
+
 def factory_np():
     return importlib.import_module('numpy')
 
@@ -41,10 +48,11 @@ def facttory_xp():
 def move2RAM(data):
     """計算結果をRAMで保持できる型に変換する
     cupyで計算した場合、GPU RAMで保持しているため
-    グラフ描画時などはデータをGPU RAMからRAMへ移動させる変換が必要
+    描画時などはデータをGPU RAMからRAMへ移動させる変換が必要
     """
-    calculator = get_calc_device()
-    if calculator == "GPU":
+    if isCPU():
+        return data
+    else:
         if type(data) == int:
             return data.get()
         elif type(data) == list:
@@ -55,5 +63,3 @@ def move2RAM(data):
         else:
             logger.warn("Unknown Type : {0}".format(type(data)))
             return data
-    else:
-        return data

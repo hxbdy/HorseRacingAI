@@ -19,7 +19,7 @@ class HorseNumClass(XClass):
 
     def nrm(self):
         # 最大出走馬数で割って標準化
-        self.xList = [float(self.xList[0]) / XClass.pad_size]
+        self.xList = [float(self.xList) / XClass.pad_size]
 
     def pad(self):
         pass
