@@ -1,26 +1,18 @@
-# 推測する
-# 予測したいレース情報は src\deepLearning\nn\config_predict.py で入力してください
-# > python ./src/deepLearning/nn/predict.py
+# レースを推測する
 
 import pickle
-import numpy as np
+import xross
+np = xross.facttory_xp()
 
 from iteration_utilities import deepflatten
 
 import encoder
-import TwoLayerNet
-from RaceInfo import RaceInfo
-from encoding_common   import encoding_load
-from getFromDB         import db_horse_bod, db_horse_father
-from make_RaceInfo import raceinfo_by_raceID
-from file_path_mgr import path_ini
-
-# 推測したいレース情報入力
-# ジャパンカップ
-# https://race.netkeiba.com/race/shutuba.html?race_id=202205050812&rf=top_pickup
-# 結果
-# 
-# ==========================================================================
+from multi_layer_net_extend import MultiLayerNetExtend
+from RaceInfo               import RaceInfo
+from encoding_common        import encoding_load
+from getFromDB              import db_horse_bod, db_horse_father
+from make_RaceInfo          import raceinfo_by_raceID
+from file_path_mgr          import path_ini
 
 
 # ==========================================================================
@@ -55,7 +47,6 @@ class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
     def get(self):
         # レース開催日
         self.d0 = tmp_param.date
-
         # 誕生日をDBから取得
         bdList = []
         for horse_id in tmp_param.horse_id:
@@ -111,6 +102,8 @@ class PredictHorseWeight(encoder.Encoder_HorseWeight.HorseWeightClass):
         # 馬体重リスト
         self.xList = tmp_param.horse_weight
 
+# ==========================================================================
+
 def prob_win(value_list):
     # 勝つ可能性 (ロジットモデル)
     ls = np.array(value_list)
@@ -136,13 +129,17 @@ def read_RaceInfo(race_id = ""):
         param = raceinfo_by_raceID(str(race_id))
         return param
 
+# ==========================================================================
 
 if __name__ == "__main__":
     # パス読み込み
-    path_tmp = path_ini('common', 'path_tmp')
+    path_tmp          = path_ini('common', 'path_tmp')
+    path_trainedParam = path_ini('nn', 'path_trainedParam')
 
     #tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
     tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
+
+    print("predict race_id = ", tmp_param.race_id)
 
     # 推論時の入力用テーブル
     predict_XTbl = [
@@ -176,9 +173,9 @@ if __name__ == "__main__":
     x = np.array(list(deepflatten(x))).reshape(1, -1)
 
     # 保存済みパラメータ読み込み
-    net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
-    net.loadParam("newest")
+    with open(path_trainedParam + "network.pickle", 'rb') as f:
+        network: MultiLayerNetExtend = pickle.load(f)
 
     # 推測
-    y = list(deepflatten(net.predict(x)))
+    y = list(deepflatten(network.predict(x)))
     prob_win(y)

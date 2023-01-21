@@ -1,24 +1,15 @@
-# NN学習本体
-# 学習済みパラメータは dst\trainedParam\newest に保存する
-# > python ./src/deepLearning/nn/deepLearningMain.py
+# coding: utf-8
 
-import logging
-import time
+# マルチレイヤ対応版学習
+
 import shutil
+from matplotlib import pyplot as plt
 
-import TwoLayerNet
-from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest
-from debug import stream_hdl, file_hdl
+from multi_layer_net_extend import MultiLayerNetExtend
+from trainer import Trainer
+
 from file_path_mgr import path_ini
-import xross
-np = xross.facttory_xp()
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-# logger.addHandler(file_hdl("output"))
+from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
@@ -31,126 +22,44 @@ shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
 x_train, t_train, x_test, t_test = encoding_load(path_learningList)
 
-# ハイパーパラメータ
-iters_num     = 50000
-train_size    = x_train.shape[0]
-batch_size    = 5     # 1度に学習するレース数
-# param_keys = ('W1', 'b1', 'W2', 'b2', 'gamma1', 'beta1') # BatchNormalization有効時のキー
-param_keys = ('W1', 'b1', 'W2', 'b2')
+def __train(lr, weight_decay, epocs=500):
+    network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[150, 75, 37],
+                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True, use_dropout=True)
 
-train_loss_list = []
-train_acc_list = []
-test_acc_list = []
+    # 学習前のパラメータをnpy形式で保存
+    network.save(serial_dir_path + "init/")
 
-# 確率的勾配降下法(SGD)
-def grad_SGD(net, grad):
-    learning_rate = 0.01
-    for key in param_keys:
-        net.params[key] -= learning_rate * grad[key]
-
-# Momentum法
-velocity = {}
-def grad_Momentum(net, grad):
-    global velocity
-    momentum =  0.9
-    learning_rate = 1
-    if(len(velocity)==0):
-        for key in param_keys:
-            velocity[key] = np.zeros_like(net.params[key])
-    for key in param_keys:
-        velocity[key] = momentum * velocity[key] - learning_rate * grad[key]
-        net.params[key] += velocity[key]
-
-# AdaGrad法
-d = {}
-def grad_AdaGrad(net, grad):
-    global d
-    learning_rate = 0.01
-    if(len(d)==0):
-        for key in param_keys:
-            d[key] = np.zeros_like(net.params[key])
-    for key in param_keys:
-        d[key] += grad[key] ** 2
-        net.params[key] -= learning_rate * grad[key] / (np.sqrt(d[key]) + 1e-8)
-
-# Adam法
-mean = {}
-variance = {}
-def grad_Adam(net, grad):
-    global mean
-    global variance
-    beta1 = 0.9
-    beta2 = 0.999
-    learning_rate = 1
-    if(len(mean)==0):
-        for key in param_keys:
-            mean[key] = np.zeros_like(net.params[key])
-    if(len(variance)==0):
-        for key in param_keys:
-            variance[key] = np.zeros_like(net.params[key])
-    for key in param_keys:
-        mean[key] = beta1 * mean[key] + (1 - beta1) * grad[key]
-        variance[key] = beta2 * variance[key] + (1 - beta2) * grad[key] ** 2
-        m = mean[key] / (1 - beta1)
-        v = variance[key] / (1 - beta2)
-        net.params[key] -= learning_rate * m / (np.sqrt(v) + 1e-8)
-
-# 解析用に学習途中のデータを確認したいのでジェネレータ関数としている
-# iter_per_epoch 毎に yeild する
-def deep_learning_main():
-    net = TwoLayerNet.TowLayerNet(x_train.shape[1], 40, t_train.shape[1])
-    # 初期化時点のパラメータをセーブ
-    net.seveParam(serial_dir_path + "init/")
-
-    # iter_per_epoch = int(max(train_size / batch_size, 1))
-    iter_per_epoch = 100
-    for i in range(iters_num):
-
-        # 学習データ取り出し
-        batch_mask = np.random.choice(train_size, batch_size)
-        x = x_train[batch_mask]
-        t = t_train[batch_mask]
-
-        # 勾配計算
-        grad = net.gradient(x,t)
-
-        # 確率的勾配降下法(SGD)
-        grad_SGD(net, grad)
-
-        # 教師tとの誤差確認
-        loss = net.loss(x,t)
-        train_loss_list.append(loss)
-
-        if i % iter_per_epoch == 0:
-            # 精度確認
-
-            train_acc = net.accuracy(x_train, t_train).item()
-            train_acc_list.append(train_acc)
-
-            test_acc  = net.accuracy(x_test, t_test).item()
-            test_acc_list.append(test_acc)
-
-            logger.info("progress {0} / {1}".format(i, iters_num))
-            logger.info("train_acc = {0:0.5f} | test_acc = {1:0.5f}".format(train_acc, test_acc))
-            logger.info("========================================")
-
-            yield net
-
-    # 保存
-    logger.info("Save param")
-    net.seveParam(serial_dir_path)
-    logger.info("Finish")
-    logger.info("========================================")
+    trainer = Trainer(network, x_train, t_train, x_test, t_test,
+                      epochs=epocs, mini_batch_size=5,
+                      optimizer='sgd', optimizer_param={'lr': lr}, verbose=True)
     
+    # 学習
+    trainer.train()
+
+    # 学習後のパラメータをnpy形式で保存
+    network.save(serial_dir_path + "final/")
+
+    # networkをpickle形式で保存
+    encoding_save_nn_data(serial_dir_path, "network.pickle", network)
+
     # 最新フォルダにも結果をコピー
     dl_copy2newest(serial_dir_path)
 
-if __name__ == "__main__":
-    time_sta = time.perf_counter()
+    return trainer.test_acc_list, trainer.train_acc_list
 
-    for i in deep_learning_main():
-        pass
-    
-    time_end = time.perf_counter()
+# 探索したハイパーパラメータの範囲を指定===============
+# パラメータの最適値は analysis_hyperParamOpt.py で探索可能
+weight_decay = 3.0017460582982937e-06
+lr           = 0.003775581996079862
+# ================================================
 
-    logger.info("Learning Time = {0}".format(time_end - time_sta))
+test_acc_list, train_acc_list = __train(lr, weight_decay)
+print("train acc:" + str(train_acc_list[-1]))
+
+plt.figure() # 新規ウインドウ
+plt.title("acc")
+plt.plot(train_acc_list, label="train")
+plt.plot(test_acc_list, label="test")
+plt.legend() # 凡例表示(labelで指定したテキストの表示)
+
+plt.show()
