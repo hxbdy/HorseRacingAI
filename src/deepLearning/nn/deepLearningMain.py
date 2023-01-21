@@ -22,9 +22,9 @@ shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
 x_train, t_train, x_test, t_test = encoding_load(path_learningList)
 
-def __train(lr, weight_decay, epocs=100):
-    network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[40],
-                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True)
+def __train(lr, weight_decay, epocs=500):
+    network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[150, 75, 37],
+                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True, use_dropout=True)
 
     # 学習前のパラメータをnpy形式で保存
     network.save(serial_dir_path + "init/")
@@ -49,8 +49,8 @@ def __train(lr, weight_decay, epocs=100):
 
 # 探索したハイパーパラメータの範囲を指定===============
 # パラメータの最適値は analysis_hyperParamOpt.py で探索可能
-weight_decay = 1.506259451432141e-06
-lr           = 0.0018246327811189563
+weight_decay = 3.0017460582982937e-06
+lr           = 0.003775581996079862
 # ================================================
 
 test_acc_list, train_acc_list = __train(lr, weight_decay)
