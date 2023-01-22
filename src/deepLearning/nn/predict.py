@@ -25,8 +25,8 @@ if __name__ == "__main__":
     # ======================================================================
 
     # 推測するレースを設定する
-    tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
-    # tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
+    # tmp_param = read_RaceInfo('202206050811') # race_id 指定(データベースから)
+    tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
     print("predict race_id = ", tmp_param.race_id)
 
     # ======================================================================

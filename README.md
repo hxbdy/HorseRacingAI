@@ -16,6 +16,7 @@
 * cupy 8.3.0
 * selenium 4.2.0
 * sqlite3 3.8.6
+* matplotlib 3.6.2
 
 ## conda installation
 ### app

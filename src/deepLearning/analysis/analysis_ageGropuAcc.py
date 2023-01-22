@@ -1,133 +1,24 @@
 # レースを推測する
+# trainデータの正答率の分布を確認する目的
+# 各年代でG1,2,3それぞれの正答率を積み上げ棒グラフで出力する
+# 横軸:年
+# 縦軸:割合(1つの棒グラフの意味- > G1的中数/G1レース数 + G2的中数/G2レース数 + G3的中数/G3レース数)
 
 import pickle
+
+from matplotlib import pyplot as plt
 import xross
 np = xross.facttory_xp()
 
+import encoder
+
 from iteration_utilities import deepflatten
 
-import encoder
 from multi_layer_net_extend import MultiLayerNetExtend
-from RaceInfo               import RaceInfo
-from encoding_common        import encoding_load
-from getFromDB              import db_horse_bod, db_horse_father
-from make_RaceInfo          import raceinfo_by_raceID
+from getFromDB              import db_race_list_id, db_race_grade
+from encoding_common        import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini
-
-
-# ==========================================================================
-# レース当日は以下メンテ不要
-class PredictMoneyClass(encoder.Encoder_Money.MoneyClass):
-    def get(self):
-        # 賞金リスト
-        self.xList = tmp_param.prize
-class PredictHorseNumClass(encoder.Encoder_HorseNum.HorseNumClass):
-    def get(self):
-        # 出走する馬の頭数
-        self.xList = [tmp_param.horse_num]
-class PredictCourseConditionClass(encoder.Encoder_CourseCondition.CourseConditionClass):
-    def get(self):
-        # コース状態
-        # '良', '稍重', '重', '不良' のいずれか
-        self.xList = tmp_param.course_condition
-class PredictCourseDistanceClass(encoder.Encoder_CourseDistance.CourseDistanceClass):
-    def get(self):
-        # コース長
-        self.xList = tmp_param.distance
-class PredictRaceStartTimeClass(encoder.Encoder_RaceStartTime.RaceStartTimeClass):
-    def get(self):
-        # 出走時刻
-        self.xList = tmp_param.start_time
-class PredictWeatherClass(encoder.Encoder_Weather.WeatherClass):
-    def get(self):
-        # 天気
-        # '晴', '曇', '小雨', '雨', '小雪', '雪' のいずれか
-        self.xList = tmp_param.weather
-class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
-    def get(self):
-        # レース開催日
-        self.d0 = tmp_param.date
-        # 誕生日をDBから取得
-        bdList = []
-        for horse_id in tmp_param.horse_id:
-            bod = db_horse_bod(horse_id)
-            bdList.append(bod)
-        self.xList = bdList        
-class PredictBurdenWeightClass(encoder.Encoder_BurdenWeight.BurdenWeightClass):
-    def get(self):
-        # 斤量
-        self.xList = tmp_param.burden_weight
-class PredictPostPositionClass(encoder.Encoder_PostPosition.PostPositionClass):
-    def get(self):
-        # 枠番
-        self.xList = tmp_param.post_position
-class PredictJockeyClass(encoder.Encoder_Jockey.JockeyClass):
-    def get(self):
-        # jockey_id
-        self.xList = tmp_param.jockey_id
-        # race_id
-        self.race_id = tmp_param.race_id
-class PredictCumPerformClass(encoder.Encoder_CumPerform.CumPerformClass):
-    def get(self):
-        # horse_id
-        self.getForCalcPerformInfo(tmp_param.horse_id)
-class PredictBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
-    def get(self):
-        # horse_id
-        self.xList = tmp_param.horse_id
-        self.col_num = len(self.xList)
-class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
-    def get(self):
-        # horse_id
-        self.xList = tmp_param.horse_id
-class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
-    def get(self):
-        # horse_id
-        childList = tmp_param.horse_id
-        parentList = []
-        for i in range(len(childList)):
-            # 父のidを取得
-            parent = db_horse_father(childList[i])
-            parentList.append(parent)
-        self.xList = parentList
-        self.col_num = len(self.xList)
-class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
-    def get(self):
-        # race_id
-        self.race_id = tmp_param.race_id
-        # horse_id
-        self.xList = tmp_param.horse_id
-class PredictHorseWeight(encoder.Encoder_HorseWeight.HorseWeightClass):
-    def get(self):
-        # 馬体重リスト
-        self.xList = tmp_param.horse_weight
-
-# ==========================================================================
-
-def prob_win(value_list):
-    # 勝つ可能性 (ロジットモデル)
-    ls = np.array(value_list)
-    ls_sorted_idx = np.argsort(-ls) # 降順のソート
-    ls_sorted = ls[ls_sorted_idx]
-    prob = np.exp(ls_sorted)/sum(np.exp(ls_sorted)) # 確率計算
-    prob_disp = ["{:.3f}".format(i) for i in prob] # 表示桁数を制限
-    
-    print(["{:^5d}".format(i) for i in ls_sorted_idx+1])
-    print(prob_disp)
-    #return list(ls_sorted_idx), prob
-
-def read_RaceInfo(race_id = ""):
-    """推測するレースのRaceInfoオブジェクトを読み込む
-    race_id: 指定した場合、データベースから読込。無指定ならばpickleを読込
-    """
-    if race_id == "":
-        # TODO: 読み込みに失敗したとき、情報をスクレイピングしておく旨を表示して終了する対応
-        with open(path_tmp, 'rb') as f:
-            tmp_param: RaceInfo = pickle.load(f)
-        return tmp_param
-    else:
-        param = raceinfo_by_raceID(str(race_id))
-        return param
+from predictClass           import predict_XTbl
 
 # ==========================================================================
 
@@ -140,40 +31,88 @@ if __name__ == "__main__":
     with open(path_trainedParam + "network.pickle", 'rb') as f:
         network: MultiLayerNetExtend = pickle.load(f)
 
-    # 推論時の入力用テーブル
-    predict_XTbl = [
-        PredictMoneyClass,
-        PredictHorseNumClass,
-        PredictCourseConditionClass,
-        PredictCourseDistanceClass,
-        PredictRaceStartTimeClass,
-        PredictWeatherClass,
-        PredictHorseAgeClass,
-        PredictBurdenWeightClass,
-        PredictPostPositionClass,
-        PredictJockeyClass,
-        PredictCumPerformClass,
-        PredictBradleyTerryClass,
-        PredictUmamusumeClass,
-        PredictParentBradleyTerryClass,
-        PredictLast3fClass,
-        PredictHorseWeight
-    ]
+    # ======================================================================
 
-    tmp_param = read_RaceInfo('202205050812') # race_id 指定(データベースから)
-    # tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
+    start_year = 1986
+    end_year = 2020
+    race_id_list = db_race_list_id(start_year, end_year, -1)
 
-    print("predict race_id = ", tmp_param.race_id)
+    ans_hist = {}
+    ans_sum  = {}
+    for year in range(start_year, end_year + 1):
+        ans_hist[str(year)] = {"G1":0, "G2":0, "G3":0}
+        ans_sum[str(year)] = {"G1":0, "G2":0, "G3":0}
 
-    # 推測用エンコード
-    x = []
-    for func in predict_XTbl:
-        # インスタンス生成
-        predict = func()
-        x.append(predict.adj())
-        del predict
-    x = np.array(list(deepflatten(x))).reshape(1, -1)
+    # ======================================================================
 
-    # 推測
-    y = list(deepflatten(network.predict(x)))
-    prob_win(y)
+    for race_id in race_id_list:
+        # 推測するレースを設定する
+        tmp_param = read_RaceInfo(str(race_id)) # race_id 指定(データベースから)
+        # tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
+        # print("predict race_id = ", tmp_param.race_id)
+        # print("year = ", race_id[0:4])
+        #     芝 G1: 1, G2: 2, G3: 3, 無印(OP): 4
+        #     ダ G1: 6, G2: 7, G3: 8, 無印(OP): 9
+        grade = db_race_grade(str(race_id))
+        if grade == 1 or grade == 6:
+            grade = "G1"
+        elif grade == 2 or grade == 7:
+            grade = "G2"
+        elif grade == 3 or grade == 8:
+            grade = "G3"
+
+        # ======================================================================
+    
+        # 推測用エンコード
+        x = []
+        for func in predict_XTbl:
+            # インスタンス生成
+            predict = func()
+            # レース情報設定
+            predict.race_info = tmp_param
+            # エンコード
+            x.append(predict.adj())
+        x = np.array(list(deepflatten(x))).reshape(1, -1)
+
+        # ======================================================================
+
+        # 推測
+        y = list(deepflatten(network.predict(x)))
+        predict_y = prob_win(y)
+
+        # 正解ラベル取り出し
+        ans = encoder.Encoder_RankOneHot.RankOneHotClass()
+        ans.set(race_id)
+        ans.adj()
+        for i in range(len(ans.xList)):
+            if ans.xList[i] == 1:
+                if predict_y[0] == i:
+                    ans_hist[race_id[0:4]][grade] += 1
+        ans_sum[race_id[0:4]][grade] += 1
+
+    print("ans_hist", ans_hist)
+    print("ans_sum", ans_sum)
+
+    # 各年代のヒット率(ヒット数/レース数)
+    percent_list_G1 = []
+    percent_list_G2 = []
+    percent_list_G3 = []
+    for key in ans_hist.keys():
+        percent_list_G1.append(ans_hist[key]["G1"] / ans_sum[key]["G1"])
+        percent_list_G2.append(ans_hist[key]["G2"] / ans_sum[key]["G2"])
+        percent_list_G3.append(ans_hist[key]["G3"] / ans_sum[key]["G3"])
+
+    fig, ax = plt.subplots()
+    
+    ax.set_title("ACC")
+    # 積み上げ棒グラフ
+    G1 = ax.bar(ans_hist.keys(), percent_list_G1, label = "G1")
+    G2 = ax.bar(ans_hist.keys(), percent_list_G2, label = "G2", bottom=percent_list_G1)
+    G3 = ax.bar(ans_hist.keys(), percent_list_G3, label = "G3", bottom=[x + y for (x, y) in zip(percent_list_G1, percent_list_G2)])
+    ax.legend()
+    # 数値表示
+    # !! matplot ver>=3.4
+    ax.bar_label(G1, label_type="center")
+    ax.bar_label(G2, label_type="center")
+    ax.bar_label(G3, label_type="center")
+    plt.show()

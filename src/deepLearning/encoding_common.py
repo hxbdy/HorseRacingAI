@@ -113,10 +113,10 @@ def prob_win(value_list):
 
         print(["{:^5d}".format(i) for i in ls_sorted_idx+1])
         print(prob_disp)
-        #return list(ls_sorted_idx), prob
     else:
         print(ls_sorted_idx+1)
         print(prob)
+    return list(ls_sorted_idx)
 
 def read_RaceInfo(race_id = ""):
     """推測するレースのRaceInfoオブジェクトを読み込む
