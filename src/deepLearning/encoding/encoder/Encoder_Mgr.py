@@ -171,19 +171,10 @@ class MgrClass:
                 break
         print()
 
-        # 解析用情報取得
-        analysis_train = []
-        # for i in range(len(self.totalRaceList)):
-        #     odds = db_race_1st_odds(self.totalRaceList[i])
-        #     grade = db_race_grade(self.totalRaceList[i])
-        #     analysis_train.append([odds, grade])
-        #     logger.info("analysis data get ... {0} / {1}".format(i, self.totalRaceNum))
-
         # 計測終了
         time_end = time.perf_counter()
 
         logger.info("========================================")
         logger.info("encoding time = {0} [sec]".format(time_end - time_sta))
-        # logger.info("Analysis List [odds, grade] = {0}".format([odds, grade]))
         
-        return self.totalXList, self.totaltList, analysis_train
+        return self.totalXList, self.totaltList
