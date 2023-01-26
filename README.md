@@ -4,7 +4,7 @@
 | About | Exe | Output |
 | ----  | --- | ------ |
 |1. [netkeiba.com](https://www.netkeiba.com/)から必要情報をスクレイピングする|src\scraping\netkeiba_scraping.py	|resrc\netkeibaDB\netkeiba.db|
-|2. 1.で取得した情報をエンコードする|src\deepLearning\encoding\scrapingDataNrm.py|dst\learningList\newest|
+|2. 1.で取得した情報をエンコードする|src\deepLearning\encoding\encodingMain.py|dst\learningList\newest|
 |3. ディープラーニングで学習する|src\deepLearning\nn\deepLearningMain.py|dst\trainedParam\newest|
 |4. 3.情報で推定する|src\deepLearning\nn\predict.py| - |
 
