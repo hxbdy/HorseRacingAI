@@ -24,7 +24,7 @@ serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
 path_learningList = path_ini('nn', 'path_learningList')
 shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
-x_train, t_train, x_test, t_test = encoding_load(path_learningList)
+x_train, t_train = encoding_load(path_learningList)
 
 # 高速化のため訓練データの削減
 # x_train = x_train[:500]

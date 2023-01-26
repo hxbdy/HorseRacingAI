@@ -83,7 +83,8 @@ def encoding_load(dir_path=""):
         with open(path_learningList + name, 'rb') as f:
             logger.info("load learningList = {0}".format(path_learningList + name))
             e = pickle.load(f)
-            data = np.array(list(deepflatten(e))).reshape(len(e), -1)
+            flat_list = np.array(list(deepflatten(e)))
+            data = flat_list.reshape(len(e), -1)
             logger.info("{0} = {1}".format(name, data.shape))
             encoding_data_list.append(data)
     

@@ -6,10 +6,10 @@ import shutil
 from matplotlib import pyplot as plt
 
 from multi_layer_net_extend import MultiLayerNetExtend
-from trainer import Trainer
-
-from file_path_mgr import path_ini
-from encoding_common import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
+from trainer                import Trainer
+from util                   import shuffle_dataset
+from file_path_mgr          import path_ini
+from encoding_common        import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
@@ -20,7 +20,16 @@ serial_dir_path = encoding_serial_dir_path(path_root_trainedParam)
 path_learningList = path_ini('nn', 'path_learningList')
 shutil.copytree(path_learningList, serial_dir_path + "learningList/")
 
-x_train, t_train, x_test, t_test = encoding_load(path_learningList)
+x_data, t_data = encoding_load(path_learningList)
+
+# データシャッフル
+rate = 0.8
+train_num = int(x_data.shape[0] * rate)
+x_data, t_data = shuffle_dataset(x_data, t_data)
+x_train = x_data[:train_num]
+t_train = t_data[:train_num]
+x_test = x_data[train_num:]
+t_test = t_data[train_num:]
 
 def __train(lr, weight_decay, epocs=500):
     network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[150, 75, 37],

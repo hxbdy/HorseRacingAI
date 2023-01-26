@@ -12,15 +12,9 @@ limit_test      = -1   # 取得件数 -1 なら全件
 
 # 学習データファイル名フォーマット
 encoded_file_name_list = [
-    "x_train.pickle",
-    "t_train.pickle",
-    "x_test.pickle",
-    "t_test.pickle"
+    "x_data.pickle",
+    "t_data.pickle",
 ]
-
-# テストファイル名フォーマット
-analysis_train_file_name = "analysis_train.pickle"
-analysis_test_file_name = "analysis_test.pickle"
 
 # 学習時の入力用テーブル
 XTbl = [
