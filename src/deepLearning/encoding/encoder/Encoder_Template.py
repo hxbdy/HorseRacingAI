@@ -73,7 +73,6 @@ if __name__ == "__main__":
         # エンコード実行
         test.adj()
         # 要素数チェック
-        test.xList = list(deepflatten(test.xList))
         if ((before_len != len(test.xList)) and (before_len != 0)):
             logger.critical("CHECK ARRAY SIZE !! before = {0}, after = {1}".format(before_len, len(test.xList)))
         before_len = len(test.xList)

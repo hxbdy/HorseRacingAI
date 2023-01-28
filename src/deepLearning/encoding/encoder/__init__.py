@@ -33,3 +33,4 @@ from . import Encoder_Weather
 from . import Encoder_Last3f
 from . import Encoder_HorseWeight
 from . import Encoder_CornerPos
+from . import Encoder_Pace

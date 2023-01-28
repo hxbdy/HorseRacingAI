@@ -94,6 +94,10 @@ class PredictCornerPos(encoder.Encoder_CornerPos.CornerPosClass):
         # horse_id
         self.xList = self.race_info.horse_id
         self.fix0()
+class PredictPace(encoder.Encoder_Pace.PaceClass):
+    def get(self):
+        # horse_id
+        self.xList = self.race_info.horse_id
 # ==========================================================================
 
 # 推論時の入力用テーブル
@@ -114,5 +118,6 @@ predict_XTbl = [
     PredictParentBradleyTerryClass,
     PredictLast3fClass,
     PredictHorseWeight,
-    PredictCornerPos
+    PredictCornerPos,
+    PredictPace
 ]

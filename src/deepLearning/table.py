@@ -34,7 +34,8 @@ XTbl = [
     encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass,
     encoder.Encoder_Last3f.Last3fClass,
     encoder.Encoder_HorseWeight.HorseWeightClass,
-    encoder.Encoder_CornerPos.CornerPosClass
+    encoder.Encoder_CornerPos.CornerPosClass,
+    encoder.Encoder_Pace.PaceClass
 ]
 
 # 正解用テーブル

@@ -248,3 +248,19 @@ def db_corner_pos(race_id, horse_id):
     corner_pos_list = list(map(int, corner_pos_list))
 
     return corner_pos_list
+
+def db_pace(race_id, horse_id):
+    """レースのペースを取得する
+    馬ごとのペースではないので注意
+    return: [first3f, last3f]
+    """
+    pace = netkeibaDB.sql_one_race_info(race_id, horse_id, "pace")
+
+    # 取得できなかった場合Noneを返す
+    if type(pace) != str:
+        return None
+
+    pace_list = pace.split("-")
+    pace_list = list(map(float, pace_list))
+
+    return pace_list
