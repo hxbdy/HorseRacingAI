@@ -1,7 +1,5 @@
 import encoder
 
-from getFromDB import db_horse_bod, db_horse_father
-
 # ==========================================================================
 # 親クラスXClassの変数としてレース情報は設定済みの前提
 # ==========================================================================
@@ -33,6 +31,7 @@ class PredictWeatherClass(encoder.Encoder_Weather.WeatherClass):
         self.xList = self.race_info.weather
 class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
     def get(self):
+        from getFromDB import db_horse_bod
         # レース開催日
         self.d0 = self.race_info.date
         # 誕生日をDBから取得
@@ -70,6 +69,7 @@ class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
         self.xList = self.race_info.horse_id
 class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
     def get(self):
+        from getFromDB import db_horse_father
         # horse_id
         childList = self.race_info.horse_id
         parentList = []
@@ -89,6 +89,11 @@ class PredictHorseWeight(encoder.Encoder_HorseWeight.HorseWeightClass):
     def get(self):
         # 馬体重リスト
         self.xList = self.race_info.horse_weight
+class PredictCornerPos(encoder.Encoder_CornerPos.CornerPosClass):
+    def get(self):
+        # horse_id
+        self.xList = self.race_info.horse_id
+        self.fix0()
 # ==========================================================================
 
 # 推論時の入力用テーブル
@@ -108,5 +113,6 @@ predict_XTbl = [
     PredictUmamusumeClass,
     PredictParentBradleyTerryClass,
     PredictLast3fClass,
-    PredictHorseWeight
+    PredictHorseWeight,
+    PredictCornerPos
 ]

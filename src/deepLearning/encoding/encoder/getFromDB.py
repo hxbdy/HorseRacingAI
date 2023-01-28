@@ -6,10 +6,10 @@
 import re
 import logging
 from datetime import date
-from typing import OrderedDict
+from typing   import OrderedDict
 
-from NetkeibaDB import NetkeibaDB
-from debug import stream_hdl, file_hdl
+from NetkeibaDB    import NetkeibaDB
+from debug         import stream_hdl, file_hdl
 from file_path_mgr import path_ini
 
 logger = logging.getLogger(__name__)
@@ -229,3 +229,22 @@ def db_race_list_sort(race_id_list):
 def db_horse_weight(race_id, horse_id):
     '''race_resultテーブルから馬体重を取得する'''
     return netkeibaDB.sql_one_race_result(race_id, horse_id, "horse_weight")
+
+def db_corner_pos(race_id, horse_id):
+    '''コーナー通過時点での順位を返す
+    return: コーナー通過時点での順位をlist(int, int, ...)返す
+    '''
+    corner_pos = netkeibaDB.sql_one_race_info(race_id, horse_id, "corner_pos")
+
+    # 取得できなかった場合Noneを返す
+    if type(corner_pos) != str:
+        return None
+
+    # 空文字ならNoneを返す
+    if " " in corner_pos:
+        return None
+
+    corner_pos_list = corner_pos.split("-")
+    corner_pos_list = list(map(int, corner_pos_list))
+
+    return corner_pos_list

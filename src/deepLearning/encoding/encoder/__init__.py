@@ -32,3 +32,4 @@ from . import Encoder_Umamusume
 from . import Encoder_Weather
 from . import Encoder_Last3f
 from . import Encoder_HorseWeight
+from . import Encoder_CornerPos

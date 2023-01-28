@@ -1,7 +1,7 @@
 # エンコーダの追加方法
 # 1. エンコーダクラスを以下のテンプレートから作成する
 # 2. __init__.py に1.で作成したクラス追加
-# 3. 推測時の入力用クラスを predict.py に追記する
+# 3. 推測時の入力用クラスを predictClass.py に追記する
 # 4. table.py のメンテナンス
 # 4.1. XTbl に1.で作成したクラス追加
 # 4.2. predict_XTbl に2.で作成したクラスを追加しておく
@@ -25,6 +25,9 @@ class XXXClass(XClass):
         # DB データ問い合わせを行う
         # 問い合わせ関数は getFromDB.py に追記して呼び出して下さい
         # !! 推測時にも入力できるデータのみをここで取得すること
+        # エンコード対象の race_id は XClass の self.race_id に格納してから実行してください
+        # 出走する馬一覧取得
+        # horse_id_list = db_race_list_horse_id(self.race_id)
         # self.xList = DB問い合わせ結果
         pass
     
@@ -50,6 +53,7 @@ if __name__ == "__main__":
     import numpy as np
     from getFromDB import db_race_list_id
     from selfcheck import selfcheck
+    from iteration_utilities import deepflatten
 
     # コンソール表示上、有効桁数は2桁とする
     np.set_printoptions(precision=2, linewidth=150)
@@ -69,12 +73,13 @@ if __name__ == "__main__":
         # エンコード実行
         test.adj()
         # 要素数チェック
+        test.xList = list(deepflatten(test.xList))
         if ((before_len != len(test.xList)) and (before_len != 0)):
             logger.critical("CHECK ARRAY SIZE !! before = {0}, after = {1}".format(before_len, len(test.xList)))
         before_len = len(test.xList)
         # 結果確認
         logger.info("race_id = {0} | result = {1}".format(race_id, np.array(test.xList)))
-        result_list.append(test.xList)
+        result_list.append(list(deepflatten(test.xList)))
     
     # 結果の妥当性を確認する
     selfcheck("XXXClass", result_list)
