@@ -172,6 +172,19 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
+    def sql_mul_diff(self, table1, col1, table2, col2):
+        """col1 - col2 を返す
+        重複しているcolの要素は1つとみなす"""
+
+        sql = "SELECT DISTINCT {0} FROM {1} EXCEPT SELECT DISTINCT {2} FROM {3};".format(col1, table1, col2, table2)
+        self.cur.execute(sql)
+        result  = self.cur.fetchall()
+        # logger.info("col1 - col2 = {0}".format(result))
+        retList = []
+        for i in result:
+            retList.append(i[0])
+        return retList
+
     def sql_isIn(self, tbl_name, condition_list):
         """テーブル内に条件に一致する行が存在するか判定
         tbl_name: テーブル名

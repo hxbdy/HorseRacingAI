@@ -24,10 +24,6 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
 
-# load DB
-path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
-netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
-
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
 col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \
         "馬番":"horse_number", "オッズ":"odds", "人気":"fav", "着順":"result", "斤量":"burden_weight", \
@@ -63,6 +59,8 @@ def create_table():
     """
 
     dbname = path_ini("common", "path_netkeibaDB")
+    os.makedirs(os.path.dirname(dbname))
+
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
     cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)')
@@ -562,13 +560,9 @@ def make_raceID_list():
     """race_idテーブルに存在し、かつrace_resultテーブル内に存在しないレースのraceIDリストを返す
     race_idテーブル -> race_resultテーブル
     """
-    raceID_list_ri = netkeibaDB.sql_mul_tbl("race_id",["DISTINCT id"],["1"],[1])
-    raceID_set_ri = set(raceID_list_ri)
-    raceID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT race_id"],["1"],[1])
-    raceID_set_rr = set(raceID_list_rr)
+    raceID_list = netkeibaDB.sql_mul_diff("race_id", "id", "race_result", "race_id")
 
-    raceID_list = list(raceID_set_ri - raceID_set_rr)
-    # raceIDにアルファベットが入るレースを排除
+    # 数字のみのraceIDを対象とする
     raceID_list_out = []
     for raceID in raceID_list:
         if raceID.isdecimal():
@@ -850,13 +844,23 @@ if __name__ == "__main__":
         login(driver, mail_address, password)
         
         create_table()
+
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         start = "198601"
         end = datetime.datetime.now().strftime("%Y%m")
+        
         update_database_learning(driver, start, end)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
     elif args.db:
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)
 
@@ -870,6 +874,10 @@ if __name__ == "__main__":
         update_database_learning(driver, start, end)
     
     elif args.race_id:
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)
 
