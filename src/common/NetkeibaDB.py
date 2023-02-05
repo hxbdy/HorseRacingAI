@@ -52,6 +52,13 @@ class NetkeibaDB:
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
 
+    def sql_mul_all(self, table_name):
+        """table要素をすべて取得する
+        テーブルの要素数に注意"""
+        sql = "SELECT * FROM {0};".format(table_name)
+        self.cur.execute(sql)
+        return self.cur.fetchall()
+
     def sql_one_horse_prof(self, horse_id, col_name):
         # horse_prof テーブルから指定列の要素を一つ取り出す
         # 主キーを指定するため必ず1つに絞れる
@@ -71,7 +78,11 @@ class NetkeibaDB:
         # 主キーを指定するため必ず1つに絞れる
         sql = "SELECT " + col_name + " FROM race_result WHERE race_id=? AND horse_id=?;"
         self.cur.execute(sql, [race_id, horse_id])
-        return self.cur.fetchone()[0]
+        data = self.cur.fetchone()
+        if data is None:
+            return None
+        else:
+            return data[0]
 
     def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list):
         # テーブル table_name から列 col_target を複数取得する
@@ -205,11 +216,19 @@ class NetkeibaDB:
             self.cur.execute(sql)
         self.conn.commit()
 
+    def sql_insert_RowToUntrackedRaceId(self, race_id_list):
+        # untracked_race_idテーブルに新しい行を挿入
+        for race_id in race_id_list:
+            if self.sql_isIn("untracked_race_id", ["race_id='{0}'".format(race_id)]) == False:
+                sql = "INSERT INTO untracked_race_id(race_id) values('{}')".format(race_id)
+                self.cur.execute(sql)
+        self.conn.commit()
+
     def sql_insert_Row(self, tbl_name, target_col_list, data_list):
         """テーブルに新しい行を挿入
         tbl_name: テーブル名
         target_col_list: 列の指定
-        data: 挿入するデータ．2次元配列で指定．全ての要素で列数が同じ． (全部文字列になる)
+        data: 挿入するデータ.2次元配列で指定.全ての要素で列数が同じ.(全部文字列になる)
         """
         for data in data_list:
             for i in range(len(data)):
@@ -246,4 +265,19 @@ class NetkeibaDB:
                 sql = "UPDATE {} SET ".format(tbl_name) + ",".join(target_col_list_copied) + " WHERE " + " AND ".join(condition)
             self.cur.execute(sql, data)
 
+        self.conn.commit()
+
+    def sql_del_row(self, table_name, key_name_list, key_data_list):
+        """指定テーブルから行を削除する。行の指定にはキーを使う"""
+        sql = "DELETE FROM " + table_name + " WHERE "
+
+        add_place_holder = []
+        for key_name in key_name_list:
+            add_place_holder.append(key_name + "=?")
+        sql += ' AND '.join(add_place_holder)
+        sql += ';'
+
+        # print(sql)
+
+        self.cur.execute(sql, key_data_list)
         self.conn.commit()
