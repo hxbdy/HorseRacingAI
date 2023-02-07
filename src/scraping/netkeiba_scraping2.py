@@ -128,8 +128,19 @@ class multi_scraper:
         self._start()
         self._join()
 
-        self.queue.put(["stop"])
+        self.queue.put(["stop"], block=True)
         self.rcv.join()
+
+    def scrape_async(self):
+        # 子プロセスの完了を待たずに返る
+        # 親プロセスの生成速度 > 子プロセス完了速度
+        # の場合、スタックオーバーフローを起こすため使用禁止
+        
+        # スクレイプ予定のリストをプロセス数に分割
+        jobs = split_list(self.scrape_list, self.tabs)
+        for job in jobs:       
+            self.child_process.append(Process(target = self.func, args = (self.queue, job)))
+        self._start()
 
     def _join(self):
         for process in self.child_process:
@@ -150,44 +161,19 @@ class race_multi_scraper(multi_scraper):
             if(rcv[0] == "success"):
                 # race_result テーブルへ挿入
                 nf.db_insert_race_result(rcv[1], rcv[2])
-
-                # untracked race_id 削除
-                # horse_id_list のスクレイプが終わるまで待機してから
-                race_id_idx = rcv[1].index("race_id")
-                for data in rcv[2]:
-                    race_id = data[race_id_idx]
-                    nf.db_del_record_untracked_race_id(race_id)
-                
-
-                #####################################################
-                # 以下別通信で行うようにする
-
                 # horse_id リストを更に別プロセスでスクレイプする
                 horse_id_list = rcv[3]
-                print("will scrape horse_id_list = ", horse_id_list)
-                ms = horse_multi_scraper(horse_id_list, scrape_horse_result, 10)
-                # !!! 10プロセスの馬のスクレイプが完了しないとこの関数から返ってこない
-
-                ms.scrape()
-                
-                # BUG: untracked horse_id テーブルが必要ではないか
-                #      horse=id をスクレイプしている上記プロセスがクラッシュした場合、
-                #      ここで受け取った複数のrace=idで出走していた馬の情報を取りこぼす
-                #      -> raceresultテーブルには登録されているhorse=idが
-                #         horseprof, race=infoには挿入されていないという現象が起きる
-                # 対策
-                # 1.untracked horse_id テーブルを用意する
-                # 2.ここで受信したスクレイプする馬のリストをuntracked=horse=id テーブルに挿入する
-                # 3.馬のスクレイピングはそこのテーブルから取得して行う
-                # 4.クラッシュせずにその馬のスクレイピングが完了したらテーブルから削除する
-
-                
-
+                print("1 will scrape horse_id_list = ", horse_id_list)
+                nf.db_insert_untracked_horse_id(horse_id_list)
+                self.queue.put(["start"], block=True)
             elif(rcv[0] == "start"):
-                # 馬のスクレイピングを行うプロセスを起動
-                pass
+                horse_id_list = nf.db_pop_untracked_horse_id()
+                print("2 will scrape horse_id_list = ", horse_id_list)
+                ms = horse_multi_scraper(horse_id_list, scrape_horse_result, 5)
+                ms.scrape()
             elif(rcv[0] == "failed"):
                 print("failed scrape race_id_list = ", rcv[1])
+                nf.db_insert_untracked_race_id(rcv[1])
             elif(rcv[0] == "stop"):
                 break
             rcv_cnt += 1
@@ -207,6 +193,7 @@ class horse_multi_scraper(multi_scraper):
                 nf.db_diff_insert_race_info(rcv[2][0], rcv[2][1], rcv[2][2])
             elif(rcv[0] == "failed"):
                 print("failed scrape horse_id_list = ", rcv[1])
+                nf.db_insert_untracked_horse_id(rcv[1])
             elif(rcv[0] == "stop"):
                 break
             rcv_cnt += 1
@@ -295,6 +282,7 @@ def create_table():
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
     cur.execute('CREATE TABLE untracked_race_id(race_id TEXT, PRIMARY KEY(race_id))')
+    cur.execute('CREATE TABLE untracked_horse_id(horse_id TEXT, PRIMARY KEY(horse_id))')
     cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
     cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
     cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
@@ -616,33 +604,36 @@ def scrape_race_result(queue, race_id_list):
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)
         for horse_id_list, target_col, data_list in scrape_racedata(driver, race_id_list):
-            queue.put(["success", target_col, data_list, horse_id_list])
+            # 1レースごとに返る
+            queue.put(["success", target_col, data_list, horse_id_list], block=True)
     except:
-        queue.put(["failed", race_id_list])
+        queue.put(["failed", race_id_list], block=True)
 
 def scrape_horse_result(queue, horse_id_list):
     nf = NetkeibaDB_IF("ROM")
-    checked_list = nf.db_not_retired_list(horse_id_list)
-    # try:
-    browser      = private_ini("scraping", "browser")
-    mail_address = private_ini("scraping", "mail")
-    password     = private_ini("scraping", "pass")
+    # TODO: 必要？
+    # checked_list = nf.db_not_retired_list(horse_id_list)
+    checked_list = horse_id_list
+    try:
+        browser      = private_ini("scraping", "browser")
+        mail_address = private_ini("scraping", "mail")
+        password     = private_ini("scraping", "pass")
 
-    driver = wf.start_driver(browser)
-    login(driver, mail_address, password)
-    for horse_prof_data, race_info_data in scrape_horsedata(driver, checked_list):
-        queue.put(["success", horse_prof_data, race_info_data])
-    # except:
-    # queue.put(["failed", checked_list])
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+        for horse_prof_data, race_info_data in scrape_horsedata(driver, checked_list):
+            queue.put(["success", horse_prof_data, race_info_data], block=True)
+    except:
+        queue.put(["failed", checked_list], block=True)
 
 ####################################################################################################
 
 def setup_scrape_race_result():
     # get scrape list
     nf = NetkeibaDB_IF("ROM")
-    race_id_list = nf.db_get_untracked_race_id()
+    race_id_list = nf.db_pop_untracked_race_id()
 
-    ms = race_multi_scraper(race_id_list, scrape_race_result, 5)
+    ms = race_multi_scraper(race_id_list, scrape_race_result, 2)
     ms.scrape()
 
 ####################################################################################

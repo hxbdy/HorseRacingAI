@@ -224,6 +224,14 @@ class NetkeibaDB:
                 self.cur.execute(sql)
         self.conn.commit()
 
+    def sql_insert_RowToUntrackedHorseId(self, horse_id_list):
+        # untracked_horse_idテーブルに新しい行を挿入
+        for horse_id in horse_id_list:
+            if self.sql_isIn("untracked_horse_id", ["horse_id='{0}'".format(horse_id)]) == False:
+                sql = "INSERT INTO untracked_horse_id(horse_id) values('{}')".format(horse_id)
+                self.cur.execute(sql)
+        self.conn.commit()
+
     def sql_insert_Row(self, tbl_name, target_col_list, data_list):
         """テーブルに新しい行を挿入
         tbl_name: テーブル名

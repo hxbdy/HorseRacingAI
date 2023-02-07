@@ -275,14 +275,30 @@ class NetkeibaDB_IF:
         """
         self.netkeibaDB.sql_insert_RowToUntrackedRaceId(race_id_list)
 
-    def db_get_untracked_race_id(self):
-        """untracked_race_idテーブルすべて取得する
+    def db_insert_untracked_horse_id(self, horse_id_list):
+        """untracked_horse_idテーブルに登録する
+        """
+        self.netkeibaDB.sql_insert_RowToUntrackedHorseId(horse_id_list)
+
+    def db_pop_untracked_race_id(self):
+        """untracked_race_idテーブルすべてpopする
         """
         race_id_list = self.netkeibaDB.sql_mul_all("untracked_race_id")
         # [('198608010111',), ('198606010111',), ('198606010109',)...]
         ret = []
         for i in race_id_list:
             ret.append(i[0])
+            self.db_del_record_untracked_race_id(i[0])
+        return ret
+
+    def db_pop_untracked_horse_id(self):
+        """untracked_horse_idテーブルすべてpopする
+        """
+        horse_id_list = self.netkeibaDB.sql_mul_all("untracked_horse_id")
+        ret = []
+        for i in horse_id_list:
+            ret.append(i[0])
+            self.db_del_record_untracked_horse_id(i[0])
         return ret
 
     def db_insert_race_result(self, target_col, data_list):
@@ -304,8 +320,12 @@ class NetkeibaDB_IF:
         return checked_list
 
     def db_del_record_untracked_race_id(self, race_id):
-        """race_result テーブルから指定レコードを削除する"""
+        """untracked_race_id テーブルから指定レコードを削除する"""
         self.netkeibaDB.sql_del_row("untracked_race_id", ["race_id"], [race_id])
+
+    def db_del_record_untracked_horse_id(self, horse_id):
+        """untracked_horse_id テーブルから指定レコードを削除する"""
+        self.netkeibaDB.sql_del_row("untracked_horse_id", ["horse_id"], [horse_id])
 
     def db_not_retired_list(self, horse_id_list):
         """ 引退馬としてテーブルに登録されていないhorse_idのみを返す
