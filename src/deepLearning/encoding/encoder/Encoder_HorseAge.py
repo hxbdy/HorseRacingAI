@@ -1,12 +1,10 @@
+import logging
 import numpy as np
 from dateutil.relativedelta import relativedelta
 
 from Encoder_X import XClass
-from getFromDB import db_race_list_horse_id, db_horse_bod, db_race_date
+from debug     import stream_hdl, file_hdl
 
-from debug import stream_hdl, file_hdl
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -22,14 +20,14 @@ class HorseAgeClass(XClass):
             logger.critical("ERROR : SET race_id")
         else:
             # 出走馬の誕生日リストを作成
-            horseList = db_race_list_horse_id(self.race_id)
+            horseList = self.nf.db_race_list_horse_id(self.race_id)
             bdList = []
             for horse_id in horseList:
-                bod = db_horse_bod(horse_id)
+                bod = self.nf.db_horse_bod(horse_id)
                 bdList.append(bod)
             self.xList = bdList
             # レース開催日を取得
-            self.d0 = db_race_date(self.race_id)
+            self.d0 = self.nf.db_race_date(self.race_id)
 
     def fix(self):
         if self.d0 == 0:

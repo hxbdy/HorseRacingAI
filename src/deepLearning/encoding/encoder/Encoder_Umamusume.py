@@ -1,9 +1,7 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_horse_id, db_horse_list_parent
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,7 +14,7 @@ class UmamusumeClass(XClass):
 
     def get(self):
         # 出馬リストを取得
-        horse_list = db_race_list_horse_id(self.race_id)
+        horse_list = self.nf.db_race_list_horse_id(self.race_id)
         self.xList = horse_list
 
     def fix(self):
@@ -117,7 +115,7 @@ class UmamusumeClass(XClass):
         for i in range(len(horse_list)):
             # horse_list[i] の親にウマ娘ちゃんがいたら umamusume_family[i] = 1 とする
             # 親を取得
-            parent_list = db_horse_list_parent(horse_list[i])
+            parent_list = self.nf.db_horse_list_parent(horse_list[i])
             # 親1頭ずつ確認する
             for parent in parent_list:
                 # ウマ娘ちゃんならフラグをセットする

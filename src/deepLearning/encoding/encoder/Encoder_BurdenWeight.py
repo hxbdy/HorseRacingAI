@@ -1,9 +1,8 @@
-import numpy as np
-from Encoder_X import XClass
-from getFromDB import db_race_list_burden_weight
-from debug import stream_hdl, file_hdl
-
 import logging
+import numpy as np
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,7 +14,7 @@ logger.addHandler(file_hdl("BurdenWeightClass"))
 class BurdenWeightClass(XClass):
 
     def get(self):
-        burdenWeightList = db_race_list_burden_weight(self.race_id)
+        burdenWeightList = self.nf.db_race_list_burden_weight(self.race_id)
         self.xList = burdenWeightList
 
     def pad(self):

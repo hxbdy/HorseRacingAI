@@ -1,10 +1,8 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_post_position
+import logging
 import numpy as np
 
-from debug import stream_hdl, file_hdl
-
-import logging
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,7 +14,7 @@ logger.addHandler(file_hdl("PostPositionClass"))
 class PostPositionClass(XClass):
 
     def get(self):
-        postPositionList = db_race_list_post_position(self.race_id)
+        postPositionList = self.nf.db_race_list_post_position(self.race_id)
         self.xList = postPositionList
 
     def pad(self):

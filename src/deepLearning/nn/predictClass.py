@@ -31,13 +31,12 @@ class PredictWeatherClass(encoder.Encoder_Weather.WeatherClass):
         self.xList = self.race_info.weather
 class PredictHorseAgeClass(encoder.Encoder_HorseAge.HorseAgeClass):
     def get(self):
-        from getFromDB import db_horse_bod
         # レース開催日
         self.d0 = self.race_info.date
         # 誕生日をDBから取得
         bdList = []
         for horse_id in self.race_info.horse_id:
-            bod = db_horse_bod(horse_id)
+            bod = self.nf.db_horse_bod(horse_id)
             bdList.append(bod)
         self.xList = bdList        
 class PredictBurdenWeightClass(encoder.Encoder_BurdenWeight.BurdenWeightClass):
@@ -69,13 +68,12 @@ class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
         self.xList = self.race_info.horse_id
 class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
     def get(self):
-        from getFromDB import db_horse_father
         # horse_id
         childList = self.race_info.horse_id
         parentList = []
         for i in range(len(childList)):
             # 父のidを取得
-            parent = db_horse_father(childList[i])
+            parent = self.nf.db_horse_father(childList[i])
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)

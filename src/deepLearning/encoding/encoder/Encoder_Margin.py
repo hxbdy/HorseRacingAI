@@ -1,10 +1,8 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_margin
 import numpy as np
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,7 +14,7 @@ logger.addHandler(file_hdl("MarginClass"))
 class MarginClass(XClass):
 
     def get(self):
-        marginList = db_race_list_margin(self.race_id)
+        marginList = self.nf.db_race_list_margin(self.race_id)
         self.xList = marginList
 
     def fix(self):

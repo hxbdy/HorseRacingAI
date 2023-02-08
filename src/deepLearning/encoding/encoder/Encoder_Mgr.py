@@ -1,12 +1,11 @@
 import copy
 import time
+import logging
 from multiprocessing import Process, Queue
 
-from getFromDB import db_race_list_id
 from debug     import stream_hdl, file_hdl
 from Encoder_X import XClass
-
-import logging
+from getFromDB import NetkeibaDB_IF
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,7 +22,8 @@ class MgrClass:
         self.tclassTbl = copy.copy(tclassTbl)
 
         # (start_year <= 取得範囲 <=  end_year) の race_id, レース数保持
-        self.totalRaceList = db_race_list_id(start_year, end_year, limit)
+        nf = NetkeibaDB_IF("RAM")
+        self.totalRaceList = nf.db_race_list_id(start_year, end_year, limit)
         self.totalRaceNum  = len(self.totalRaceList)
 
         # エンコード結果保持リスト

@@ -1,11 +1,9 @@
-from Encoder_X import XClass
+import logging
 import re
-from getFromDB import db_horse_list_perform, db_race_list_horse_id
 import numpy as np
 
-from debug import stream_hdl, file_hdl
-
-import logging
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,14 +17,14 @@ class CumPerformClass(XClass):
     def getForCalcPerformInfo(self, horse_list):
         horse_info_list = []
         for horse in horse_list:
-            race = db_horse_list_perform(horse)
+            race = self.nf.db_horse_list_perform(horse)
             horse_info_list.append(race)
         self.xList = horse_info_list
 
     def get(self):
         # race_id に出場した馬のリストを取得
         # fixでパフォーマンスを計算する
-        horse_list = db_race_list_horse_id(self.race_id)
+        horse_list = self.nf.db_race_list_horse_id(self.race_id)
         self.getForCalcPerformInfo(horse_list)
 
     def getStandardTime(self, distance, condition, track, location):

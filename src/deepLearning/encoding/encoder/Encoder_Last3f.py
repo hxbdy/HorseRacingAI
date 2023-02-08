@@ -1,10 +1,8 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_horse_id, db_race_last_3f, db_race_last_race
 import numpy as np
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -17,20 +15,20 @@ class Last3fClass(XClass):
 
     def get(self):
         # 出走馬リスト取得
-        self.xList = db_race_list_horse_id(self.race_id)
+        self.xList = self.nf.db_race_list_horse_id(self.race_id)
 
     def fix(self):
         # 直前のレースのあがり3Fのリストを作成する
         last_3f_list = []
         for horse_id in self.xList:
             # 直前のレースIDを取得
-            last_race_id = db_race_last_race(self.race_id, horse_id)
+            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id)
             if len(last_race_id) == 0:
                 # 直前に重賞レースに出走していないもしくはデータがない
                 t = None
             else:
                 # 直前のレースあがり3ハロンのタイムを取得
-                t = db_race_last_3f(last_race_id, horse_id)
+                t = self.nf.db_race_last_3f(last_race_id, horse_id)
 
             if (t == None) or (t.isspace()):
                 # 空白文字のみだった -> 該当のレースがなかった

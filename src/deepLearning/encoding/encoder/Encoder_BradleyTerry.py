@@ -1,8 +1,7 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_horse_id, db_race_rank, db_race_list_1v1
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,12 +13,12 @@ logger.addHandler(file_hdl("BradleyTerryClass"))
 class BradleyTerryClass(XClass):
 
     def get(self):
-        self.xList = db_race_list_horse_id(self.race_id)
+        self.xList = self.nf.db_race_list_horse_id(self.race_id)
         self.col_num = len(self.xList)
 
     def getRankFromDB(self, race_id, horse_id):
         # race_id で horse_id は何位だったか取得
-        val = db_race_rank(race_id, horse_id)
+        val = self.nf.db_race_rank(race_id, horse_id)
         if val.isdigit():
             rank = int(val)
         else:
@@ -38,7 +37,7 @@ class BradleyTerryClass(XClass):
                 win = 0
                 lose = 0
                 horse_x = self.xList[x]
-                races = db_race_list_1v1(horse_y, horse_x)
+                races = self.nf.db_race_list_1v1(horse_y, horse_x)
                 for race in races:
                     # race で horse_x, y は何位だったか取得
                     rank_y = self.getRankFromDB(race, horse_y)

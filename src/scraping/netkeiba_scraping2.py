@@ -610,7 +610,6 @@ def scrape_race_result(queue, race_id_list):
         queue.put(["failed", race_id_list], block=True)
 
 def scrape_horse_result(queue, horse_id_list):
-    nf = NetkeibaDB_IF("ROM")
     # TODO: 必要？
     # checked_list = nf.db_not_retired_list(horse_id_list)
     checked_list = horse_id_list

@@ -3,8 +3,7 @@ import logging
 import numpy as np
 
 from Encoder_X import XClass
-from getFromDB import db_race_list_rank
-from debug import stream_hdl, file_hdl
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -17,7 +16,7 @@ class RankOneHotClass(XClass):
 
     def get(self):
         # 馬番で昇順ソートされた順位を文字列で取得
-        self.xList = db_race_list_rank(self.race_id)
+        self.xList = self.nf.db_race_list_rank(self.race_id)
 
     def fix(self):
         retList = []

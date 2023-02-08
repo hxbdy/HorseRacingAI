@@ -1,8 +1,9 @@
-from debug import stream_hdl, file_hdl
 import logging
 import numpy as np
 
-from RaceInfo import RaceInfo
+from debug     import stream_hdl, file_hdl
+from getFromDB import NetkeibaDB_IF
+from RaceInfo  import RaceInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,6 +20,7 @@ class XClass:
 
     def __init__(self):
         self.xList = []
+        self.nf:NetkeibaDB_IF = NetkeibaDB_IF("RAM")
         
     def set(self, target_race_id):
         XClass.race_id = target_race_id

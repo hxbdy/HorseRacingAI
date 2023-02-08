@@ -51,7 +51,7 @@ class XXXClass(XClass):
 # このファイルを直接実行することで,このクラスのエンコードのみ動かせる
 if __name__ == "__main__":
     import numpy as np
-    from getFromDB import db_race_list_id
+    from getFromDB import NetkeibaDB_IF
     from selfcheck import selfcheck
     from iteration_utilities import deepflatten
 
@@ -62,7 +62,8 @@ if __name__ == "__main__":
     test = XXXClass()
 
     # テストに使うrace_id
-    race_id_list = db_race_list_id(1800, 2020, -1)
+    nf = NetkeibaDB_IF("RAM")
+    race_id_list = nf.db_race_list_id(1800, 2020, -1)
     
     result_list = []
     # エンコード結果は固定長である必要があるので確認

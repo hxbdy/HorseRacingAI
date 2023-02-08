@@ -1,11 +1,9 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_race_data1
+import logging
 import re
 import numpy as np
 
+from Encoder_X import XClass
 from debug import stream_hdl, file_hdl
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -17,7 +15,7 @@ logger.addHandler(file_hdl("CourseDistanceClass"))
 class CourseDistanceClass(XClass):
 
     def get(self):
-        raceData1List = db_race_list_race_data1(self.race_id)
+        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
         # 距離取得
         # 3桁以上4桁以下の数値のみ取り出す。
         # 例えば、https://race.netkeiba.com/race/result.html?race_id=201306050111 では
