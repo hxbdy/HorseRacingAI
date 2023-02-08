@@ -7,18 +7,17 @@
 import pickle
 
 from matplotlib import pyplot as plt
-import xross
-np = xross.facttory_xp()
-
-import encoder
-
 from iteration_utilities import deepflatten
 
+import encoder
+import NetkeibaDB_IF
 from multi_layer_net_extend import MultiLayerNetExtend
-from getFromDB              import NetkeibaDB_IF
 from encoding_common        import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
+
+import xross
+np = xross.facttory_xp()
 
 # ==========================================================================
 

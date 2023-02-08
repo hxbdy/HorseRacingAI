@@ -1,8 +1,8 @@
 import logging
 import numpy as np
 
+import NetkeibaDB_IF
 from debug     import stream_hdl, file_hdl
-from getFromDB import NetkeibaDB_IF
 from RaceInfo  import RaceInfo
 
 logger = logging.getLogger(__name__)

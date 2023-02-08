@@ -51,7 +51,7 @@ class XXXClass(XClass):
 # このファイルを直接実行することで,このクラスのエンコードのみ動かせる
 if __name__ == "__main__":
     import numpy as np
-    from getFromDB import NetkeibaDB_IF
+    import NetkeibaDB_IF
     from selfcheck import selfcheck
     from iteration_utilities import deepflatten
 

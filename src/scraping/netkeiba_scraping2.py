@@ -1,19 +1,18 @@
-import logging
+import re
+import os
 import time
+import logging
 import argparse
 import datetime
 from dateutil.relativedelta import relativedelta
-from multiprocessing import Process, Queue
-import os
-import re
+from multiprocessing        import Process, Queue
 
 from selenium.webdriver.common.by import By
-from iteration_utilities import deepflatten
 
 import webdriver_functions as wf
+import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
-from debug import stream_hdl, file_hdl
-from getFromDB import NetkeibaDB_IF
+from debug         import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

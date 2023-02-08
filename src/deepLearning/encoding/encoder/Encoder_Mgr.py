@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 
 from debug     import stream_hdl, file_hdl
 from Encoder_X import XClass
-from getFromDB import NetkeibaDB_IF
+import NetkeibaDB_IF
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
