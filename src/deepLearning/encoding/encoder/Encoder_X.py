@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-import NetkeibaDB_IF
+from NetkeibaDB_IF import NetkeibaDB_IF
 from debug     import stream_hdl, file_hdl
 from RaceInfo  import RaceInfo
 

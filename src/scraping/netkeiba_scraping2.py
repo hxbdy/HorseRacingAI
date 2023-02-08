@@ -10,7 +10,7 @@ from multiprocessing        import Process, Queue
 from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
-import NetkeibaDB_IF
+from NetkeibaDB_IF import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
 from debug         import stream_hdl, file_hdl
 
@@ -263,33 +263,6 @@ def login(driver, mail_address, password):
         logger.critical('failed to log in netkeiba')
         err_msg = 'ログインに失敗した可能性．ログインidとパスワードを確認してください．正しい場合は，netkeiba_scraping.pyのコードを変更してください．'
         raise ValueError(err_msg)
-
-def create_table():
-    import sqlite3
-    """データベースの作成
-    データベースを新規作成するときに実行する。
-    untracked_idテーブル: スクレイピング対象のrace_idを一時的に保持しておく用
-    horse_profテーブル: 馬のページにある馬名などの情報と、生年月日などの表・血統の表の情報
-    race_infoテーブル: 馬のページにある出走レース情報
-    race_resultテーブル: レースのページにあるレース名やレース結果の情報(オッズは含まず)
-    jockey_infoテーブル: 騎手の騎乗回数を1年ごとに計上してまとめたテーブル
-    """
-
-    dbname = path_ini("common", "path_netkeibaDB")
-    os.makedirs(os.path.dirname(dbname))
-
-    conn = sqlite3.connect(dbname)
-    cur = conn.cursor()
-    cur.execute('CREATE TABLE untracked_race_id(race_id TEXT, PRIMARY KEY(race_id))')
-    cur.execute('CREATE TABLE untracked_horse_id(horse_id TEXT, PRIMARY KEY(horse_id))')
-    cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
-    cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
-    cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
-    cur.execute('CREATE TABLE jockey_info(jockey_id, year, num, PRIMARY KEY(jockey_id, year))')
-    conn.commit()
-
-    cur.close()
-    conn.close()
 
 def scrape_horsedata(driver, horseID_list):
     """馬のデータを取得して保存する
@@ -654,7 +627,6 @@ if __name__ == "__main__":
 
     # DB初期化
     if args.init:
-        create_table()
 
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)

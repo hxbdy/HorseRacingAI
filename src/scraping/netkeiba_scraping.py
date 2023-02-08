@@ -821,7 +821,7 @@ def update_jockey_info(lower_year=1980, upper_year=2021):
         logger.info("year {} end".format(year))
     
 
-
+# TODO: netkeibaDBを操作する時はNetkeibaDB_IFを使うように変更する
 if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
     browser      = private_ini("scraping", "browser")

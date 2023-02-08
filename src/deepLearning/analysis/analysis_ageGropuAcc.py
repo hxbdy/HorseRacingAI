@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from iteration_utilities import deepflatten
 
 import encoder
-import NetkeibaDB_IF
+from NetkeibaDB_IF import NetkeibaDB_IF
 from multi_layer_net_extend import MultiLayerNetExtend
 from encoding_common        import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini

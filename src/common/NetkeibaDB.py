@@ -8,12 +8,13 @@
 # mul : 取得する行数が1つ以上
 # {B} = 関数名
 
-import sqlite3
+import logging
 import copy
+import os
+
+import sqlite3
 
 from debug import stream_hdl, file_hdl
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -24,6 +25,9 @@ logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
     def __init__(self, path_db, loc):
+        if not os.path.isfile(path_db):
+            self.create_table(path_db)
+
         self.conn = sqlite3.connect(path_db)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
@@ -33,6 +37,30 @@ class NetkeibaDB:
         else:
             logger.info("DB will be located in ROM")
         logger.info("Database {0} loading complete".format(path_db))
+
+    def create_table(self, dbname):
+        """データベースの作成
+        データベースを新規作成するときに実行する。
+        untracked_idテーブル: スクレイピング対象のrace_idを一時的に保持しておく用
+        horse_profテーブル: 馬のページにある馬名などの情報と、生年月日などの表・血統の表の情報
+        race_infoテーブル: 馬のページにある出走レース情報
+        race_resultテーブル: レースのページにあるレース名やレース結果の情報(オッズは含まず)
+        jockey_infoテーブル: 騎手の騎乗回数を1年ごとに計上してまとめたテーブル
+        """
+        os.makedirs(os.path.dirname(dbname))
+
+        conn = sqlite3.connect(dbname)
+        cur = conn.cursor()
+        cur.execute('CREATE TABLE untracked_race_id(race_id TEXT, PRIMARY KEY(race_id))')
+        cur.execute('CREATE TABLE untracked_horse_id(horse_id TEXT, PRIMARY KEY(horse_id))')
+        cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg)')
+        cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id))')
+        cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id))')
+        cur.execute('CREATE TABLE jockey_info(jockey_id, year, num, PRIMARY KEY(jockey_id, year))')
+        conn.commit()
+
+        cur.close()
+        conn.close()
 
     def __del__(self):
         # データベースへのコネクションを閉じる
