@@ -110,6 +110,7 @@ class untracked_race_id_table:
 class multi_scraper:
     def __init__(self, scrape_list, func, tabs) -> None:
         self.scrape_list = scrape_list
+        self.scrape_list_len = len(self.scrape_list)
         self.queue = Queue()
         self.func = func
         self.tabs = tabs
@@ -155,19 +156,20 @@ class race_multi_scraper(multi_scraper):
         nf = NetkeibaDB_IF("ROM")
         while True:
             rcv = self.queue.get()
-            print("race_multi_scraper no.{0}".format(rcv_cnt))
-            print("race_multi_scraper wait msg = {0}".format(self.queue.qsize()))
+            # print("race_multi_scraper wait msg = {0}".format(self.queue.qsize()))
             if(rcv[0] == "success"):
+                print("race_multi_scraper {0} / {1}".format(rcv_cnt, self.scrape_list_len))
                 # race_result テーブルへ挿入
                 nf.db_insert_race_result(rcv[1], rcv[2])
                 # horse_id リストを更に別プロセスでスクレイプする
                 horse_id_list = rcv[3]
-                print("1 will scrape horse_id_list = ", horse_id_list)
+                # print("1 will scrape horse_id_list = ", horse_id_list)
                 nf.db_insert_untracked_horse_id(horse_id_list)
                 self.queue.put(["start"], block=True)
+                rcv_cnt += 1
             elif(rcv[0] == "start"):
                 horse_id_list = nf.db_pop_untracked_horse_id()
-                print("2 will scrape horse_id_list = ", horse_id_list)
+                # print("2 will scrape horse_id_list = ", horse_id_list)
                 ms = horse_multi_scraper(horse_id_list, scrape_horse_result, 5)
                 ms.scrape()
             elif(rcv[0] == "failed"):
@@ -175,7 +177,6 @@ class race_multi_scraper(multi_scraper):
                 nf.db_insert_untracked_race_id(rcv[1])
             elif(rcv[0] == "stop"):
                 break
-            rcv_cnt += 1
 
 class horse_multi_scraper(multi_scraper):
     def _Task(self):
@@ -183,20 +184,20 @@ class horse_multi_scraper(multi_scraper):
         nf = NetkeibaDB_IF("ROM")
         while True:
             rcv = self.queue.get()
-            print("horse_multi_scraper no.{0}".format(rcv_cnt))
             if(rcv[0] == "success"):
+                print("horse_multi_scraper {0} / {1}".format(rcv_cnt, self.scrape_list_len))
                 # ["success", horse_prof_data, race_info_data])
                 # horse_prof テーブルへ挿入
                 nf.db_upsert_horse_prof(rcv[1][0], rcv[1][1], rcv[1][2], rcv[1][3], rcv[1][4], rcv[1][5], rcv[1][6])
                 # race_info テーブルへ挿入
                 nf.db_diff_insert_race_info(rcv[2][0], rcv[2][1], rcv[2][2])
+                rcv_cnt += 1
             elif(rcv[0] == "failed"):
                 print("failed scrape horse_id_list = ", rcv[1])
                 nf.db_insert_untracked_horse_id(rcv[1])
             elif(rcv[0] == "stop"):
                 break
-            rcv_cnt += 1
-
+            
 ####################################################################################
 
 def string2grade(grade_str, distance_str):
