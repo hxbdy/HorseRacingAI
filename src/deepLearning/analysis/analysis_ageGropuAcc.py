@@ -16,7 +16,7 @@ from iteration_utilities import deepflatten
 
 from multi_layer_net_extend import MultiLayerNetExtend
 from getFromDB              import db_race_list_id, db_race_grade
-from encoding_common        import read_RaceInfo, prob_win
+from deepLearning_common    import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
 

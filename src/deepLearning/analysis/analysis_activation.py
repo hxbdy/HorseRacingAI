@@ -5,7 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from encoding_common import encoding_load
+from deepLearning_common import encoding_load
 
 
 def sigmoid(x):

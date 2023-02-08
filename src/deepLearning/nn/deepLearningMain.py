@@ -9,7 +9,7 @@ from multi_layer_net_extend import MultiLayerNetExtend
 from trainer                import Trainer
 from util                   import shuffle_dataset
 from file_path_mgr          import path_ini
-from encoding_common        import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
+from deepLearning_common    import encoding_load, encoding_serial_dir_path, dl_copy2newest, encoding_save_nn_data
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')
