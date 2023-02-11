@@ -1,11 +1,11 @@
 import re
-import os
 import time
 import logging
 import argparse
 import datetime
 from dateutil.relativedelta import relativedelta
 from multiprocessing        import Process, Queue
+from collections            import deque
 
 from selenium.webdriver.common.by import By
 
@@ -107,96 +107,135 @@ class untracked_race_id_table:
         self.race_No
         self.id
 
-class multi_scraper:
-    def __init__(self, scrape_list, func, tabs) -> None:
-        self.scrape_list = scrape_list
-        self.scrape_list_len = len(self.scrape_list)
-        self.queue = Queue()
-        self.func = func
-        self.tabs = tabs
-        self.child_process = []
+def main_process(queue, untracked_race_id_list, children_num):
+    children_process  = []
+    children_queue    = []
+    children_comp_flg = [0] * children_num
+    
+    nf = NetkeibaDB_IF("ROM")
 
-        # 子プロセスからのデータ受け取りプロセス生成
-        self.rcv = Process(target = self._Task)
-        self.rcv.start()
+    untracked_race_id_queue  = deque(untracked_race_id_list)
+    untracked_horse_id_queue = deque()
 
-    def scrape(self):
-        # スクレイプ予定のリストをプロセス数に分割
-        jobs = split_list(self.scrape_list, self.tabs)
-        for job in jobs:       
-            self.child_process.append(Process(target = self.func, args = (self.queue, job)))
-        self._start()
-        self._join()
+    # 前回 FAILED した id があればエンキューしておく
+    untracked_race_id_queue.extend(nf.db_pop_untracked_race_id())
+    untracked_horse_id_queue.extend(nf.db_pop_untracked_horse_id())
 
-        self.queue.put(["stop"], block=True)
-        self.rcv.join()
+    # スクレイププロセスの用意
+    # REQ メッセージをエンキュー
+    for i in range(children_num):
+        children_queue.append(Queue())
+        children_process.append(Process(target=scrape_process, args=(queue, children_queue[-1])))
+        children_process[-1].start()
+        queue.put(["REQ", i])
 
-    def scrape_async(self):
-        # 子プロセスの完了を待たずに返る
-        # 親プロセスの生成速度 > 子プロセス完了速度
-        # の場合、スタックオーバーフローを起こすため使用禁止
+    while True:
+        data = queue.get()
+
+        # REQ メッセージ
+        # 子プロセスからジョブの要求があったときに受信する
+        # 未スクレイプの horse_id / race_id があれば子プロセスにスクレイプ要求を送信する
+        if data[0] == "REQ":
+            children_id = data[1]
+
+            # スクレイピング待ちの馬のidをデキュー
+            # レース1回につき馬は複数いるので、馬のスクレイプ優先
+            if len(untracked_horse_id_queue) != 0:
+                cat  = "REQ"
+                id   = untracked_horse_id_queue.pop()
+                func = scrape_horse_result
+
+            elif len(untracked_race_id_queue) != 0:
+                cat  = "REQ"
+                id   = untracked_race_id_queue.pop()
+                func = scrape_race_result
+
+            # FIN メッセージ
+            # horse_id / race_id のキューが空なら
+            # 子プロセスに終了要求を送信する準備をする
+            else:
+                cat  = "FIN"
+                id   = None
+                func = None
+                children_comp_flg[children_id] = 1
+            
+            # 子プロセスに各種要求送信
+            children_queue[children_id].put([cat, children_id, func, id])
+
+        # 子プロセスからのスクレイプ完了通知
+        elif data[0] == "SUCCESS":
+            
+            # レースのスクレイプ完了通知受信
+            # race_result テーブルの更新と
+            # そのレースに出走した horse_id をエンキューする
+            if data[1] == "scrape_race_result":
+                target_col, data_list, horse_id_list = data[2]
+                nf.db_insert_race_result(target_col, data_list)
+                untracked_horse_id_queue.extend(horse_id_list)
+
+            # 馬のスクレイプ完了通知受信
+            # horse_prof / race_info テーブルの更新
+            elif data[1] == "scrape_horse_result":
+                horse_prof_data, race_info_data = data[2]
+                nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6])
+                nf.db_diff_insert_race_info(race_info_data[0], race_info_data[1], race_info_data[2])
+
+        # 子プロセスからのスクレイプ失敗通知
+        # untracked テーブルに挿入しておく
+        elif data[0] == "FAILED":
+            if data[1] == "scrape_race_result":
+                nf.db_insert_untracked_race_id(data[2])
+
+            elif data[1] == "scrape_horse_result":
+                nf.db_insert_untracked_horse_id(data[2])
+
+        # すべての子プロセスの完了確認
+        if 0 in children_comp_flg:
+            pass
+        else:
+            break
+
+def scrape_process(parent_queue, child_queue):
+    browser      = private_ini("scraping", "browser")
+    mail_address = private_ini("scraping", "mail")
+    password     = private_ini("scraping", "pass")
+
+    driver = wf.start_driver(browser)
+    login(driver, mail_address, password)
+
+    queue = child_queue
+    while True:
+        data = queue.get()
+
+        # 親プロセスから終了要求受信
+        if data[0] == "FIN":
+             break
         
-        # スクレイプ予定のリストをプロセス数に分割
-        jobs = split_list(self.scrape_list, self.tabs)
-        for job in jobs:       
-            self.child_process.append(Process(target = self.func, args = (self.queue, job)))
-        self._start()
+        # REQ 受信
+        # スクレイプを行う
+        elif data[0] == "REQ":
+            children_id, func, id = data[1:]
+            if func is None:
+                print("!!! func is not defined !!!")
+            if id is None:
+                print("!!! id is not defined !!!")
+            func(queue, [id], driver)
 
-    def _join(self):
-        for process in self.child_process:
-            process.join()
-        
-    def _start(self):
-        for process in self.child_process:
-            process.start()
+        # スクレイプ完了通知受信 (From func)
+        # 次のスクレイプ id の要求を送信してから
+        # 結果を親プロセスに送信する
+        # この順番により次のジョブがくるまでの間隔が短くなるはず
+        elif data[0] == "SUCCESS":
+            parent_queue.put(["REQ", children_id])
+            parent_queue.put(data)
 
-class race_multi_scraper(multi_scraper):
-    def _Task(self):
-        rcv_cnt = 0
-        nf = NetkeibaDB_IF("ROM")
-        while True:
-            rcv = self.queue.get()
-            # print("race_multi_scraper wait msg = {0}".format(self.queue.qsize()))
-            if(rcv[0] == "success"):
-                print("race_multi_scraper {0} / {1}".format(rcv_cnt, self.scrape_list_len))
-                # race_result テーブルへ挿入
-                nf.db_insert_race_result(rcv[1], rcv[2])
-                # horse_id リストを更に別プロセスでスクレイプする
-                horse_id_list = rcv[3]
-                # print("1 will scrape horse_id_list = ", horse_id_list)
-                nf.db_insert_untracked_horse_id(horse_id_list)
-                self.queue.put(["start"], block=True)
-                rcv_cnt += 1
-            elif(rcv[0] == "start"):
-                horse_id_list = nf.db_pop_untracked_horse_id()
-                # print("2 will scrape horse_id_list = ", horse_id_list)
-                ms = horse_multi_scraper(horse_id_list, scrape_horse_result, 5)
-                ms.scrape()
-            elif(rcv[0] == "failed"):
-                print("failed scrape race_id_list = ", rcv[1])
-                nf.db_insert_untracked_race_id(rcv[1])
-            elif(rcv[0] == "stop"):
-                break
-
-class horse_multi_scraper(multi_scraper):
-    def _Task(self):
-        rcv_cnt = 0
-        nf = NetkeibaDB_IF("ROM")
-        while True:
-            rcv = self.queue.get()
-            if(rcv[0] == "success"):
-                print("horse_multi_scraper {0} / {1}".format(rcv_cnt, self.scrape_list_len))
-                # ["success", horse_prof_data, race_info_data])
-                # horse_prof テーブルへ挿入
-                nf.db_upsert_horse_prof(rcv[1][0], rcv[1][1], rcv[1][2], rcv[1][3], rcv[1][4], rcv[1][5], rcv[1][6])
-                # race_info テーブルへ挿入
-                nf.db_diff_insert_race_info(rcv[2][0], rcv[2][1], rcv[2][2])
-                rcv_cnt += 1
-            elif(rcv[0] == "failed"):
-                print("failed scrape horse_id_list = ", rcv[1])
-                nf.db_insert_untracked_horse_id(rcv[1])
-            elif(rcv[0] == "stop"):
-                break
+        # スクレイプ失敗通知受信 (From func)
+        # 次のスクレイプ id の要求を送信してから
+        # 結果を親プロセスに送信する
+        # この順番により次のジョブがくるまでの間隔が短くなるはず
+        elif data[0] == "FAILED":
+            parent_queue.put(["REQ", children_id])
+            parent_queue.put(data)
             
 ####################################################################################
 
@@ -262,8 +301,10 @@ def login(driver, mail_address, password):
     # もしログインidとパスワードが正しいにも関わらずエラーの場合はこの節を消去する．
     if driver.current_url == "https://regist.netkeiba.com/account/":
         logger.critical('failed to log in netkeiba')
-        err_msg = 'ログインに失敗した可能性．ログインidとパスワードを確認してください．正しい場合は，netkeiba_scraping.pyのコードを変更してください．'
+        err_msg = 'ログインに失敗した可能性.ログインidとパスワードを確認してください.正しい場合は.netkeiba_scraping.pyのコードを変更してください.'
         raise ValueError(err_msg)
+    
+####################################################################################   
 
 def scrape_horsedata(driver, horseID_list):
     """馬のデータを取得して保存する
@@ -564,51 +605,29 @@ def regist_scrape_race_id(driver, start, end, grade):
             checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
 
             logger.debug("saving checked_race_id_list = {0}".format(checked_race_id_list))
-            nf.db_insert_untracked_race_id(checked_race_id_list)
+            yield checked_race_id_list
 
 ####################################################################################################
 
-def scrape_race_result(queue, race_id_list):
+def scrape_race_result(queue, race_id_list, driver):
     try:
-        browser      = private_ini("scraping", "browser")
-        mail_address = private_ini("scraping", "mail")
-        password     = private_ini("scraping", "pass")
-
-        driver = wf.start_driver(browser)
-        login(driver, mail_address, password)
         for horse_id_list, target_col, data_list in scrape_racedata(driver, race_id_list):
             # 1レースごとに返る
-            queue.put(["success", target_col, data_list, horse_id_list], block=True)
+            queue.put(["SUCCESS", "scrape_race_result", [target_col, data_list, horse_id_list]], block=True)
     except:
-        queue.put(["failed", race_id_list], block=True)
+        queue.put(["FAILED", "scrape_race_result", [race_id_list]], block=True)
 
-def scrape_horse_result(queue, horse_id_list):
+def scrape_horse_result(queue, horse_id_list, driver):
     # TODO: 必要？
     # checked_list = nf.db_not_retired_list(horse_id_list)
     checked_list = horse_id_list
     try:
-        browser      = private_ini("scraping", "browser")
-        mail_address = private_ini("scraping", "mail")
-        password     = private_ini("scraping", "pass")
-
-        driver = wf.start_driver(browser)
-        login(driver, mail_address, password)
         for horse_prof_data, race_info_data in scrape_horsedata(driver, checked_list):
-            queue.put(["success", horse_prof_data, race_info_data], block=True)
+            queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
     except:
-        queue.put(["failed", checked_list], block=True)
+        queue.put(["FAILED", "scrape_horse_result", [checked_list]], block=True)
 
 ####################################################################################################
-
-def setup_scrape_race_result():
-    # get scrape list
-    nf = NetkeibaDB_IF("ROM")
-    race_id_list = nf.db_pop_untracked_race_id()
-
-    ms = race_multi_scraper(race_id_list, scrape_race_result, 2)
-    ms.scrape()
-
-####################################################################################
 
 if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
@@ -635,11 +654,15 @@ if __name__ == "__main__":
         start = "198601"
         end   = "198602"
         grade = "OP"
-        regist_scrape_race_id(driver, start, end, grade)
+
+        race_id = []
+        for race_id_list in regist_scrape_race_id(driver, start, end, grade):
+            race_id.extend(race_id_list)
 
         driver.close()
 
-        setup_scrape_race_result()
+        queue = Queue()
+        main_process(queue, race_id, 5)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
