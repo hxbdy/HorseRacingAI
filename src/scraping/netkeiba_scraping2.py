@@ -177,7 +177,7 @@ def main_process(queue, untracked_race_id_list, children_num):
             # horse_prof / race_info テーブルの更新
             elif data[1] == "scrape_horse_result":
                 horse_prof_data, race_info_data = data[2]
-                nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6])
+                nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6], horse_prof_data[7])
                 nf.db_diff_insert_race_info(race_info_data[0], race_info_data[1], race_info_data[2])
 
         # 子プロセスからのスクレイプ失敗通知
@@ -343,7 +343,7 @@ def scrape_horsedata(driver, horseID_list):
         except:
             prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table ']")
             target_col_hp = ["bod","trainer","owner","owner_info","producer","area","auction_price","earned","lifetime_record","main_winner","relative"]
-        target_col_hp = [*target_col_hp, "blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm", "horse_id","horse_title","check_flg","retired_flg"] #★順序対応確認
+        target_col_hp = [*target_col_hp, "blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm", "horse_id","horse_title","check_flg","retired_flg", "review_cource_left_text", "review_cource_left", "review_cource_right", "review_cource_right_text", "review_distance_left_text", "review_distance_left", "review_distance_right", "review_distance_right_text", "review_style_left_text", "review_style_left", "review_style_right", "review_style_right_text", "review_grow_left_text", "review_grow_left", "review_grow_right", "review_grow_right_text", "review_heavy_left_text", "review_heavy_left", "review_heavy_right", "review_heavy_right_text"] #★順序対応確認
         row_name_data = prof_table.find_elements(By.TAG_NAME, "th")
         prof_contents_data = prof_table.find_elements(By.TAG_NAME, "td")
         row_name = []
@@ -373,6 +373,27 @@ def scrape_horsedata(driver, horseID_list):
             blood_horse_url_str = blood_table[i].get_attribute("href")
             blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
             blood_list.append(blood_horseID)
+
+        ## 適正レビューテーブルの取得
+        logger.debug('get Approproate table')
+        app_table = driver.find_element(By.XPATH, "//*[@class='tekisei_table']")
+        app_table = app_table.find_elements(By.TAG_NAME, "img")
+        app_list = []
+        for i in range(5):
+            # i:0 コース適性 (芝 <-> ダート)
+            # i:1 距離適性 (短い <-> 長い)
+            # i:2 脚質 (逃げ <-> 追込)
+            # i:3 成長 (早熟 <-> 晩生)
+            # i:4 重馬場 (得意 <-> 苦手)
+            review_1 = app_table[i * 5 + 0].get_attribute("width") # ゲージ左文字
+            review_2 = app_table[i * 5 + 1].get_attribute("width") # ゲージ左
+            review_3 = app_table[i * 5 + 2].get_attribute("width") # センターライン(不要)
+            review_4 = app_table[i * 5 + 3].get_attribute("width") # ゲージ右
+            review_5 = app_table[i * 5 + 4].get_attribute("width") # ゲージ右文字
+
+            app_list.extend([review_1, review_2, review_4, review_5])
+        logger.info("app_list = {0}".format(app_list))
+
 
         ## 競走成績テーブルの取得
         logger.debug('get result table')
@@ -436,7 +457,7 @@ def scrape_horsedata(driver, horseID_list):
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
 
-        yield [prof_contents, blood_list, horseID, horse_title, check, retired, target_col_hp], [perform_contents, target_col_ri, horseID]
+        yield [prof_contents, blood_list, horseID, horse_title, check, retired, app_list, target_col_hp], [perform_contents, target_col_ri, horseID]
     logger.info("scrape_horsedata comp")
 
 
@@ -670,7 +691,13 @@ if __name__ == "__main__":
         pass
     
     elif args.race_id:
-        pass
+        driver = wf.start_driver(browser)
+        login(driver, mail_address, password)
+        for horse_prof_data, race_info_data in scrape_horsedata(driver, ["2019102879"]):
+            print(horse_prof_data)
+            print(race_info_data)
+
+        driver.close()
     
     else:
         logger.error("read usage: netkeiba_scraping.py -h")

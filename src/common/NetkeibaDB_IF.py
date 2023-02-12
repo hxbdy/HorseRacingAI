@@ -337,10 +337,10 @@ class NetkeibaDB_IF:
                 checked_list.append(horse_id)
         return checked_list
 
-    def db_upsert_horse_prof(self, prof_contents, blood_list, horseID, horse_title, check, retired, target_col_hp):
+    def db_upsert_horse_prof(self, prof_contents, blood_list, horseID, horse_title, check, retired, app_list, target_col_hp):
         ## テーブルへの保存
         #- horse_profテーブル
-        data_list = [[*prof_contents, *blood_list, horseID, horse_title, check, retired]] #★順序対応確認
+        data_list = [[*prof_contents, *blood_list, horseID, horse_title, check, retired, *app_list]] #★順序対応確認
         # 存在確認して，あればUPDATE，なければINSERT
         if len(self.netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID])) > 0:
             self.netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
