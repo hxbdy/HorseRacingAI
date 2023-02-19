@@ -247,7 +247,8 @@ class NetkeibaDB:
     def sql_insert_RowToUntrackedRaceId(self, race_id_list):
         # untracked_race_idテーブルに新しい行を挿入
         for race_id in race_id_list:
-            if self.sql_isIn("untracked_race_id", ["race_id='{0}'".format(race_id)]) == False:
+            condition = "race_id='{0}'".format(race_id)
+            if self.sql_isIn("untracked_race_id", [condition]) == False:
                 sql = "INSERT INTO untracked_race_id(race_id) values('{}')".format(race_id)
                 self.cur.execute(sql)
         self.conn.commit()

@@ -1,4 +1,5 @@
 import re
+import os
 import time
 import logging
 import argparse
@@ -125,7 +126,7 @@ def main_process(queue, untracked_race_id_list, children_num):
     # REQ メッセージをエンキュー
     for i in range(children_num):
         children_queue.append(Queue())
-        children_process.append(Process(target=scrape_process, args=(queue, children_queue[-1])))
+        children_process.append(Process(target=scrape_process, args=(queue, children_queue[-1], i)))
         children_process[-1].start()
         queue.put(["REQ", i])
 
@@ -140,24 +141,27 @@ def main_process(queue, untracked_race_id_list, children_num):
 
             # スクレイピング待ちの馬のidをデキュー
             # レース1回につき馬は複数いるので、馬のスクレイプ優先
-            if len(untracked_horse_id_queue) != 0:
+            if len(untracked_horse_id_queue) < (children_num * 2):
+                if len(untracked_race_id_queue) != 0:
+                    cat  = "REQ"
+                    id   = untracked_race_id_queue.pop()
+                    func = scrape_race_result
+                elif len(untracked_horse_id_queue) != 0:
+                    cat  = "REQ"
+                    id   = untracked_horse_id_queue.pop()
+                    func = scrape_horse_result
+                else:
+                    # FIN メッセージ
+                    # horse_id / race_id のキューが空なら
+                    # 子プロセスに終了要求を送信する準備をする
+                    cat  = "FIN"
+                    id   = None
+                    func = None
+                    children_comp_flg[children_id] = 1   
+            else:
                 cat  = "REQ"
                 id   = untracked_horse_id_queue.pop()
                 func = scrape_horse_result
-
-            elif len(untracked_race_id_queue) != 0:
-                cat  = "REQ"
-                id   = untracked_race_id_queue.pop()
-                func = scrape_race_result
-
-            # FIN メッセージ
-            # horse_id / race_id のキューが空なら
-            # 子プロセスに終了要求を送信する準備をする
-            else:
-                cat  = "FIN"
-                id   = None
-                func = None
-                children_comp_flg[children_id] = 1
             
             # 子プロセスに各種要求送信
             children_queue[children_id].put([cat, children_id, func, id])
@@ -195,13 +199,21 @@ def main_process(queue, untracked_race_id_list, children_num):
         else:
             break
 
-def scrape_process(parent_queue, child_queue):
+def scrape_process(parent_queue, child_queue, children_id):
     browser      = private_ini("scraping", "browser")
     mail_address = private_ini("scraping", "mail")
     password     = private_ini("scraping", "pass")
 
-    driver = wf.start_driver(browser)
-    login(driver, mail_address, password)
+    path_userdata = os.getcwd() + '/' + path_ini("scraping", "path_userdata")
+    path_userdata = path_userdata.replace('\\', '/')
+
+    # スクレイピング用driver設定
+    arg_list = ['--user-data-dir=' + path_userdata + str(children_id), '--profile-directory=Profile ' + str(children_id), '--disable-logging', '--blink-settings=imagesEnabled=false']
+
+
+    driver = wf.start_driver(browser, arg_list, True)
+
+    # login(driver, mail_address, password)
 
     queue = child_queue
     while True:
@@ -209,7 +221,8 @@ def scrape_process(parent_queue, child_queue):
 
         # 親プロセスから終了要求受信
         if data[0] == "FIN":
-             break
+            driver.close()
+            break
         
         # REQ 受信
         # スクレイプを行う
@@ -636,7 +649,7 @@ def scrape_race_result(queue, race_id_list, driver):
             # 1レースごとに返る
             queue.put(["SUCCESS", "scrape_race_result", [target_col, data_list, horse_id_list]], block=True)
     except:
-        queue.put(["FAILED", "scrape_race_result", [race_id_list]], block=True)
+        queue.put(["FAILED", "scrape_race_result", race_id_list], block=True)
 
 def scrape_horse_result(queue, horse_id_list, driver):
     # TODO: 必要？
@@ -646,7 +659,7 @@ def scrape_horse_result(queue, horse_id_list, driver):
         for horse_prof_data, race_info_data in scrape_horsedata(driver, checked_list):
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
     except:
-        queue.put(["FAILED", "scrape_horse_result", [checked_list]], block=True)
+        queue.put(["FAILED", "scrape_horse_result", checked_list], block=True)
 
 ####################################################################################################
 
@@ -655,6 +668,9 @@ if __name__ == "__main__":
     browser      = private_ini("scraping", "browser")
     mail_address = private_ini("scraping", "mail")
     password     = private_ini("scraping", "pass")
+
+    # 並列スクレイピング数
+    process_num = int(private_ini("scraping", "process_num"))
 
     # tmpファイルパス読み込み
     path_tmp = path_ini("common", "path_tmp")
@@ -666,39 +682,43 @@ if __name__ == "__main__":
     parser.add_argument('-r','--race_id', help='scrape race_id info')
     args = parser.parse_args()
 
+    path_userdata = os.getcwd() + '/' + path_ini("scraping", "path_userdata")
+    path_userdata = path_userdata.replace('\\', '/')
+    print("path_userdata = ", path_userdata)
+
+    # スクレイピング用driver設定
+    # プロセス数分のログインセッションを持ったユーザを作成
+    # ログインボタンは画像のためここでは画像を読む(フラグなし)
+    for i in range(process_num):
+        print("process {0} init...".format(i))
+        # arg_list = ['--single-process', '--headless', '-no-sandbox', '--disable-gpu', '--user-data-dir=C:/Users/hxbdy/AppData/Local/Google/Chrome/User Data', '--profile-directory=Profile 1', '--disable-logging', '--user-agent=hogehoge']
+        arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
+        driver = wf.start_driver(browser, arg_list, False)
+        login(driver, mail_address, password)
+        driver.close()
+
+
     # DB初期化
     if args.init:
-
-        driver = wf.start_driver(browser)
-        login(driver, mail_address, password)
-        
         start = "198601"
         end   = "198602"
         grade = "OP"
-
         race_id = []
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
+        driver = wf.start_driver(browser, arg_list, False)
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
-
-        driver.close()
-
         queue = Queue()
-        main_process(queue, race_id, 5)
+        driver.close()
+        main_process(queue, race_id, process_num)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
     elif args.db:
         pass
-    
     elif args.race_id:
-        driver = wf.start_driver(browser)
-        login(driver, mail_address, password)
         for horse_prof_data, race_info_data in scrape_horsedata(driver, ["2019102879"]):
             print(horse_prof_data)
-            print(race_info_data)
-
-        driver.close()
-    
+            print(race_info_data)    
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
-        exit(-1)
