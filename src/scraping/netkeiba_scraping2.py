@@ -9,6 +9,7 @@ from multiprocessing        import Process, Queue
 from collections            import deque
 
 from selenium.webdriver.common.by import By
+import pandas as pd
 
 import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
@@ -317,7 +318,49 @@ def login(driver, mail_address, password):
         err_msg = 'ログインに失敗した可能性.ログインidとパスワードを確認してください.正しい場合は.netkeiba_scraping.pyのコードを変更してください.'
         raise ValueError(err_msg)
     
+####################################################################################
+
+def build_perform_contents(driver, horseID):
+    ## 競走成績テーブルの取得
+    logger.debug('get result table')
+    COL_NAME_TEXT = ['レース名', '日付', '開催', '頭 数', '枠 番', '馬 番', 'オ ッ ズ', '人 気', '着 順', '斤 量', '距離', '馬 場', 'タイム', '着差', '通過', 'ペース', '上り', '賞金']
+
+    # 旧perform_table
+    element_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
+    
+    # 表のテキスト取得
+    html = element_table.get_attribute('outerHTML')
+    dfs = pd.read_html(html, header=0)
+    for col in dfs[0].columns:
+        if not (col in COL_NAME_TEXT):
+            dfs[0].drop(col, axis=1, inplace=True)
+    
+    # jockey id 取得
+    jockey_link_list = re.findall('/jockey/result/recent/[0-9a-zA-Z]{5}', html)
+    jockey_link_list = list(map(lambda x: (x.replace("/jockey/result/recent/", '')), jockey_link_list))
+    # print("jockey_link_list = ", jockey_link_list)
+
+    # race_id 取得
+    race_link_list = re.findall('/race/[0-9a-zA-Z]{12}', html)
+    race_link_list = list(map(lambda x: (x.replace("/race/", '')), race_link_list))
+    # print("race_link_list = ", race_link_list)
+
+    all_perform_contents = []
+    for i in range(len(dfs[0])):
+        perform_contents = [0] * 21
+        perform_contents[0]     = horseID
+        perform_contents[1:2]   = dfs[0].loc[0, '日付':'開催']
+        perform_contents[3]     = race_link_list[0]
+        perform_contents[4:9]   = dfs[0].loc[0, '頭 数':'着 順']
+        perform_contents[10]    = jockey_link_list[0]
+        perform_contents[11:19] = dfs[0].loc[0, '斤 量':'賞金']
+        perform_contents[20]    = string2grade(dfs[0].loc[0, 'レース名'], dfs[0].loc[0, '距離'])
+        all_perform_contents.append(perform_contents)
+
+    return all_perform_contents
+
 ####################################################################################   
+
 
 def scrape_horsedata(driver, horseID_list):
     """馬のデータを取得して保存する
@@ -410,55 +453,7 @@ def scrape_horsedata(driver, horseID_list):
 
         ## 競走成績テーブルの取得
         logger.debug('get result table')
-        perform_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
-        perform_table = perform_table.find_elements(By.TAG_NAME, "tr")
-        # 取得する列の位置を決定する (過去と現在で表の形が異なるため)
-        # COL_NAME_TEXTとCOL_NAME_ID にある列のデータだけ取得する。
-        # TEXT: 表示されている文字列を取得。ID: レースIDと騎手IDを取得(下のtry文内も変更必要)。
-        COL_NAME_TEXT = ["日付","開催", "頭数", "枠番", "馬番", "オッズ", "人気", "着順", "斤量","距離","馬場", "タイム", "着差", "賞金", "通過", "ペース", "上り"]
-        COL_NAME_ID = ["レース名", "騎手"]
-        column_name_data = perform_table[0].find_elements(By.TAG_NAME, "th")
-        col_idx = []
-        col_idx_id = []
-        col_idx_for_grade = [-1, -1] # グレード判定用の列の位置を保持(レース名、距離)
-        target_col_ri = ["horse_id"]
-        for i in range(len(column_name_data)):
-            # 列名
-            cname = column_name_data[i].text.replace("\n","")
-            if cname in COL_NAME_TEXT:
-                col_idx.append(i)
-                target_col_ri.append(col_name_dict[cname])
-            elif cname in COL_NAME_ID:
-                col_idx_id.append(i)
-                col_idx.append(i)
-                target_col_ri.append(col_name_dict[cname])
-            if cname == "レース名":
-                col_idx_for_grade[0] = i
-            elif cname == "距離":
-                col_idx_for_grade[1] = i
-        target_col_ri.append("grade")
-        # 各レースの情報を取得
-        perform_contents = []
-        for row in range(1, len(perform_table)):
-            # 文字列として取得
-            perform_table_row = perform_table[row].find_elements(By.TAG_NAME, "td")
-            perform_contents_row = list(map(lambda x: x.text, perform_table_row))
-            # グレードの判定
-            grade = string2grade(perform_contents_row[col_idx_for_grade[0]],perform_contents_row[col_idx_for_grade[1]])
-            # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
-            for i in col_idx_id:
-                try:
-                    url_str_id = perform_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
-                    # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
-                    if "jockey/result/recent/" in url_str_id:
-                        id = url2ID(url_str_id, "recent")
-                    elif "race/" in url_str_id:
-                        id = url2ID(url_str_id, "race")
-                    perform_contents_row[i] = id
-                except:
-                    pass
-            # 必要部分だけ取り出して追加
-            perform_contents.append([horseID, *list(map(lambda x: perform_contents_row[x], col_idx)), grade])
+        perform_contents = build_perform_contents(driver, horseID)
 
         ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
         if num_entry_race == len(perform_contents):
@@ -470,7 +465,10 @@ def scrape_horsedata(driver, horseID_list):
         if (iter_num+1) % progress_notice_cycle == 0:
             logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
 
-        yield [prof_contents, blood_list, horseID, horse_title, check, retired, app_list, target_col_hp], [perform_contents, target_col_ri, horseID]
+        # target_col_ri
+        # target_col_ri =  ['horse_id', 'date', 'venue', 'race_id', 'horse_num', 'post_position', 'horse_number', 'odds', 'fav', 'result', 'jockey_id', 'burden_weight', 'distance', 'course_condition', 'time', 'margin', 'corner_pos', 'pace', 'last_3f', 'prize', 'grade']
+
+        yield [prof_contents, blood_list, horseID, horse_title, check, retired, app_list, target_col_hp], [perform_contents, horseID] # [perform_contents, target_col_ri, horseID]
     logger.info("scrape_horsedata comp")
 
 
@@ -680,6 +678,8 @@ if __name__ == "__main__":
     parser.add_argument('-i','--init', action='store_true', default=False, help='init database and scrape until today')
     parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
     parser.add_argument('-r','--race_id', help='scrape race_id info')
+    parser.add_argument('-t','--test', action='store_true', default=False, help='for debug scraping')
+
     args = parser.parse_args()
 
     path_userdata = os.getcwd() + '/' + path_ini("scraping", "path_userdata")
@@ -689,13 +689,13 @@ if __name__ == "__main__":
     # スクレイピング用driver設定
     # プロセス数分のログインセッションを持ったユーザを作成
     # ログインボタンは画像のためここでは画像を読む(フラグなし)
-    for i in range(process_num):
-        print("process {0} init...".format(i))
-        # arg_list = ['--single-process', '--headless', '-no-sandbox', '--disable-gpu', '--user-data-dir=C:/Users/hxbdy/AppData/Local/Google/Chrome/User Data', '--profile-directory=Profile 1', '--disable-logging', '--user-agent=hogehoge']
-        arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
-        driver = wf.start_driver(browser, arg_list, False)
-        login(driver, mail_address, password)
-        driver.close()
+    # for i in range(process_num):
+    #     print("process {0} init...".format(i))
+    #     # arg_list = ['--single-process', '--headless', '-no-sandbox', '--disable-gpu', '--user-data-dir=C:/Users/hxbdy/AppData/Local/Google/Chrome/User Data', '--profile-directory=Profile 1', '--disable-logging', '--user-agent=hogehoge']
+    #     arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
+    #     driver = wf.start_driver(browser, arg_list, False)
+    #     login(driver, mail_address, password)
+    #     driver.close()
 
 
     # DB初期化
@@ -719,6 +719,20 @@ if __name__ == "__main__":
     elif args.race_id:
         for horse_prof_data, race_info_data in scrape_horsedata(driver, ["2019102879"]):
             print(horse_prof_data)
-            print(race_info_data)    
+            print(race_info_data)
+    elif args.test:
+        # 処理時間計測開始
+        time_sta = time.perf_counter()
+
+        # debug
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
+        driver = wf.start_driver(browser, arg_list, True)
+        for _, _ in scrape_horsedata(driver, ["2019102879"]):
+            print("comp")
+        driver.close()
+
+        # 計測終了
+        time_end = time.perf_counter()
+        logger.info("scraping time = {0} [sec]".format(time_end - time_sta))
     else:
         logger.error("read usage: netkeiba_scraping.py -h")

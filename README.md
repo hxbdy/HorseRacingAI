@@ -11,12 +11,16 @@
 # Setup
 
 ## conda env
-* Python 3.8.13
-* cuda 11.7.0
-* cupy 8.3.0
-* selenium 4.2.0
-* sqlite3 3.8.6
-* matplotlib 3.6.2
+| About | Ver |
+| ----       | ---    |
+| Python     | 3.8.13 |
+| cuda       | 11.7.0 |
+| cupy       | 8.3.0 |
+| selenium   | 4.2.0 |
+| sqlite3    | 3.8.6 |
+| matplotlib | 3.6.2 |
+| pandas     | 1.5.2 |
+| html5lib   | 1.1   |
 
 ## conda installation
 ### app
@@ -31,6 +35,8 @@
 5. [Sqlite3 :: Anaconda.org](https://anaconda.org/blaze/sqlite3)
 6. [Matplotlib :: Anaconda.org](https://anaconda.org/conda-forge/matplotlib)
 7. [Iteration Utilities :: Anaconda.org](https://anaconda.org/conda-forge/iteration_utilities)
+8. [Pandas :: Anaconda.org](https://anaconda.org/anaconda/pandas)
+9. [Html5Lib :: Anaconda.org](https://anaconda.org/anaconda/html5lib)
 
 ## PATH
 conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
