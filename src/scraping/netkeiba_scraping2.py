@@ -26,11 +26,15 @@ logger.addHandler(file_hdl("output"))
 ####################################################################################
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
-col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠 番":"post_position", \
-        "馬番":"horse_number", "オッズ":"odds", "人気":"fav", "着 順":"result", "斤量":"burden_weight", \
-            "距離":"distance","馬場":"course_condition", "タイム":"time", "着差":"margin", "賞金":"prize", \
-                "レース名":"race_id", "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace", \
-                    "上り":"last_3f", "馬名":"horse_id", "馬体重":"horse_weight", "賞金 (万円)":"prize"}
+col_name_dict = {
+    "日付":"date", "開催":"venue", "頭 数":"horse_num", "枠 番":"post_position", \
+    "馬 番":"horse_number", "オッズ":"odds","オ ッ ズ":"odds", "人 気":"fav", "着 順":"result", "斤量":"burden_weight", "斤 量":"burden_weight", \
+    "距離":"distance","馬 場":"course_condition", "タイム":"time", "着差":"margin", "賞金":"prize", \
+    "レース名":"race_id", "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace", \
+    "上り":"last_3f", "馬名":"horse_id", "馬体重":"horse_weight", "賞金 (万円)":"prize", "賞金":"prize", \
+    "生年月日":"bod", "馬主":"owner", "生産者":"producer", "産地":"area", "セリ取引価格":"auction_price", \
+    "獲得賞金":"earned", "通算成績":"lifetime_record", "主な勝鞍":"main_winner", "近親馬":"relative", "調教師":"trainer"
+}
 
 ####################################################################################
 
@@ -181,13 +185,16 @@ def main_process(queue, untracked_race_id_list, children_num):
             if data[1] == "scrape_race_result":
                 race_result = data[2]
                 #TODO: data frameの挿入処理
+                print("rcv race_result")
 
             # 馬のスクレイプ完了通知受信
             # horse_prof / race_info テーブルの更新
             elif data[1] == "scrape_horse_result":
                 horse_prof_data, race_info_data = data[2]
-                nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6], horse_prof_data[7])
-                nf.db_diff_insert_race_info(race_info_data[0], race_info_data[1], race_info_data[2])
+                print("rcv horse_prof_data")
+                print("rcv race_info_data")
+                #nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6], horse_prof_data[7])
+                #nf.db_diff_insert_race_info(race_info_data[0], race_info_data[1], race_info_data[2])
 
         # 子プロセスからのスクレイプ失敗通知
         # untracked テーブルに挿入しておく
@@ -349,24 +356,25 @@ def build_perform_contents(driver, horseID):
     race_link_list = list(map(lambda x: (x.replace("/race/", '')), race_link_list))
     # print("race_link_list = ", race_link_list)
 
-    all_perform_contents = []
+    # grade 取得
+    grade_list = []
     for i in range(len(dfs[0])):
-        perform_contents = [0] * 21
-        perform_contents[0]     = horseID
-        perform_contents[1:2]   = dfs[0].loc[i, '日付':'開催']
-        perform_contents[3]     = race_link_list[i]
-        perform_contents[4:9]   = dfs[0].loc[i, '頭 数':'着 順']
-        perform_contents[10]    = jockey_link_list[i]
-        perform_contents[11:19] = dfs[0].loc[i, '斤 量':'賞金']
-        perform_contents[20]    = string2grade(dfs[0].loc[i, 'レース名'], dfs[0].loc[i, '距離'])
-        all_perform_contents.append(perform_contents)
+        grade = string2grade(dfs[0].loc[i, 'レース名'], dfs[0].loc[i, '距離'])
+        grade_list.append(grade)
 
-    return all_perform_contents
+    dfs[0].rename(columns=col_name_dict, inplace=True)
+
+    dfs[0]["horse_id"] = horseID
+    dfs[0]["race_id"] = race_link_list
+    dfs[0]["jockey_id"] = jockey_link_list
+    dfs[0]["grade"] = grade_list
+
+    return dfs[0]
 
 ####################################################################################   
 
 
-def scrape_horsedata(driver, horseID_list):
+def scrape_horsedata(driver, horseID):
     """馬のデータを取得して保存する
     driver: webdriver
     horseID_list: 調べるhorseIDのリスト
@@ -374,107 +382,118 @@ def scrape_horsedata(driver, horseID_list):
     ## 以下保留事項
     # 外国から参加してきた馬はどう処理するのか
 
-    # 進捗表示の間隔
-    progress_notice_cycle = 10
+    ## 馬のページにアクセス
+    horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
+    logger.debug('access {}'.format(horse_url))
+    wf.access_page(driver, horse_url)
 
-    for iter_num in range(len(horseID_list)):
-        horseID = str(horseID_list[iter_num])
-
-        ## 馬のページにアクセス
-        horse_url = "https://db.netkeiba.com/horse/{}/".format(horseID)
-        logger.debug('access {}'.format(horse_url))
-        wf.access_page(driver, horse_url)
-
-        ## 馬名，英名，抹消/現役，牡牝，毛の色
-        # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
-        horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
-        # 引退馬判定 (現役:0, 引退:1)
-        if "抹消" in horse_title:
-            retired = "1"
-        else:
-            retired = "0"
-
-        ## プロフィールテーブルの取得
-        logger.debug('get profile table')
-        # 過去と現在(2003年ごろ以降に誕生の馬)で表示内容が違うため、tryを使用
-        try:
-            prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table no_OwnerUnit']")
-            target_col_hp = ["bod","trainer","owner","producer","area","auction_price","earned","lifetime_record","main_winner","relative"]
-        except:
-            prof_table = driver.find_element(By.XPATH, "//*[@class='db_prof_table ']")
-            target_col_hp = ["bod","trainer","owner","owner_info","producer","area","auction_price","earned","lifetime_record","main_winner","relative"]
-        target_col_hp = [*target_col_hp, "blood_f","blood_ff","blood_fm","blood_m","blood_mf","blood_mm", "horse_id","horse_title","check_flg","retired_flg", "review_cource_left_text", "review_cource_left", "review_cource_right", "review_cource_right_text", "review_distance_left_text", "review_distance_left", "review_distance_right", "review_distance_right_text", "review_style_left_text", "review_style_left", "review_style_right", "review_style_right_text", "review_grow_left_text", "review_grow_left", "review_grow_right", "review_grow_right_text", "review_heavy_left_text", "review_heavy_left", "review_heavy_right", "review_heavy_right_text"] #★順序対応確認
-        row_name_data = prof_table.find_elements(By.TAG_NAME, "th")
-        prof_contents_data = prof_table.find_elements(By.TAG_NAME, "td")
-        row_name = []
-        prof_contents = []
-        for row in range(len(row_name_data)):
-            row_name.append(row_name_data[row].text)
-            # 調教師の場合はurlから調教師IDを取得し、それ以外はテキストで取得
-            if row_name[row] == "調教師":
-                try:
-                    trainer_url_str = prof_contents_data[row].find_element(By.TAG_NAME, "a").get_attribute("href")
-                    prof_contents.append(url2ID(trainer_url_str, "trainer"))
-                except:
-                    prof_contents.append(prof_contents_data[row].text)
-            else:
-                prof_contents.append(prof_contents_data[row].text)
-            # 競走成績テーブルが全て取得できているか確認するため、出走数を取得しておく
-            if row_name[row] == "通算成績":
-                num_entry_race = int(prof_contents[row][:prof_contents[row].find("戦")])
-
-        ## 血統テーブルの取得
-        logger.debug('get blood table')
-        blood_table = driver.find_element(By.XPATH, "//*[@class='blood_table']")
-        blood_table = blood_table.find_elements(By.TAG_NAME, "a")
-        # 血統のhorseID。順番：[父, 父父, 父母, 母, 母父, 母母]
-        blood_list = []
-        for i in range(len(blood_table)):
-            blood_horse_url_str = blood_table[i].get_attribute("href")
-            blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
-            blood_list.append(blood_horseID)
-
-        ## 適正レビューテーブルの取得
-        logger.debug('get Approproate table')
-        app_table = driver.find_element(By.XPATH, "//*[@class='tekisei_table']")
-        app_table = app_table.find_elements(By.TAG_NAME, "img")
-        app_list = []
-        for i in range(5):
-            # i:0 コース適性 (芝 <-> ダート)
-            # i:1 距離適性 (短い <-> 長い)
-            # i:2 脚質 (逃げ <-> 追込)
-            # i:3 成長 (早熟 <-> 晩生)
-            # i:4 重馬場 (得意 <-> 苦手)
-            review_1 = app_table[i * 5 + 0].get_attribute("width") # ゲージ左文字
-            review_2 = app_table[i * 5 + 1].get_attribute("width") # ゲージ左
-            review_3 = app_table[i * 5 + 2].get_attribute("width") # センターライン(不要)
-            review_4 = app_table[i * 5 + 3].get_attribute("width") # ゲージ右
-            review_5 = app_table[i * 5 + 4].get_attribute("width") # ゲージ右文字
-
-            app_list.extend([review_1, review_2, review_4, review_5])
-        logger.info("app_list = {0}".format(app_list))
+    html = driver.page_source
+    dfs = pd.read_html(html)
+    _, prof, parent, _, _, _ = dfs
 
 
-        ## 競走成績テーブルの取得
-        logger.debug('get result table')
-        perform_contents = build_perform_contents(driver, horseID)
-
-        ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
-        if num_entry_race == len(perform_contents):
-            check = "1" # OK
-        else:
-            check = "0" # データ欠損アリ (prof_tableとperform_tableで一致しない)
+    # 転置
+    prof = prof.T
         
-        # 進捗表示
-        if (iter_num+1) % progress_notice_cycle == 0:
-            logger.info("scrape_horsedata {0} / {1} finished.".format(iter_num+1, len(horseID_list)))
+    # 1行目を列名にする
+    prof.columns = prof.iloc[0]
+    prof = prof.reindex(prof.index.drop(0))
+        
+    ## 馬名，英名，抹消/現役，牡牝，毛の色
+    # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
+    horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
+    # 引退馬判定 (現役:0, 引退:1)
+    if "抹消" in horse_title:
+        prof["retired_flg"] = "1"
+    else:
+        prof["retired_flg"] = "0"
 
-        # target_col_ri
-        # target_col_ri =  ['horse_id', 'date', 'venue', 'race_id', 'horse_num', 'post_position', 'horse_number', 'odds', 'fav', 'result', 'jockey_id', 'burden_weight', 'distance', 'course_condition', 'time', 'margin', 'corner_pos', 'pace', 'last_3f', 'prize', 'grade']
+    ## プロフィールテーブルの取得
+    logger.debug('get profile table')
+    trainer = re.findall('/trainer/[0-9a-zA-Z]{5}', html)[0]
+    trainer = trainer.replace("/trainer/", "")
 
-        #TODO: 各テーブルに挿入しやすいようにクラスで返すようにする
-        yield [prof_contents, blood_list, horseID, horse_title, check, retired, app_list, target_col_hp], [perform_contents, horseID] # [perform_contents, target_col_ri, horseID]
-    logger.info("scrape_horsedata comp")
+    num_entry_race = re.findall('\d+戦\d+勝', html)[0]
+    num_entry_race = int(num_entry_race[:num_entry_race.find("戦")])
+
+    ## 血統テーブルの取得
+    logger.debug('get blood table')
+    blood_table = driver.find_element(By.XPATH, "//*[@class='blood_table']")
+    blood_table = blood_table.find_elements(By.TAG_NAME, "a")
+    # 血統のhorseID。順番：[父, 父父, 父母, 母, 母父, 母母]
+    blood_list = []
+    for i in range(len(blood_table)):
+        blood_horse_url_str = blood_table[i].get_attribute("href")
+        blood_horseID = blood_horse_url_str[blood_horse_url_str.find("ped/")+4 : -1]
+        blood_list.append(blood_horseID)
+
+    ## 適正レビューテーブルの取得
+    logger.debug('get Approproate table')
+    app_table = driver.find_element(By.XPATH, "//*[@class='tekisei_table']")
+    app_table = app_table.find_elements(By.TAG_NAME, "img")
+    app_list = []
+    for i in range(5):
+        # i:0 コース適性 (芝 <-> ダート)
+        # i:1 距離適性 (短い <-> 長い)
+        # i:2 脚質 (逃げ <-> 追込)
+        # i:3 成長 (早熟 <-> 晩生)
+        # i:4 重馬場 (得意 <-> 苦手)
+        review_1 = app_table[i * 5 + 0].get_attribute("width") # ゲージ左文字
+        review_2 = app_table[i * 5 + 1].get_attribute("width") # ゲージ左
+        review_3 = app_table[i * 5 + 2].get_attribute("width") # センターライン(不要)
+        review_4 = app_table[i * 5 + 3].get_attribute("width") # ゲージ右
+        review_5 = app_table[i * 5 + 4].get_attribute("width") # ゲージ右文字
+
+        app_list.extend([review_1, review_2, review_4, review_5])
+    logger.info("app_list = {0}".format(app_list))
+
+
+    ## 競走成績テーブルの取得
+    logger.debug('get result table')
+    race_info = build_perform_contents(driver, horseID)
+
+    ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
+    if num_entry_race == len(race_info):
+        check = "1" # OK
+    else:
+        check = "0" # データ欠損アリ (prof_tableとperform_tableで一致しない)
+
+    # horse_prof_data, race_info_data
+    prof.rename(columns = col_name_dict, inplace=True)
+
+    prof["blood_f" ] = blood_list[0]
+    prof["blood_ff"] = blood_list[1]
+    prof["blood_fm"] = blood_list[2]
+    prof["blood_m" ] = blood_list[3]
+    prof["blood_mf"] = blood_list[4]
+    prof["blood_mm"] = blood_list[5]
+
+    prof["horse_id"] = horseID
+    prof["horse_title"] = horse_title
+    prof["check"] = check
+
+    prof["review_cource_left_text"]    = app_list[0]
+    prof["review_cource_left"]         = app_list[1]
+    prof["review_cource_right"]        = app_list[2]
+    prof["review_cource_right_text"]   = app_list[3]
+    prof["review_distance_left_text"]  = app_list[4]
+    prof["review_distance_left"]       = app_list[5]
+    prof["review_distance_right"]      = app_list[6]
+    prof["review_distance_right_text"] = app_list[7]
+    prof["review_style_left_text"]     = app_list[8]
+    prof["review_style_left"]          = app_list[9]
+    prof["review_style_right"]         = app_list[10]
+    prof["review_style_right_text"]    = app_list[11]
+    prof["review_grow_left_text"]      = app_list[12]
+    prof["review_grow_left"]           = app_list[13]
+    prof["review_grow_right"]          = app_list[14]
+    prof["review_grow_right_text"]     = app_list[15]
+    prof["review_heavy_left_text"]     = app_list[16]
+    prof["review_heavy_left"]          = app_list[17]
+    prof["review_heavy_right"]         = app_list[18]
+    prof["review_heavy_right_text"]    = app_list[19]
+        
+    return prof, race_info
 
 
 def scrape_racedata(driver, race_id):
@@ -616,8 +635,9 @@ def scrape_race_result(queue, race_id_list, driver):
     # スクレイピング成功時の戻り ["SUCCESS", "scrape_race_result", race_result行]
     # スクレイピング失敗時の戻り ["FAILED" , "scrape_race_result", race_id_list]
     try:
-        race_result = scrape_racedata(driver, race_id_list)
-        queue.put(["SUCCESS", "scrape_race_result", race_result], block=True)
+        for race_id in race_id_list:
+            race_result = scrape_racedata(driver, race_id)
+            queue.put(["SUCCESS", "scrape_race_result", race_result], block=True)
     except:
         queue.put(["FAILED", "scrape_race_result", race_id_list], block=True)
 
@@ -626,7 +646,8 @@ def scrape_horse_result(queue, horse_id_list, driver):
     # checked_list = nf.db_not_retired_list(horse_id_list)
     checked_list = horse_id_list
     try:
-        for horse_prof_data, race_info_data in scrape_horsedata(driver, checked_list):
+        for race_id in checked_list:
+            horse_prof_data, race_info_data = scrape_horsedata(driver, race_id)
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
     except:
         queue.put(["FAILED", "scrape_horse_result", checked_list], block=True)
@@ -695,14 +716,15 @@ if __name__ == "__main__":
     elif args.test:
         # debug
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
-        driver = wf.start_driver(browser, arg_list, True)
+        driver = wf.start_driver(browser, arg_list, False)
 
         time_sta = time.perf_counter()
-        table = scrape_racedata(driver, "198601010809")
+        horse_prof_data, race_info_data = scrape_horsedata(driver, "2019102879")
+        print("race_info_data = ", race_info_data)
+        print("horse_prof_data = ", horse_prof_data)
         time_end = time.perf_counter()
         logger.info("scraping time = {0} [sec]".format(time_end - time_sta))
 
-        print(table)
         driver.close()
 
     else:
