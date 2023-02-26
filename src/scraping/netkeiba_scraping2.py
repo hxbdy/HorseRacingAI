@@ -4,6 +4,7 @@ import time
 import logging
 import argparse
 import datetime
+import pickle
 from dateutil.relativedelta import relativedelta
 from multiprocessing        import Process, Queue
 from collections            import deque
@@ -15,6 +16,7 @@ import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
 from debug         import stream_hdl, file_hdl
+from RaceInfo      import RaceInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -38,107 +40,169 @@ col_name_dict = {
 
 ####################################################################################
 
-# TODO: 順序付き辞書(初期値None)を用意しておいて、スクレイプ結果をここに詰めていく。
-# それぞれのクラスでwebページ上の表記と、DB上の表記を変換する関数を用意する
-# set(web上の列名, データ) 
-# 列名をDB用列名に変換して、データを変数として持っておく
+# TODO: マージまでの残件
+# 1. jockeyテーブル更新
+# 2. DBのインデックス貼り付けを自動でやる
+# 3. DBの初期化、当日の予測、定期更新ができることを確認する
+# 4. エンコードを実行し互換性を保持できていることを確認する
 
-class horse_prof_table:
-    def __init__(self) -> None:
-        self.horse_id
-        self.bod, 
-        self.trainer, 
-        self.owner, 
-        self.owner_info, 
-        self.producer, 
-        self.area, 
-        self.auction_price, 
-        self.earned, 
-        self.lifetime_record, 
-        self.main_winner, 
-        self.relative, 
-        self.blood_f, 
-        self.blood_ff, 
-        self.blood_fm, 
-        self.blood_m, 
-        self.blood_mf, 
-        self.blood_mm, 
-        self.horse_title, 
-        self.check_flg, 
-        self.retired_flg
+def update_database_predict(driver, horseID_list):
+    """レース直前に、レース結果の予想に必要なデータのみを集める。
+    レースに出走する馬に対して、scrape_horsedataを実行し、race_infoとhorse_profを更新する。
+    driver: webdriver
+    horseID_list: レースに出走する馬のhorse idのリスト
+    """
+    prof, race_info = scrape_horsedata(driver, horseID_list)
 
-class race_info_table:
-    def __init__(self) -> None:
-        self.horse_id, 
-        self.race_id, 
-        self.date, 
-        self.venue, 
-        self.horse_num, 
-        self.post_position, 
-        self.horse_number, 
-        self.odds, 
-        self.fav, 
-        self.result, 
-        self.jockey_id, 
-        self.burden_weight, 
-        self.distance, 
-        self.course_condition, 
-        self.time, 
-        self.margin, 
-        self.corner_pos, 
-        self.pace, 
-        self.last_3f, 
-        self.prize, 
-        self.grade
+    nf = NetkeibaDB_IF("ROM")
+    nf.db_insert_pandas(prof, "horse_prof")
+    nf.db_insert_pandas(race_info, "race_info")
 
-class race_result_table:
-    def __init__(self) -> None:
-        self.horse_id, 
-        self.race_id, 
-        self.race_name, 
-        self.grade, 
-        self.race_data1, 
-        self.race_data2, 
-        self.post_position, 
-        self.burden_weight, 
-        self.time, 
-        self.margin, 
-        self.horse_weight, 
-        self.prize, 
-        self.result
+    #reconfirm_check()
+    logger.info("update_horsedata_only comp")
 
-class jockey_info_table:
-    def __init__(self) -> None:
-        self.jockey_id, 
-        self.year, 
-        self.num
+def scrape_race_today(driver, raceID):
+    """まだ競走が始まっていないレースのデータをスクレイプする
+    driver: webdriver
+    raceID: レースid
+    """
+    raceInfo = RaceInfo()
+    raceInfo.race_id = raceID
+    
+    # サイトにアクセス
+    url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
+    wf.access_page(driver, url)
 
-class untracked_race_id_table:
-    def __init__(self) -> None:
-        self.race_No
-        self.id
+    # 予測に必要なデータをスクレイプ
+    race_date_raw = driver.find_element(By.ID, "RaceList_DateList").find_element(By.CLASS_NAME, "Active").text  # '10月30日(日)' or '12/17'
+    year = int(raceID[:4])
+    month_day = re.findall(r"\d+", race_date_raw)
+    raceInfo.date = datetime.date(year, int(month_day[0]), int(month_day[1]))
 
-def main_process(queue, untracked_race_id_list, children_num):
+    # 文中から
+    racedata01 = driver.find_element(By.CLASS_NAME, "RaceData01").text # '14:50発走 / ダ1200m (右) / 天候:晴 / 馬場:良'
+    logger.debug("racedata01 = {0}".format(racedata01))
+
+    racedata01 = racedata01.split("/")
+    raceInfo.start_time = racedata01[0][:racedata01[0].find("発走")]        # '14:50'
+    raceInfo.distance = [float(re.findall('\d{3,4}', racedata01[1])[0])]   # [1200.0]
+
+    try:
+        # レース前に天候, 馬場が取得できない時は晴、良とする
+        raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
+        raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
+    except IndexError:
+        logger.error("!!! IndexError : racedata01 = {0}".format(racedata01))
+        raceInfo.weather = '晴'
+        raceInfo.course_condition = '良'
+    
+    racedata02 = driver.find_element(By.CLASS_NAME, "RaceData02").find_elements(By.TAG_NAME, "span")
+    #venue = racedata02[1].text            # '中山'
+    prize_str = racedata02[-1].text       # '本賞金:1840,740,460,280,184万円'
+    raceInfo.prize = re.findall(r"\d+", prize_str) # ['1840', '740', '460', '280', '184']
+
+    # テーブルから
+    shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
+
+    COL_NAME_TEXT = ["枠", "馬番", "斤量", "馬体重(増減)"]
+    COL_NAME_ID = ["馬名", "騎手"]
+    column_name_data = shutuba_table.find_elements(By.TAG_NAME, "th")
+    col_idx = []
+    col_idx_id = []
+    target_col = []
+    for i in range(len(column_name_data)):
+        # 列名
+        cname = column_name_data[i].text.replace("\n","")
+        if cname in COL_NAME_TEXT:
+            col_idx.append(i)
+            target_col.append(cname)
+        elif cname in COL_NAME_ID:
+            col_idx_id.append(i)
+            col_idx.append(i)
+            target_col.append(cname)
+    contents = []
+    shutuba_table = shutuba_table.find_element(By.TAG_NAME, "tbody")
+    shutuba_table = shutuba_table.find_elements(By.TAG_NAME, "tr")
+    for row in range(len(shutuba_table)):
+        # 文字列として取得
+        shutuba_table_row = shutuba_table[row].find_elements(By.TAG_NAME, "td")
+        shutuba_contents_row = list(map(lambda x: x.text, shutuba_table_row))
+        # COL_NAME_IDに含まれる列のうち，idを取得可能な場合のみ取得して上書き
+        for i in col_idx_id:
+            try:
+                url_str_id = shutuba_table_row[i].find_element(By.TAG_NAME, "a").get_attribute("href")
+                # レース名か騎手か判定して取得 (ID_COL_NAME変更時にidの取得方法を記述)
+                if "jockey/result/recent/" in url_str_id:
+                    id = url2ID(url_str_id, "recent")
+                elif "horse/" in url_str_id:
+                    id = url2ID(url_str_id, "horse")
+                shutuba_contents_row[i] = id
+            except:
+                pass
+        # 必要部分だけ取り出して追加
+        contents.append(list(map(lambda x: shutuba_contents_row[x], col_idx)))
+    
+    raceInfo.horse_num = len(shutuba_table)
+    raceInfo.post_position = list(map(lambda x: int(x[0]), contents))
+    raceInfo.horse_number = list(map(lambda x: int(x[1]), contents))
+    raceInfo.horse_id = list(map(lambda x: x[2], contents))
+    raceInfo.burden_weight = list(map(lambda x: float(x[3]), contents))
+    raceInfo.jockey_id = list(map(lambda x: x[4], contents))
+    raceInfo.horse_weight = list(map(lambda x: x[5], contents))
+    
+    print("枠")
+    print(raceInfo.post_position)
+    print("馬番")
+    print(raceInfo.horse_number)
+    print("horse id")
+    print(raceInfo.horse_id)
+    print("斤量")
+    print(raceInfo.burden_weight)
+    print("jockey id")
+    print(raceInfo.jockey_id)
+    print("馬体重")
+    print(raceInfo.horse_weight)
+    print("発走時刻")
+    print(raceInfo.start_time)
+    print("距離")
+    print(raceInfo.distance)
+    print("天候")
+    print(raceInfo.weather)
+    print("馬場状態")
+    print(raceInfo.course_condition)
+    print("本賞金")
+    print(raceInfo.prize)
+    return raceInfo
+
+def main_process(untracked_race_id_list, children_num):
     children_process  = []
     children_queue    = []
     children_comp_flg = [0] * children_num
-    
-    nf = NetkeibaDB_IF("ROM")
 
+    queue = Queue()
+    
+    # スクレイピング対象のidを準備
     untracked_race_id_queue  = deque(untracked_race_id_list)
     untracked_horse_id_queue = deque()
 
     # 前回 FAILED した id があればエンキューしておく
+    nf = NetkeibaDB_IF("ROM")
     untracked_race_id_queue.extend(nf.db_pop_untracked_race_id())
     untracked_horse_id_queue.extend(nf.db_pop_untracked_horse_id())
+    del nf
 
-    # スクレイププロセスの用意
+    # スクレイププロセス起動
     # REQ メッセージをエンキュー
     for i in range(children_num):
         children_queue.append(Queue())
         children_process.append(Process(target=scrape_process, args=(queue, children_queue[-1], i)))
         children_process[-1].start()
         queue.put(["REQ", i])
+
+    # DB制御プロセス起動
+    db_queue = Queue()
+    child_db_process = Process(target=db_process, args=(queue, db_queue))
+    child_db_process.start()
 
     while True:
         data = queue.get()
@@ -183,33 +247,43 @@ def main_process(queue, untracked_race_id_list, children_num):
             # race_result テーブルの更新と
             # そのレースに出走した horse_id をエンキューする
             if data[1] == "scrape_race_result":
-                race_result = data[2]
-                #TODO: data frameの挿入処理
-                print("rcv race_result")
+                race_result, horse_id_list = data[2]
+                print("<- rcv SUCCESS scrape_race_result")
+
+                db_queue.put(["SUCCESS_UPSERT", race_result, "race_result"])
+                # horse_idのスクレイピング依頼
+                untracked_horse_id_queue.extend(horse_id_list)
 
             # 馬のスクレイプ完了通知受信
             # horse_prof / race_info テーブルの更新
             elif data[1] == "scrape_horse_result":
-                horse_prof_data, race_info_data = data[2]
-                print("rcv horse_prof_data")
-                print("rcv race_info_data")
-                #nf.db_upsert_horse_prof(horse_prof_data[0], horse_prof_data[1], horse_prof_data[2], horse_prof_data[3], horse_prof_data[4], horse_prof_data[5], horse_prof_data[6], horse_prof_data[7])
-                #nf.db_diff_insert_race_info(race_info_data[0], race_info_data[1], race_info_data[2])
+                horse_prof, race_info = data[2]
+                print("<- rcv SUCCESS scrape_horse_result")
+
+                db_queue.put(["SUCCESS_UPSERT", horse_prof, "horse_prof"])
+                db_queue.put(["SUCCESS_UPSERT", race_info, "race_info"])
 
         # 子プロセスからのスクレイプ失敗通知
         # untracked テーブルに挿入しておく
         elif data[0] == "FAILED":
             if data[1] == "scrape_race_result":
-                nf.db_insert_untracked_race_id(data[2])
+                print("<- rcv FAILED scrape_race_result")
+                db_queue.put(["FAILED_INSERT", "scrape_race_result", data[2]])
 
             elif data[1] == "scrape_horse_result":
-                nf.db_insert_untracked_horse_id(data[2])
+                print("<- rcv FAILED scrape_horse_result")
+                db_queue.put(["FAILED_INSERT", "scrape_horse_result", data[2]])
 
         # すべての子プロセスの完了確認
         if 0 in children_comp_flg:
             pass
+            # print("children_comp_flg = ", children_comp_flg)
         else:
             break
+
+    # DB制御プロセス終了
+    db_queue.put(["FIN"])
+    print("snd db_queue FIN")
 
 def scrape_process(parent_queue, child_queue, children_id):
     browser      = private_ini("scraping", "browser")
@@ -251,6 +325,7 @@ def scrape_process(parent_queue, child_queue, children_id):
         # 結果を親プロセスに送信する
         # この順番により次のジョブがくるまでの間隔が短くなるはず
         elif data[0] == "SUCCESS":
+            print("-> SUCCESS REQ id =", children_id)
             parent_queue.put(["REQ", children_id])
             parent_queue.put(data)
 
@@ -259,9 +334,31 @@ def scrape_process(parent_queue, child_queue, children_id):
         # 結果を親プロセスに送信する
         # この順番により次のジョブがくるまでの間隔が短くなるはず
         elif data[0] == "FAILED":
+            print("-> FAILED REQ id =", children_id)
             parent_queue.put(["REQ", children_id])
             parent_queue.put(data)
             
+def db_process(parent_queue, child_queue):
+    nf = NetkeibaDB_IF("ROM")
+    queue = child_queue
+    while True:
+        data = queue.get()
+
+        # 親プロセスから終了要求受信
+        if data[0] == "FIN":
+            break
+
+        elif data[0] == "SUCCESS_UPSERT":
+            df = data[1]
+            table_name = data[2]
+            nf.db_insert_pandas(df, table_name)
+
+        elif data[0] == "FAILED_INSERT":
+            if data[1]=="scrape_race_result":
+                nf.db_insert_untracked_race_id(data[2])
+            elif data[1]=="scrape_horse_result":
+                nf.db_insert_untracked_horse_id(data[2])
+
 ####################################################################################
 
 def string2grade(grade_str, distance_str):
@@ -389,7 +486,13 @@ def scrape_horsedata(driver, horseID):
 
     html = driver.page_source
     dfs = pd.read_html(html)
-    _, prof, parent, _, _, _ = dfs
+    
+    # _ = dfs[0]
+    prof = dfs[1]
+    # parent = dfs[2]
+    # _ = dfs[3]
+    # _ = dfs[4]
+    # _ = dfs[5]
 
 
     # 転置
@@ -470,7 +573,7 @@ def scrape_horsedata(driver, horseID):
 
     prof["horse_id"] = horseID
     prof["horse_title"] = horse_title
-    prof["check"] = check
+    prof["check_flg"] = check
 
     prof["review_cource_left_text"]    = app_list[0]
     prof["review_cource_left"]         = app_list[1]
@@ -632,12 +735,15 @@ def regist_scrape_race_id(driver, start, end, grade):
 
 def scrape_race_result(queue, race_id_list, driver):
     # race_result テーブルに挿入するデータをスクレイピングしてくる
-    # スクレイピング成功時の戻り ["SUCCESS", "scrape_race_result", race_result行]
+    # スクレイピング成功時の戻り ["SUCCESS", "scrape_race_result", [race_result, horse_id_list]]
     # スクレイピング失敗時の戻り ["FAILED" , "scrape_race_result", race_id_list]
     try:
         for race_id in race_id_list:
-            race_result = scrape_racedata(driver, race_id)
-            queue.put(["SUCCESS", "scrape_race_result", race_result], block=True)
+            race_result :pd= scrape_racedata(driver, race_id)
+
+            # race_result から horse_id のみ取り出しておく
+            # (次段の horse_id スクレイピング対象のため)
+            queue.put(["SUCCESS", "scrape_race_result", [race_result, race_result["horse_id"]]], block=True)
     except:
         queue.put(["FAILED", "scrape_race_result", race_id_list], block=True)
 
@@ -649,7 +755,8 @@ def scrape_horse_result(queue, horse_id_list, driver):
         for race_id in checked_list:
             horse_prof_data, race_info_data = scrape_horsedata(driver, race_id)
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
-    except:
+    except Exception as e:
+        print("Exception", e.args)
         queue.put(["FAILED", "scrape_horse_result", checked_list], block=True)
 
 ####################################################################################################
@@ -682,50 +789,64 @@ if __name__ == "__main__":
     # スクレイピング用driver設定
     # プロセス数分のログインセッションを持ったユーザを作成
     # ログインボタンは画像のためここでは画像を読む(フラグなし)
-    # for i in range(process_num):
-    #     print("process {0} init...".format(i))
-    #     # arg_list = ['--single-process', '--headless', '-no-sandbox', '--disable-gpu', '--user-data-dir=C:/Users/hxbdy/AppData/Local/Google/Chrome/User Data', '--profile-directory=Profile 1', '--disable-logging', '--user-agent=hogehoge']
-    #     arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
-    #     driver = wf.start_driver(browser, arg_list, False)
-    #     login(driver, mail_address, password)
-    #     driver.close()
-
+    for i in range(process_num):
+        print("process {0} init...".format(i))
+        arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
+        driver = wf.start_driver(browser, arg_list, False)
+        login(driver, mail_address, password)
+        driver.close()
 
     # DB初期化
     if args.init:
         start = "198601"
-        end   = "198602"
+        end   = datetime.datetime.now().strftime("%Y%m")
         grade = "OP"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
         driver = wf.start_driver(browser, arg_list, False)
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
-        queue = Queue()
         driver.close()
-        main_process(queue, race_id, process_num)
+        main_process(race_id, process_num)
 
     # 定期的なDBアップデート
-    # 1ヶ月間隔更新前提
+    # 1ヶ月間隔更新
     elif args.db:
-        pass
-    elif args.race_id:
-        for horse_prof_data, race_info_data in scrape_horsedata(driver, ["2019102879"]):
-            print(horse_prof_data)
-            print(race_info_data)
-    elif args.test:
-        # debug
-        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
-        driver = wf.start_driver(browser, arg_list, False)
+        end = datetime.datetime.now()
+        start = end - relativedelta(months=1)
 
-        time_sta = time.perf_counter()
-        horse_prof_data, race_info_data = scrape_horsedata(driver, "2019102879")
-        print("race_info_data = ", race_info_data)
-        print("horse_prof_data = ", horse_prof_data)
-        time_end = time.perf_counter()
-        logger.info("scraping time = {0} [sec]".format(time_end - time_sta))
+        end = end.strftime("%Y%m")
+        start = start.strftime("%Y%m")
+        
+        grade = "OP"
+        race_id = []
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
+        driver = wf.start_driver(browser, arg_list, False)
+        for race_id_list in regist_scrape_race_id(driver, start, end, grade):
+            race_id.extend(race_id_list)
+        driver.close()
+        main_process(race_id, process_num)
+
+    # 当日予想
+    elif args.race_id:
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
+        driver = wf.start_driver(browser, arg_list, True)
+
+        # 当日予想したいレースIDから馬の情報をコンソール出力
+        a = scrape_race_today(driver, args.race_id)
+
+        # 出走する馬のDB情報をアップデート
+        update_database_predict(driver, a.horse_id)
+
+        # 推測用に取得したレース情報を一時保存
+        with open(path_tmp, 'wb') as f:
+            pickle.dump(a, f)
 
         driver.close()
+
+    elif args.test:
+        # debug
+        pass
 
     else:
         logger.error("read usage: netkeiba_scraping.py -h")

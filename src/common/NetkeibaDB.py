@@ -9,10 +9,12 @@
 # {B} = 関数名
 
 import logging
+import time
 import copy
 import os
 
 import sqlite3
+import pandas as pd
 
 from debug import stream_hdl, file_hdl
 
@@ -318,3 +320,28 @@ class NetkeibaDB:
 
         self.cur.execute(sql, key_data_list)
         self.conn.commit()
+
+    def sql_insert(self, df_ins, table_name, col):
+        # TODO: pandas UPSERT
+        # Adding (Insert or update if key exists) option to .to_sql #14553 by cvonsteg · Pull Request #29636 · pandas-dev/pandas · GitHub
+        # https://github.com/pandas-dev/pandas/pull/29636
+        # PRはあったが、ぽしゃった模様。
+        # ローカルビルドでif_exists='upsert_overwrite'対応したい
+        
+        time_sta = time.perf_counter()
+
+        # (DBの対象テーブル) と (今回insert予定のテーブル) との差分から、
+        # insertするレコードを決定する
+        # おそらく激重
+        sql = "SELECT * FROM {0};".format(table_name)
+        df = pd.read_sql(sql, self.conn)
+        df = pd.merge(df, df_ins, on=col, how='outer', indicator=True)
+        df = df[df['_merge'] == 'right_only'].iloc[:,:-1]
+
+        if(len(df) != 0):
+            df_ins.to_sql(table_name, self.conn, if_exists='append', index=None, method='multi')
+            print("insert df = \n", df)
+        
+        # 処理の重さ確認用
+        time_end = time.perf_counter()
+        logger.info("insert time = {0} [sec]".format(time_end - time_sta))

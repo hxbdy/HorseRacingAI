@@ -359,3 +359,12 @@ class NetkeibaDB_IF:
         else:
             pass
         logger.debug("save horse data on race_info table, horse_id={}".format(horseID))
+
+    def db_insert_pandas(self, table, table_name):
+        if table_name == "horse_prof":
+            key = ["horse_id"]
+        elif table_name == "race_info":
+            key = ["horse_id", "race_id"]
+        elif table_name == "race_result":
+            key = ["horse_id", "race_id"]
+        self.netkeibaDB.sql_insert(table, table_name, key)
