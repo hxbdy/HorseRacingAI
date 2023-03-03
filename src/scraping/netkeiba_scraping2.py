@@ -26,20 +26,26 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
 
-# プロセス優先度:通常以下
-psutil.Process().nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+# プロセス優先度設定
+# 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
+# 通常 : psutil.NORMAL_PRIORITY_CLASS
+psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
 
 ####################################################################################
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
-col_name_dict = {
-    "日付":"date", "開催":"venue", "頭 数":"horse_num", "枠 番":"post_position", \
-    "馬 番":"horse_number", "オッズ":"odds","オ ッ ズ":"odds", "人 気":"fav", "着 順":"result", "斤量":"burden_weight", "斤 量":"burden_weight", \
-    "距離":"distance","馬 場":"course_condition", "タイム":"time", "着差":"margin", "賞金":"prize", \
-    "レース名":"race_id", "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace", \
-    "上り":"last_3f", "馬名":"horse_id", "馬体重":"horse_weight", "賞金 (万円)":"prize", "賞金":"prize", \
-    "生年月日":"bod", "馬主":"owner", "生産者":"producer", "産地":"area", "セリ取引価格":"auction_price", \
-    "獲得賞金":"earned", "通算成績":"lifetime_record", "主な勝鞍":"main_winner", "近親馬":"relative", "調教師":"trainer"
+race_info_col_name_dict = {
+    "馬名":"horse_id","レース名":"race_id","日付":"date","開催":"venue","頭 数":"horse_num","枠 番":"post_position","馬 番":"horse_number","オッズ":"odds","オ ッ ズ":"odds","人 気":"fav","着 順":"result","騎手":"jockey_id",
+    "斤量":"burden_weight", "斤 量":"burden_weight","距離":"distance","馬 場":"course_condition","タイム":"time","着差":"margin","通過":"corner_pos","ペース":"pace","上り":"last_3f","賞金 (万円)":"prize", "賞金":"prize",
+}
+
+horse_prof_col_name_dict = {
+    "馬名":"horse_id","生年月日":"bod","調教師":"trainer","馬主":"owner","生産者":"producer","産地":"area","セリ取引価格":"auction_price","獲得賞金":"earned","通算成績":"lifetime_record","主な勝鞍":"main_winner","近親馬":"relative",
+}
+
+# horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result
+race_result_col_name_dict = {
+    "馬名":"horse_id","レース名":"race_id","枠 番":"post_position","斤量":"burden_weight", "斤 量":"burden_weight","タイム":"time","着差":"margin","馬体重":"horse_weight","賞金 (万円)":"prize", "賞金":"prize","着 順":"result"
 }
 
 ####################################################################################
@@ -289,7 +295,7 @@ def main_process(untracked_race_id_list, children_num, roll):
         # すべての子プロセスの完了確認
         if 0 in children_comp_flg:
             pass
-            # print("children_comp_flg = ", children_comp_flg)
+            print("children_comp_flg = ", children_comp_flg)
         else:
             break
 
@@ -365,7 +371,7 @@ def scrape_process(parent_queue, child_queue, children_id):
             parent_queue.put(data)
             
 def db_process(parent_queue, child_queue):
-    nf = NetkeibaDB_IF("ROM")
+    nf = NetkeibaDB_IF("RAM")
     queue = child_queue
     while True:
         data = queue.get()
@@ -467,7 +473,7 @@ def build_perform_contents(driver, horseID):
 
     # 不要な列削除
     for col in dfs[0].columns:
-        if not (col in col_name_dict.keys()):
+        if not (col in race_info_col_name_dict.keys()):
             dfs[0].drop(col, axis=1, inplace=True)
     
     # jockey id 取得
@@ -486,7 +492,7 @@ def build_perform_contents(driver, horseID):
         grade = string2grade(dfs[0].loc[i, 'レース名'], dfs[0].loc[i, '距離'])
         grade_list.append(grade)
 
-    dfs[0].rename(columns=col_name_dict, inplace=True)
+    dfs[0].rename(columns=race_info_col_name_dict, inplace=True)
 
     dfs[0]["horse_id"] = horseID
     dfs[0]["race_id"] = race_link_list
@@ -530,7 +536,7 @@ def scrape_horsedata(driver, horseID):
 
     # 不要な列は削除する
     for col in prof.columns:
-        if not (col in col_name_dict.keys()):
+        if not (col in horse_prof_col_name_dict.keys()):
             prof.drop(col, axis=1, inplace=True)
         
     ## 馬名，英名，抹消/現役，牡牝，毛の色
@@ -593,7 +599,7 @@ def scrape_horsedata(driver, horseID):
         check = "0" # データ欠損アリ (prof_tableとperform_tableで一致しない)
 
     # horse_prof_data, race_info_data
-    prof.rename(columns = col_name_dict, inplace=True)
+    prof.rename(columns = horse_prof_col_name_dict, inplace=True)
 
     prof["blood_f" ] = blood_list[0]
     prof["blood_ff"] = blood_list[1]
@@ -666,7 +672,7 @@ def scrape_racedata(driver, race_id):
     horse_id_list = list(map(lambda x: (x.replace("/horse/", '')), horse_id_list))
 
     # Webページの列名をDBの列名に変更
-    dfs[0].rename(columns=col_name_dict, inplace=True)
+    dfs[0].rename(columns=race_result_col_name_dict, inplace=True)
     
     # 共通列追加
     dfs[0]["grade"]      = grade

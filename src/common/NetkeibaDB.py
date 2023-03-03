@@ -27,18 +27,21 @@ logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
     def __init__(self, path_db, loc):
-        if not os.path.isfile(path_db):
-            self.create_table(path_db)
+        self.path_db = path_db
+        self.loc = loc
 
-        self.conn = sqlite3.connect(path_db)
+        if not os.path.isfile(self.path_db):
+            self.create_table(self.path_db)
+
+        self.conn = sqlite3.connect(self.path_db)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
-        if loc == "RAM":
+        if self.loc == "RAM":
             logger.info("DB will be located in RAM")
             self._switch_RAM()
         else:
             logger.info("DB will be located in ROM")
-        logger.info("Database {0} loading complete".format(path_db))
+        logger.info("Database {0} loading complete".format(self.path_db))
 
     def create_table(self, dbname):
         """データベースの作成
@@ -66,11 +69,16 @@ class NetkeibaDB:
 
     def __del__(self):
         # データベースへのコネクションを閉じる
+        # RAM展開時は変更内容をROMへ移す
+        if self.loc == "RAM":
+            self._switch_ROM()
+
         self.cur.close()
         self.conn.close()
 
     # DBをRAM上に移して、以降の操作をRAM上で行う
     def _switch_RAM(self):
+        print("DB flush ROM -> RAM")
         # RAM DBへのコネクション作成
         dest = sqlite3.connect(':memory:')
         self.conn.backup(dest)
@@ -81,6 +89,22 @@ class NetkeibaDB:
         self.conn = dest
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
+        print("comp")
+
+    # DBをROM上に移して、以降の操作をROM上で行う
+    def _switch_ROM(self):
+        print("DB flush RAM -> ROM")
+        # ROM DBへのコネクション作成
+        dest = sqlite3.connect(self.path_db)
+        self.conn.backup(dest)
+        # RAM DBへのコネクションを閉じる
+        self.cur.close()
+        self.conn.close()
+        # コネクション変数譲渡
+        self.conn = dest
+        # sqliteを操作するカーソルオブジェクトを作成
+        self.cur = self.conn.cursor()
+        print("comp")
 
     def sql_mul_all(self, table_name):
         """table要素をすべて取得する
