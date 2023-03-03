@@ -339,8 +339,8 @@ class NetkeibaDB:
         df = df[df['_merge'] == 'right_only'].iloc[:,:-1]
 
         if(len(df) != 0):
-            df_ins.to_sql(table_name, self.conn, if_exists='append', index=None, method='multi')
             print("insert df = \n", df)
+            df_ins.to_sql(table_name, self.conn, if_exists='append', index=None, method='multi')
         
         # 処理の重さ確認用
         time_end = time.perf_counter()

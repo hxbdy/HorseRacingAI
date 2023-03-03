@@ -11,6 +11,7 @@ from collections            import deque
 
 from selenium.webdriver.common.by import By
 import pandas as pd
+import psutil
 
 import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
@@ -24,6 +25,9 @@ logger.setLevel(logging.DEBUG)
 #loggerにハンドラを設定
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
+
+# プロセス優先度:通常以下
+psutil.Process().nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 ####################################################################################
 
@@ -174,7 +178,7 @@ def scrape_race_today(driver, raceID):
     print(raceInfo.prize)
     return raceInfo
 
-def main_process(untracked_race_id_list, children_num):
+def main_process(untracked_race_id_list, children_num, roll):
     children_process  = []
     children_queue    = []
     children_comp_flg = [0] * children_num
@@ -185,11 +189,12 @@ def main_process(untracked_race_id_list, children_num):
     untracked_race_id_queue  = deque(untracked_race_id_list)
     untracked_horse_id_queue = deque()
 
-    # 前回 FAILED した id があればエンキューしておく
-    nf = NetkeibaDB_IF("ROM")
-    untracked_race_id_queue.extend(nf.db_pop_untracked_race_id())
-    untracked_horse_id_queue.extend(nf.db_pop_untracked_horse_id())
-    del nf
+    # 前回 FAILED した id を再度スクレイプしてみる
+    if roll:
+        nf = NetkeibaDB_IF("ROM")
+        untracked_race_id_queue.extend(nf.db_pop_untracked_race_id())
+        untracked_horse_id_queue.extend(nf.db_pop_untracked_horse_id())
+        del nf
 
     # スクレイププロセス起動
     # REQ メッセージをエンキュー
@@ -206,6 +211,13 @@ def main_process(untracked_race_id_list, children_num):
 
     while True:
         data = queue.get()
+
+        # DB制御キュー溢れ対策
+        # BrokenPipeError: [WinError 232] パイプを閉じています。
+        # が起きる時がある
+        while db_queue.qsize() > 10:
+            print("sync db ctrl. plz wait ... | db_queue.qsize = ", db_queue.qsize())
+            time.sleep(1)
 
         # REQ メッセージ
         # 子プロセスからジョブの要求があったときに受信する
@@ -301,9 +313,23 @@ def scrape_process(parent_queue, child_queue, children_id):
 
     # login(driver, mail_address, password)
 
-    queue = child_queue
+    queue :Queue= child_queue
+    
     while True:
-        data = queue.get()
+        try:
+            data = queue.get(timeout=60)
+        except Exception as e:
+            print("Exception", e.args)
+            # スクレイピングに60 sec以上かかった
+            # 失敗としてdriverは再起動して次に行く
+            print("scrape timeout !!!")
+            print("-> TIMEOUT FAILED REQ id =", children_id)
+
+            # reboot driver
+            driver.close()
+            driver = wf.start_driver(browser, arg_list, True)
+
+            parent_queue.put(["REQ", children_id])
 
         # 親プロセスから終了要求受信
         if data[0] == "FIN":
@@ -431,7 +457,6 @@ def login(driver, mail_address, password):
 def build_perform_contents(driver, horseID):
     ## 競走成績テーブルの取得
     logger.debug('get result table')
-    COL_NAME_TEXT = ['レース名', '日付', '開催', '頭 数', '枠 番', '馬 番', 'オ ッ ズ', '人 気', '着 順', '斤 量', '距離', '馬 場', 'タイム', '着差', '通過', 'ペース', '上り', '賞金']
 
     # 旧perform_table
     element_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
@@ -439,8 +464,10 @@ def build_perform_contents(driver, horseID):
     # 表のテキスト取得
     html = element_table.get_attribute('outerHTML')
     dfs = pd.read_html(html, header=0)
+
+    # 不要な列削除
     for col in dfs[0].columns:
-        if not (col in COL_NAME_TEXT):
+        if not (col in col_name_dict.keys()):
             dfs[0].drop(col, axis=1, inplace=True)
     
     # jockey id 取得
@@ -486,7 +513,7 @@ def scrape_horsedata(driver, horseID):
 
     html = driver.page_source
     dfs = pd.read_html(html)
-    
+
     # _ = dfs[0]
     prof = dfs[1]
     # parent = dfs[2]
@@ -494,13 +521,17 @@ def scrape_horsedata(driver, horseID):
     # _ = dfs[4]
     # _ = dfs[5]
 
-
     # 転置
     prof = prof.T
         
     # 1行目を列名にする
     prof.columns = prof.iloc[0]
     prof = prof.reindex(prof.index.drop(0))
+
+    # 不要な列は削除する
+    for col in prof.columns:
+        if not (col in col_name_dict.keys()):
+            prof.drop(col, axis=1, inplace=True)
         
     ## 馬名，英名，抹消/現役，牡牝，毛の色
     # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
@@ -548,7 +579,7 @@ def scrape_horsedata(driver, horseID):
         review_5 = app_table[i * 5 + 4].get_attribute("width") # ゲージ右文字
 
         app_list.extend([review_1, review_2, review_4, review_5])
-    logger.info("app_list = {0}".format(app_list))
+    # logger.info("app_list = {0}".format(app_list))
 
 
     ## 競走成績テーブルの取得
@@ -744,7 +775,8 @@ def scrape_race_result(queue, race_id_list, driver):
             # race_result から horse_id のみ取り出しておく
             # (次段の horse_id スクレイピング対象のため)
             queue.put(["SUCCESS", "scrape_race_result", [race_result, race_result["horse_id"]]], block=True)
-    except:
+    except Exception as e:
+        print("Exception", e.args)
         queue.put(["FAILED", "scrape_race_result", race_id_list], block=True)
 
 def scrape_horse_result(queue, horse_id_list, driver):
@@ -798,8 +830,8 @@ if __name__ == "__main__":
 
     # DB初期化
     if args.init:
-        start = "198601"
-        end   = datetime.datetime.now().strftime("%Y%m")
+        start = "200501"
+        end   = "200701"
         grade = "OP"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
@@ -807,7 +839,7 @@ if __name__ == "__main__":
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
         driver.close()
-        main_process(race_id, process_num)
+        main_process(race_id, process_num, False)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新
@@ -825,7 +857,7 @@ if __name__ == "__main__":
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
         driver.close()
-        main_process(race_id, process_num)
+        main_process(race_id, process_num, False)
 
     # 当日予想
     elif args.race_id:
