@@ -34,19 +34,42 @@ psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
 ####################################################################################
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
-race_info_col_name_dict = {
-    "馬名":"horse_id","レース名":"race_id","日付":"date","開催":"venue","頭 数":"horse_num","枠 番":"post_position","馬 番":"horse_number","オッズ":"odds","オ ッ ズ":"odds","人 気":"fav","着 順":"result","騎手":"jockey_id",
-    "斤量":"burden_weight", "斤 量":"burden_weight","距離":"distance","馬 場":"course_condition","タイム":"time","着差":"margin","通過":"corner_pos","ペース":"pace","上り":"last_3f","賞金 (万円)":"prize", "賞金":"prize",
+# (空白文字揺れも含む)
+col_name_dict = {
+    # 揺れあり
+    "枠 番":"post_position", "枠番":"post_position",
+    "馬 番":"horse_number", "馬番":"horse_number",
+    "着 順":"result","着順":"result",
+    "斤量":"burden_weight", "斤 量":"burden_weight",
+    "オッズ":"odds","オ ッ ズ":"odds",
+    "賞金":"prize", "賞金 (万円)":"prize", "賞金":"prize", "賞金(万円)":"prize",
+    "頭 数":"horse_num", "頭数":"horse_num",
+    "人 気":"fav", "人気":"fav",
+    "馬 場":"course_condition", "馬場":"course_condition",
+    # 揺れなし
+    "距離":"distance", "タイム":"time", "着差":"margin", "レース名":"race_id",
+    "騎手":"jockey_id", "通過":"corner_pos", "ペース":"pace",
+    "上り":"last_3f", "馬名":"horse_id", "馬体重":"horse_weight",
+    "日付":"date", "開催":"venue",
+    "生年月日":"bod", "馬主":"owner", "生産者":"producer", "産地":"area", "セリ取引価格":"auction_price",
+    "獲得賞金":"earned", "通算成績":"lifetime_record", "主な勝鞍":"main_winner", "近親馬":"relative", "調教師":"trainer"
 }
 
-horse_prof_col_name_dict = {
-    "馬名":"horse_id","生年月日":"bod","調教師":"trainer","馬主":"owner","生産者":"producer","産地":"area","セリ取引価格":"auction_price","獲得賞金":"earned","通算成績":"lifetime_record","主な勝鞍":"main_winner","近親馬":"relative",
-}
+# race_info テーブル
+race_info_col_name_dict = (
+    "date","venue","horse_num","post_position","horse_number","odds","fav","result","jockey_id",
+    "burden_weight","distance","course_condition","time","margin","corner_pos","pace","last_3f","prize",
+)
 
-# horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result
-race_result_col_name_dict = {
-    "馬名":"horse_id","レース名":"race_id","枠 番":"post_position","斤量":"burden_weight", "斤 量":"burden_weight","タイム":"time","着差":"margin","馬体重":"horse_weight","賞金 (万円)":"prize", "賞金":"prize","着 順":"result"
-}
+# horse_prof テーブル
+horse_prof_col_name_dict = (
+    "bod","trainer","owner","producer","area","auction_price","earned","lifetime_record","main_winner","relative",
+)
+
+# race_result テーブル
+race_result_col_name_dict = (
+    "post_position", "burden_weight", "burden_weight", "time", "margin", "horse_weight", "prize", "prize", "result"
+)
 
 ####################################################################################
 
@@ -187,6 +210,8 @@ def scrape_race_today(driver, raceID):
 def main_process(untracked_race_id_list, children_num, roll):
     children_process  = []
     children_queue    = []
+
+    # プロセス終了FIN送信のタイミングでセットする
     children_comp_flg = [0] * children_num
 
     queue = Queue()
@@ -215,15 +240,50 @@ def main_process(untracked_race_id_list, children_num, roll):
     child_db_process = Process(target=db_process, args=(queue, db_queue))
     child_db_process.start()
 
+    # メモリ溢れ対策
+    MEM_LIMIT_WAIT_SEC = 100
+    mem_limit_cnt = 0
+
     while True:
         data = queue.get()
 
         # DB制御キュー溢れ対策
         # BrokenPipeError: [WinError 232] パイプを閉じています。
         # が起きる時がある
-        while db_queue.qsize() > 10:
-            print("sync db ctrl. plz wait ... | db_queue.qsize = ", db_queue.qsize())
-            time.sleep(1)
+        # メモリが足りないのが原因
+        # DB制御キューを捌けさせて、メモリが空くのを待つ
+        # 一定時間待っても改善しない場合は強制終了する
+        mem = psutil.virtual_memory()
+        while mem.percent > 90.0:
+            # 待ちの数を10以下になるまで待つ
+            # 待ってもメモリの使用率が改善しない場合は一定時間経過後に強制終了
+            print("mem {0}% used ! queue size = {1} | wait {2}/{3}".format(mem.percent, db_queue.qsize(), mem_limit_cnt, MEM_LIMIT_WAIT_SEC))
+            if db_queue.qsize() > 10:
+                time.sleep(1)
+            else:
+                if mem_limit_cnt > MEM_LIMIT_WAIT_SEC:
+                    # 強制終了
+                    # スクレイププロセスに終了要求送信
+                    print("scrape imm FIN send")
+                    for i in range(children_num):
+                        children_queue[i].put(["FIN", i, None, None])
+                        children_comp_flg[children_id] = 1
+                    # untracked キューで待っていたidを払い出し。DBに保存しておく
+                    print("scrape_race_result send")
+                    while len(untracked_race_id_queue) > 0:
+                        race_id = untracked_race_id_queue.pop()
+                        db_queue.put(["FAILED_INSERT", "scrape_race_result", race_id])
+                    print("scrape_horse_result send")
+                    while len(untracked_horse_id_queue) > 0:
+                        horse_id = untracked_horse_id_queue.pop()
+                        db_queue.put(["FAILED_INSERT", "scrape_horse_result", horse_id])
+                    print("db_queue FIN send")
+                    db_queue.put(["FIN"])
+                    child_db_process.join()
+                else:
+                    mem_limit_cnt += 1
+                    time.sleep(1)
+        mem_limit_cnt = 0
 
         # REQ メッセージ
         # 子プロセスからジョブの要求があったときに受信する
@@ -294,7 +354,6 @@ def main_process(untracked_race_id_list, children_num, roll):
 
         # すべての子プロセスの完了確認
         if 0 in children_comp_flg:
-            pass
             print("children_comp_flg = ", children_comp_flg)
         else:
             break
@@ -369,6 +428,7 @@ def scrape_process(parent_queue, child_queue, children_id):
             print("-> FAILED REQ id =", children_id)
             parent_queue.put(["REQ", children_id])
             parent_queue.put(data)
+    print("scrape_process fin id:", children_id)
             
 def db_process(parent_queue, child_queue):
     nf = NetkeibaDB_IF("RAM")
@@ -390,6 +450,7 @@ def db_process(parent_queue, child_queue):
                 nf.db_insert_untracked_race_id(data[2])
             elif data[1]=="scrape_horse_result":
                 nf.db_insert_untracked_horse_id(data[2])
+    print("db_process fin")
 
 ####################################################################################
 
@@ -464,18 +525,26 @@ def build_perform_contents(driver, horseID):
     ## 競走成績テーブルの取得
     logger.debug('get result table')
 
-    # 旧perform_table
     element_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
     
     # 表のテキスト取得
     html = element_table.get_attribute('outerHTML')
     dfs = pd.read_html(html, header=0)
 
+    # Webページの列名をDBの列名に変更
+    dfs[0].rename(columns=col_name_dict, inplace=True)
+
+    # grade 取得
+    grade_list = []
+    for i in range(len(dfs[0])):
+        grade = string2grade(dfs[0].loc[i, 'race_id'], dfs[0].loc[i, 'distance'])
+        grade_list.append(grade)
+
     # 不要な列削除
     for col in dfs[0].columns:
-        if not (col in race_info_col_name_dict.keys()):
+        if not (col in race_info_col_name_dict):
             dfs[0].drop(col, axis=1, inplace=True)
-    
+
     # jockey id 取得
     jockey_link_list = re.findall('/jockey/result/recent/[0-9a-zA-Z]{5}', html)
     jockey_link_list = list(map(lambda x: (x.replace("/jockey/result/recent/", '')), jockey_link_list))
@@ -485,14 +554,6 @@ def build_perform_contents(driver, horseID):
     race_link_list = re.findall('/race/[0-9a-zA-Z]{12}', html)
     race_link_list = list(map(lambda x: (x.replace("/race/", '')), race_link_list))
     # print("race_link_list = ", race_link_list)
-
-    # grade 取得
-    grade_list = []
-    for i in range(len(dfs[0])):
-        grade = string2grade(dfs[0].loc[i, 'レース名'], dfs[0].loc[i, '距離'])
-        grade_list.append(grade)
-
-    dfs[0].rename(columns=race_info_col_name_dict, inplace=True)
 
     dfs[0]["horse_id"] = horseID
     dfs[0]["race_id"] = race_link_list
@@ -534,11 +595,14 @@ def scrape_horsedata(driver, horseID):
     prof.columns = prof.iloc[0]
     prof = prof.reindex(prof.index.drop(0))
 
+    # Webページの列名をDBの列名に変更
+    prof.rename(columns = col_name_dict, inplace=True)
+
     # 不要な列は削除する
     for col in prof.columns:
-        if not (col in horse_prof_col_name_dict.keys()):
+        if not (col in horse_prof_col_name_dict):
             prof.drop(col, axis=1, inplace=True)
-        
+
     ## 馬名，英名，抹消/現役，牡牝，毛の色
     # 'コントレイル\nContrail\n抹消\u3000牡\u3000青鹿毛'
     horse_title = driver.find_element(By.CLASS_NAME, "horse_title").text
@@ -598,9 +662,6 @@ def scrape_horsedata(driver, horseID):
     else:
         check = "0" # データ欠損アリ (prof_tableとperform_tableで一致しない)
 
-    # horse_prof_data, race_info_data
-    prof.rename(columns = horse_prof_col_name_dict, inplace=True)
-
     prof["blood_f" ] = blood_list[0]
     prof["blood_ff"] = blood_list[1]
     prof["blood_fm"] = blood_list[2]
@@ -647,14 +708,18 @@ def scrape_racedata(driver, race_id):
     logger.debug('access {}'.format(race_url))
     wf.access_page(driver, race_url)
 
-    COL_NAME_TEXT = ["着 順", "枠 番", "タイム", "着差", "馬体重", "賞金 (万円)", "斤量"]
     element_table = driver.find_element(By.XPATH, "//*[@class='race_table_01 nk_tb_common']")
 
     # 表のHTML取得
     html = element_table.get_attribute('outerHTML')
     dfs = pd.read_html(html, header=0)
+
+    # Webページの列名をDBの列名に変更
+    dfs[0].rename(columns=col_name_dict, inplace=True)
+
+    # テーブルに挿入しない列を削除
     for col in dfs[0].columns:
-        if not (col in COL_NAME_TEXT):
+        if not (col in race_result_col_name_dict):
             dfs[0].drop(col, axis=1, inplace=True)
 
     ## race情報の取得・整形と保存 (払い戻しの情報は含まず)
@@ -670,9 +735,6 @@ def scrape_racedata(driver, race_id):
     # horse_id取得
     horse_id_list = re.findall('/horse/[0-9a-zA-Z]{10}', html)
     horse_id_list = list(map(lambda x: (x.replace("/horse/", '')), horse_id_list))
-
-    # Webページの列名をDBの列名に変更
-    dfs[0].rename(columns=race_result_col_name_dict, inplace=True)
     
     # 共通列追加
     dfs[0]["grade"]      = grade
@@ -817,6 +879,7 @@ if __name__ == "__main__":
     parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
     parser.add_argument('-r','--race_id', help='scrape race_id info')
     parser.add_argument('-t','--test', action='store_true', default=False, help='for debug scraping')
+    parser.add_argument('--skip_login', action='store_true', default=False, help='skip login')
 
     args = parser.parse_args()
 
@@ -827,17 +890,18 @@ if __name__ == "__main__":
     # スクレイピング用driver設定
     # プロセス数分のログインセッションを持ったユーザを作成
     # ログインボタンは画像のためここでは画像を読む(フラグなし)
-    for i in range(process_num):
-        print("process {0} init...".format(i))
-        arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
-        driver = wf.start_driver(browser, arg_list, False)
-        login(driver, mail_address, password)
-        driver.close()
+    if not args.skip_login:
+        for i in range(process_num):
+            print("process {0} init...".format(i))
+            arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
+            driver = wf.start_driver(browser, arg_list, False)
+            login(driver, mail_address, password)
+            driver.close()
 
     # DB初期化
     if args.init:
-        start = "200501"
-        end   = "200701"
+        start = "198601"
+        end   = "198701"
         grade = "OP"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
@@ -846,6 +910,7 @@ if __name__ == "__main__":
             race_id.extend(race_id_list)
         driver.close()
         main_process(race_id, process_num, False)
+        print("init fin")
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新
@@ -884,7 +949,15 @@ if __name__ == "__main__":
 
     elif args.test:
         # debug
-        pass
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
+        driver = wf.start_driver(browser, arg_list, True)
+        horse_prof_data, race_info_data = scrape_horsedata(driver, "1997200031")
+        driver.close()
 
+        print("horse_prof_data \n")
+        # df.loc[:,['A','B']]
+        print(horse_prof_data)
+        print("race_info_data \n")
+        print(race_info_data.loc[:,['horse_num','post_position', 'horse_number', 'fav', 'result', 'course_condition', 'prize']])
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
