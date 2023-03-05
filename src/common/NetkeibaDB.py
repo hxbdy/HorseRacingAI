@@ -345,27 +345,33 @@ class NetkeibaDB:
         self.cur.execute(sql, key_data_list)
         self.conn.commit()
 
-    def sql_insert(self, df_ins, table_name, col):
-        # TODO: pandas UPSERT
+    def sql_upsert(self, df_ins:pd, table_name:str):
+        """指定テーブルにupsertする(あれば更新、なければ追加)"""
+
         # Adding (Insert or update if key exists) option to .to_sql #14553 by cvonsteg · Pull Request #29636 · pandas-dev/pandas · GitHub
         # https://github.com/pandas-dev/pandas/pull/29636
-        # PRはあったが、ぽしゃった模様。
-        # ローカルビルドでif_exists='upsert_overwrite'対応したい
-        
+        # pandasにupsertを追加するPRはあったが、ぽしゃった模様。
+        # cloneしてローカルビルドするとif_exists='upsert_overwrite'で使用可能
+
         time_sta = time.perf_counter()
 
-        # (DBの対象テーブル) と (今回insert予定のテーブル) との差分から、
-        # insertするレコードを決定する
-        # おそらく激重
-        sql = "SELECT * FROM {0};".format(table_name)
-        df = pd.read_sql(sql, self.conn)
-        df = pd.merge(df, df_ins, on=col, how='outer', indicator=True)
-        df = df[df['_merge'] == 'right_only'].iloc[:,:-1]
+        # 挿入する列名一覧
+        col_name = ",".join(df_ins.columns.values)
 
-        if(len(df) != 0):
-            print("insert df = \n", df)
-            df_ins.to_sql(table_name, self.conn, if_exists='append', index=None, method='multi')
-        
+        # 挿入する行をリスト化
+        data_list = df_ins.values.tolist()
+
+        # プレースホルダ
+        replacement = ",".join(["?"] * len(df_ins.columns))
+
+
+        sql = "INSERT OR REPLACE INTO {0} ( {1} ) VALUES ( {2} );".format(table_name, col_name, replacement)
+
+        # print(sql)
+
+        self.cur.executemany(sql, data_list)
+        self.conn.commit()
+
         # 処理の重さ確認用
         time_end = time.perf_counter()
-        logger.info("insert time = {0} [sec]".format(time_end - time_sta))
+        logger.info("upsert time = {0} [sec]".format(time_end - time_sta))

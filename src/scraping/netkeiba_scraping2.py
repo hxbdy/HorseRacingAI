@@ -248,9 +248,6 @@ def main_process(untracked_race_id_list, children_num, roll):
         data = queue.get()
 
         # DB制御キュー溢れ対策
-        # BrokenPipeError: [WinError 232] パイプを閉じています。
-        # が起きる時がある
-        # メモリが足りないのが原因
         # DB制御キューを捌けさせて、メモリが空くのを待つ
         # 一定時間待っても改善しない場合は強制終了する
         mem = psutil.virtual_memory()
@@ -268,6 +265,10 @@ def main_process(untracked_race_id_list, children_num, roll):
                     for i in range(children_num):
                         children_queue[i].put(["FIN", i, None, None])
                         children_comp_flg[children_id] = 1
+                    # スクレイププロセス終了待ち
+                    # メインプロセスが先に終了してしまう時のデッドロック回避
+                    for i in range(children_num):
+                        children_process[i].join(timeout = 90)
                     # untracked キューで待っていたidを払い出し。DBに保存しておく
                     print("scrape_race_result send")
                     while len(untracked_race_id_queue) > 0:
@@ -279,11 +280,17 @@ def main_process(untracked_race_id_list, children_num, roll):
                         db_queue.put(["FAILED_INSERT", "scrape_horse_result", horse_id])
                     print("db_queue FIN send")
                     db_queue.put(["FIN"])
-                    child_db_process.join()
+                    # DB制御プロセス終了待ち
+                    # メインプロセスが先に終了してしまう時のデッドロック回避
+                    child_db_process.join(timeout = 90)
                 else:
                     mem_limit_cnt += 1
                     time.sleep(1)
         mem_limit_cnt = 0
+
+        # 進捗確認
+        logger.info("untracked_race_id_queue:{0}".format(len(untracked_race_id_queue)))
+        logger.info("untracked_horse_id_queue:{0}".format(len(untracked_horse_id_queue)))
 
         # REQ メッセージ
         # 子プロセスからジョブの要求があったときに受信する
@@ -362,6 +369,18 @@ def main_process(untracked_race_id_list, children_num, roll):
     db_queue.put(["FIN"])
     print("snd db_queue FIN")
 
+    # 子プロセス終了待ち
+    # メインプロセスが先に終了してしまう時のデッドロック回避
+    for i in range(children_num):
+        children_process[i].join(timeout = 90)
+
+    # 終了したかの確認
+    # 終了していない場合(joinタイムアウト発生)、子プロセスが終了できなくなっているため強制終了する
+    for i in range(children_num):
+        if(children_process[i].is_alive()):
+            logger.critical('failed to terminate scrape process !! force kill ID:{0}'.format(i))
+            children_process[i].kill()
+
 def scrape_process(parent_queue, child_queue, children_id):
     browser      = private_ini("scraping", "browser")
     mail_address = private_ini("scraping", "mail")
@@ -435,6 +454,9 @@ def db_process(parent_queue, child_queue):
     queue = child_queue
     while True:
         data = queue.get()
+
+        # 進捗確認
+        logger.info("db_ctrl_queue:{0}".format(queue.qsize()))
 
         # 親プロセスから終了要求受信
         if data[0] == "FIN":
@@ -825,7 +847,11 @@ def regist_scrape_race_id(driver, start, end, grade):
         for race_id_list in scrape_raceID(driver, start, end, grade_dict[key]):
 
             # 実際にスクレイプするレースを絞るフィルタ処理
-            checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
+            # checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
+
+            # TODO: フィルタ処理を行わない
+            # UPSERTが実装されたので、不要ではないか
+            checked_race_id_list = race_id_list
 
             logger.debug("saving checked_race_id_list = {0}".format(checked_race_id_list))
             yield checked_race_id_list
@@ -901,7 +927,7 @@ if __name__ == "__main__":
     # DB初期化
     if args.init:
         start = "198601"
-        end   = "198701"
+        end   = "198601"
         grade = "OP"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
