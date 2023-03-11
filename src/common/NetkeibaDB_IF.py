@@ -122,8 +122,17 @@ class NetkeibaDB_IF:
         return jockeyIDList
 
     def db_race_cnt_jockey(self, jockey_id, lower_year, upper_year):
-        # 騎手の lower_year から upper_year までの総出場回数を求める
+        # jockey_infoテーブルから騎手の lower_year から upper_year までの総出場回数を求める
         return self.netkeibaDB.sql_one_jockey_total(jockey_id, str(lower_year), str(upper_year))
+    
+    def db_race_info_jockey_list(self, lower, upper):
+        # race_infoテーブルから(year)年に騎乗した騎手のリスト
+        jockey_list = self.netkeibaDB.sql_mul_jockey_cnt(lower, upper)
+        return jockey_list
+    
+    def db_race_info_jockey_cnt(self, jockey_id, lower, upper):
+        cnt = self.netkeibaDB.sql_one_rowCnt_range("race_info", "jockey_id", jockey_id, lower, upper)
+        return cnt
 
     def db_horse_list_parent(self, horse_id):
         # 親馬のIDリストを返す

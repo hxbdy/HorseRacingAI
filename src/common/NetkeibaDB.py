@@ -191,10 +191,19 @@ class NetkeibaDB:
         return int(self.cur.fetchone()[0])
 
     def sql_one_jockey_total(self, jockey_id, lower, upper):
-        # 指定騎手の騎乗回数をfloatで返す
-        sql = "SELECT TOTAL(num) FROM jockey_info WHERE ((jockey_id = \"" + jockey_id +"\" ) AND ( year BETWEEN \"" + lower + "\" AND \"" + lower + "\" ));"
+        # jockey_infoテーブルから指定騎手の騎乗回数をfloatで返す
+        sql = "SELECT TOTAL(num) FROM jockey_info WHERE ((jockey_id = \"" + jockey_id +"\" ) AND ( year BETWEEN \"" + lower + "\" AND \"" + upper + "\" ));"
         self.cur.execute(sql)
         return self.cur.fetchone()[0]
+    
+    def sql_mul_jockey_cnt(self, lower, upper):
+        # race_info テーブルから
+        # lower < race_id < upper に騎乗した騎手のリスト
+        sql = "SELECT DISTINCT jockey_id FROM race_info WHERE race_id>'{0}' AND race_id<'{1}'".format(lower, upper)
+        self.cur.execute(sql)
+        jockey_list_raw = self.cur.fetchall()
+        jockey_list = list(map(lambda x: x[0], jockey_list_raw))
+        return jockey_list
 
     def sql_mul_distinctColCnt_G1G2G3(self, lower, upper, limit):
         # !!注意!! ソートは行っていないので必ず lower から順に limit 件取り出しているとは限らない

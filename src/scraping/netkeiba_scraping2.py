@@ -1,3 +1,13 @@
+# マルチプロセスで馬の情報、レース情報をデータベースへ保存する
+# 1. スクレイプするレースIDは直列で取得する(untracked_race_idキューにエンキューする)
+# 2. private.iniで設定してあるマルチプロセス数分ドライバを作成して、スクレイプする
+# 2.1. 並列で動作するプロセスは、スクレイププロセス + DB制御プロセス
+# 2.2. スクレイププロセスは、レース情報をスクレイプするか馬情報をスクレイプするかはキューのたまり具合で判断する
+
+# 残件
+# 1. 取得に失敗したIDを再度取得チャレンジするオプションの追加
+# 2. ログがフォーマット通り出力されない問題の対処
+
 import re
 import os
 import time
@@ -26,7 +36,7 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
 
-# プロセス優先度設定
+# プロセス優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
 # 通常 : psutil.NORMAL_PRIORITY_CLASS
 psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
@@ -85,11 +95,13 @@ def update_database_predict(driver, horseID_list):
     driver: webdriver
     horseID_list: レースに出走する馬のhorse idのリスト
     """
-    prof, race_info = scrape_horsedata(driver, horseID_list)
 
     nf = NetkeibaDB_IF("ROM")
-    nf.db_insert_pandas(prof, "horse_prof")
-    nf.db_insert_pandas(race_info, "race_info")
+
+    for horse_id in horseID_list:
+        prof, race_info = scrape_horsedata(driver, horse_id)
+        nf.db_insert_pandas(prof, "horse_prof")
+        nf.db_insert_pandas(race_info, "race_info")
 
     #reconfirm_check()
     logger.info("update_horsedata_only comp")
@@ -586,11 +598,40 @@ def build_perform_contents(driver, horseID):
 
 ####################################################################################   
 
+def update_jockey_info(lower_year, upper_year):
+    """jockey_infoテーブルの更新
+    開始年から終了年までの各年で、騎手の騎乗回数をカウントしてテーブルを更新。
+    騎乗回数はrace_infoテーブルから計上する。
+    lower_year: 開始年
+    upper_year: 終了年
+    """
+    nf = NetkeibaDB_IF("RAM")
+
+    df = pd.DataFrame(columns=["jockey_id", "year", "num"])
+
+    for year in range(lower_year, upper_year+1):
+        year = str(year)
+        year0 = year + "00000000"
+        year1 = year + "99999999"
+
+        # (year)年に騎乗した騎手のリスト
+        jockey_list = nf.db_race_info_jockey_list(year0, year1)
+        
+        logger.info("year {}, #jockey = {}".format(year, len(jockey_list)))
+
+        for jockey_id in jockey_list:
+            # 騎乗回数のカウント
+            cnt = nf.db_race_info_jockey_cnt(jockey_id, year0, year1)
+            insert_dict = {"jockey_id":jockey_id, "year":year, "num":cnt}
+            df = df.append(insert_dict, ignore_index=True)
+    
+    # dbの更新
+    nf.db_insert_pandas(df, "jockey_info")
 
 def scrape_horsedata(driver, horseID):
     """馬のデータを取得して保存する
     driver: webdriver
-    horseID_list: 調べるhorseIDのリスト
+    horseID: 調べるhorseID
     """
     ## 以下保留事項
     # 外国から参加してきた馬はどう処理するのか
@@ -847,11 +888,10 @@ def regist_scrape_race_id(driver, start, end, grade):
         for race_id_list in scrape_raceID(driver, start, end, grade_dict[key]):
 
             # 実際にスクレイプするレースを絞るフィルタ処理
-            # checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
+            checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
 
-            # TODO: フィルタ処理を行わない
-            # UPSERTが実装されたので、不要ではないか
-            checked_race_id_list = race_id_list
+            # フィルタ処理を行わない
+            # checked_race_id_list = race_id_list
 
             logger.debug("saving checked_race_id_list = {0}".format(checked_race_id_list))
             yield checked_race_id_list
@@ -893,7 +933,7 @@ if __name__ == "__main__":
     mail_address = private_ini("scraping", "mail")
     password     = private_ini("scraping", "pass")
 
-    # 並列スクレイピング数
+    # 並列スクレイピング数読み込み
     process_num = int(private_ini("scraping", "process_num"))
 
     # tmpファイルパス読み込み
@@ -901,21 +941,22 @@ if __name__ == "__main__":
 
     # 引数パース
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--init', action='store_true', default=False, help='init database and scrape until today')
-    parser.add_argument('-d','--db', action='store_true', default=False, help='update database')
-    parser.add_argument('-r','--race_id', help='scrape race_id info')
-    parser.add_argument('-t','--test', action='store_true', default=False, help='for debug scraping')
-    parser.add_argument('--skip_login', action='store_true', default=False, help='skip login')
+    parser.add_argument('--init', action='store_true', default=False, help='init database and scrape until today') # DB初期化
+    parser.add_argument('--db', action='store_true', default=False, help='update database')                        # 今日から一ヶ月前までのレースをスクレイピング
+    parser.add_argument('--race_id', help='scrape race_id info')                                                   # 特定のレースのみスクレイピング
+    parser.add_argument('--debug', action='store_true', default=False, help='for debug scraping')                  # デバッグ用
+    parser.add_argument('--skip_login', action='store_true', default=False, help='skip login')                     # netkeibaへのログイン作業をスキップする
 
     args = parser.parse_args()
 
+    # スクレイピングに使うブラウザのダミーユーザデータの保存場所を用意
     path_userdata = os.getcwd() + '/' + path_ini("scraping", "path_userdata")
     path_userdata = path_userdata.replace('\\', '/')
     print("path_userdata = ", path_userdata)
 
     # スクレイピング用driver設定
-    # プロセス数分のログインセッションを持ったユーザを作成
-    # ログインボタンは画像のためここでは画像を読む(フラグなし)
+    # プロセス数分のログインセッションを持ったダミーユーザを作成
+    # ログインボタンは画像のためここでは画像を読む
     if not args.skip_login:
         for i in range(process_num):
             print("process {0} init...".format(i))
@@ -926,9 +967,13 @@ if __name__ == "__main__":
 
     # DB初期化
     if args.init:
+        # スクレイピング範囲は1986年1月から今日まで
         start = "198601"
-        end   = "198601"
+        end = datetime.datetime.now().strftime("%Y%m")
+
+        # すべてのグレードを対象とする
         grade = "OP"
+
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
         driver = wf.start_driver(browser, arg_list, False)
@@ -936,7 +981,9 @@ if __name__ == "__main__":
             race_id.extend(race_id_list)
         driver.close()
         main_process(race_id, process_num, False)
-        print("init fin")
+        
+        # jockey_infoテーブルアップデート
+        update_jockey_info(start[:-2], end[:-2])
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新
@@ -956,10 +1003,13 @@ if __name__ == "__main__":
         driver.close()
         main_process(race_id, process_num, False)
 
+        # jockey_infoテーブルアップデート
+        update_jockey_info(start[:-2], end[:-2])
+
     # 当日予想
     elif args.race_id:
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
-        driver = wf.start_driver(browser, arg_list, True)
+        driver = wf.start_driver(browser, arg_list, False)
 
         # 当日予想したいレースIDから馬の情報をコンソール出力
         a = scrape_race_today(driver, args.race_id)
@@ -973,17 +1023,9 @@ if __name__ == "__main__":
 
         driver.close()
 
-    elif args.test:
-        # debug
-        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
-        driver = wf.start_driver(browser, arg_list, True)
-        horse_prof_data, race_info_data = scrape_horsedata(driver, "1997200031")
-        driver.close()
+    elif args.debug:
+        # debug用引数
+        update_jockey_info(1980, 2022)
 
-        print("horse_prof_data \n")
-        # df.loc[:,['A','B']]
-        print(horse_prof_data)
-        print("race_info_data \n")
-        print(race_info_data.loc[:,['horse_num','post_position', 'horse_number', 'fav', 'result', 'course_condition', 'prize']])
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
