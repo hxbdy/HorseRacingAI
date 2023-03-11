@@ -181,14 +181,13 @@ class NetkeibaDB_IF:
         return last_3f
 
     def db_race_last_race(self, race_id, horse_id, pattern):
-        # horse_id が出走した重賞レースのうち、race_idの直前に走ったレースIDを返す
+        # horse_id が出走したレースのうち、race_idの直前に走ったレースIDを返す
         # 見つからなかった場合、出走レース一覧から一番最近のrace_idを返す
         # 指定のrace_idより古いレースがない場合は指定のrace_idをそのまま返す
 
         # これは直前の調子をはかるために使う
         # 直前のレースが重賞以外のとき、現状は重賞まで遡ってタイムを取得している。
         # が、直前のレースのグレードは関係ないと思う。ラスト3ハロンタイムは
-        # TODO: グレードに関係なく取得したほうがいいのでは...?
 
         # horse_idの重賞出走レース一覧を取得する
         # TODO: race_infoテーブルからも取得できるはず。
