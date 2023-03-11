@@ -56,7 +56,10 @@ class MarginClass(XClass):
                 time += marginDict[m[0]]
                 time += marginDict[m[1]]
             else:
-                time += marginDict[margin]
+                if margin in marginDict.keys():
+                    time += marginDict[margin]
+                else:
+                    pass
             retList.append(time)
         self.xList = retList
 
