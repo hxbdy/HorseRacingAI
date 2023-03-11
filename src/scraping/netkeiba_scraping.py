@@ -384,7 +384,7 @@ def scrape_horsedata(driver, horseID_list):
         #- horse_profテーブル
         data_list = [[*prof_contents, *blood_list, horseID, horse_title, check, retired]] #★順序対応確認
         # 存在確認して，あればUPDATE，なければINSERT
-        if len(netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID])) > 0:
+        if len(netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID], False)) > 0:
             netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
         else:
             netkeibaDB.sql_insert_Row("horse_prof", target_col_hp, data_list)
@@ -392,7 +392,7 @@ def scrape_horsedata(driver, horseID_list):
         
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
-        dif = len(perform_contents) - len(netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID]))
+        dif = len(perform_contents) - len(netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID], False))
         logger.debug("dif = {}".format(dif))
         if dif > 0:
             data_list = perform_contents[:dif]
@@ -523,10 +523,10 @@ def scrape_race_today(driver, raceID):
 
 def reconfirm_check():
     """check_flgが0の馬を再確認して修正可能なら修正する
-    db上のデータを削除することはせず，flgの値のみ変更する．
+    db上のデータを削除することはせず, flgの値のみ変更する.
     """
     # checkが0の馬のhorse_idを抽出
-    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"])
+    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"], False)
     logger.info("{} horses need be reconfirmed.".format(len(id_check_list)))
     logger.info("horse_id:")
     logger.info(id_check_list)
@@ -537,18 +537,18 @@ def reconfirm_check():
         # エラーを含むレース数のカウンター
         num_error = 0
         # 着順による判定
-        result_list = netkeibaDB.sql_mul_tbl("race_info",["result"],["horse_id"],horse_id)
+        result_list = netkeibaDB.sql_mul_tbl("race_info",["result"],["horse_id"],horse_id, False)
         for res in result_list:
             # 着順が "除","取","" のレースを除外 (競走除外，出走取消，開催延期?)
             if res == "除" or res == "取" or res == "":
                 num_error += 1
         # horse_profの通算成績の競走回数と比較
-        race_prof = netkeibaDB.sql_mul_tbl("horse_prof",["lifetime_record"],["horse_id"],horse_id)[0]
+        race_prof = netkeibaDB.sql_mul_tbl("horse_prof",["lifetime_record"],["horse_id"],horse_id, False)[0]
         if int(race_prof) == len(result_list) - num_error:
             netkeibaDB.sql_update_Row("horse_prof",["check_flg"],["1"],["horse_id = '{}'".format(horse_id)])
     
     # checkが0の馬のhorse_idを再抽出して表示
-    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"])
+    id_check_list = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["check_flg"],["0"], False)
     logger.info("{} horses remained.".format(len(id_check_list)))
     logger.info("horse_id:")
     logger.info(id_check_list)
@@ -576,9 +576,9 @@ def make_horseID_list():
     """race_resultテーブル内に存在し、かつ引退していない馬のhorse_idリストを返す
     race_resultテーブル -> horse_profテーブル
     """
-    horseID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT horse_id"],["1"],[1])
+    horseID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT horse_id"],["1"],[1], False)
     horseID_set_rr = set(horseID_list_rr)
-    horseID_list_hp = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["retired_flg"],["0"])
+    horseID_list_hp = netkeibaDB.sql_mul_tbl("horse_prof",["horse_id"],["retired_flg"],["0"], False)
     horseID_set_hp = set(horseID_list_hp)
 
     horseID_list = list(horseID_set_rr - horseID_set_hp)

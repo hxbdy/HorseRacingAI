@@ -22,7 +22,7 @@ class Last3fClass(XClass):
         last_3f_list = []
         for horse_id in self.xList:
             # 直前のレースIDを取得
-            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id)
+            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
             if len(last_race_id) == 0:
                 # 直前に重賞レースに出走していないもしくはデータがない
                 t = None

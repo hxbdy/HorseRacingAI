@@ -36,8 +36,8 @@ class HorseWeightClass(XClass):
                 # base = "530"
                 # delta = "+5"
                 base, delta = re.findall("[\+\-]*\d+", row) 
-            except ValueError:
-                # raw = 計不
+            except (ValueError, TypeError):
+                # raw = 計不, None
                 logger.debug("failed to get horse_weight race_id = {0}".format(self.race_id))
                 # 競争馬平均kg
                 base = 470

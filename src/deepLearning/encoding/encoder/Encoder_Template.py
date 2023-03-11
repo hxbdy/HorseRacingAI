@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # テストに使うrace_id
     nf = NetkeibaDB_IF("RAM", read_only=True)
-    race_id_list = nf.db_race_list_id(1800, 2020, -1)
+    race_id_list = nf.db_race_list_id(1800, 2020, -1, False)
     
     result_list = []
     # エンコード結果は固定長である必要があるので確認

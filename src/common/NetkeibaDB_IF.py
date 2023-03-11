@@ -30,13 +30,15 @@ class NetkeibaDB_IF:
 
     def db_race_1st_odds(self, race_id):
         # 指定レースの1位オッズをfloatで返す
-        odds = self.netkeibaDB.sql_mul_tbl("race_info", ["odds"], ["race_id", "result"], [race_id, "1"])
+        odds = self.netkeibaDB.sql_mul_tbl("race_info", ["odds"], ["race_id", "result"], [race_id, "1"], False)
         return float(odds[0])
 
-    def db_race_list_id(self, start_year = 0, end_year = 9999, limit = -1):
-        # yearを含む年のレースまでをlimit件取得する
-        # limit を指定しない場合は全件検索
-        # デフォルトでは全てのレースを取得する
+    def db_race_list_id(self, start_year = 0, end_year = 9999, limit = -1, pattern = False):
+        """yearを含む年のレースまでをlimit件取得する
+        limit を指定しない場合は全件検索
+        pattern : True 重賞レースのみを取得する, False 全レースを取得する
+        """
+
         # DB上のrace_idの上4桁は開催年前提
         if len(str(start_year)) != 4:
             logger.critical("len(str(start_year)) != 4")
@@ -52,14 +54,15 @@ class NetkeibaDB_IF:
             # SQLite Int の最大値 2**63 -1
             limit = 9223372036854775807
 
-        totalRaceList = self.netkeibaDB.sql_mul_distinctColCnt_G1G2G3(start_year, end_year, limit)
+        totalRaceList = self.netkeibaDB.sql_mul_distinctColCnt(start_year, end_year, limit, pattern)
+
         return totalRaceList
 
     def db_race_date(self, race_id):
         # レース開催日を取り出す
         # 以下の前提で計算する
         # race_data2 にレース開催日が含まれていること
-        raceDate = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id])
+        raceDate = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id], False)
         raceDate = raceDate[0]
         raceDateYear = int(raceDate.split("年")[0])
         raceDateMon = int(raceDate.split("年")[1].split("月")[0])
@@ -69,13 +72,13 @@ class NetkeibaDB_IF:
     def db_race_grade(self, race_id):
         # レースのグレードを返す
         # 不明の場合-1を返す
-        raceGrade = self.netkeibaDB.sql_mul_tbl("race_info", ["grade"], ["race_id"], [race_id])
+        raceGrade = self.netkeibaDB.sql_mul_tbl("race_info", ["grade"], ["race_id"], [race_id], False)
         return int(raceGrade[0])
 
     def db_race_list_prize(self, race_id):
         # レースの賞金をリストで返す
         # (降順ソートされているか未確認)
-        prizeList = self.netkeibaDB.sql_mul_tbl("race_result", ["prize"], ["race_id"], [race_id])
+        prizeList = self.netkeibaDB.sql_mul_tbl("race_result", ["prize"], ["race_id"], [race_id], False)
         for i in range(len(prizeList)):
             prizeList[i] = str(prizeList[i])
         return prizeList
@@ -86,7 +89,7 @@ class NetkeibaDB_IF:
 
     def db_race_list_race_data1(self, race_id):
         # race_result テーブルの race_data1 列のデータを取得する
-        return self.netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id])
+        return self.netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id], False)
 
     def db_race_list_horse_id(self, race_id):
         # 馬番でソートされた出走する馬のIDリストを返す
@@ -136,19 +139,19 @@ class NetkeibaDB_IF:
 
     def db_horse_list_parent(self, horse_id):
         # 親馬のIDリストを返す
-        parent_list = self.netkeibaDB.sql_mul_tbl("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], ["horse_id"], [horse_id])
+        parent_list = self.netkeibaDB.sql_mul_tbl("horse_prof", ["blood_f", "blood_ff", "blood_fm", "blood_m", "blood_mf", "blood_mm"], ["horse_id"], [horse_id], False)
         parent_list = parent_list[0]
         return parent_list
 
     def db_horse_list_perform(self, horse_id):
         # パフォーマンス計算に必要な列を返す
         col = ["horse_id", "venue", "time", "burden_weight", "course_condition", "distance", "grade"]
-        race = self.netkeibaDB.sql_mul_tbl("race_info", col, ["horse_id"], [horse_id])
+        race = self.netkeibaDB.sql_mul_tbl("race_info", col, ["horse_id"], [horse_id], False)
         return race
 
     def db_race_list_margin(self, race_id):
         # 着差を文字列のリストで返す
-        marginList = self.netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id])
+        marginList = self.netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id], False)
         for i in range(len(marginList)):
             marginList[i] = str(marginList[i])
         return marginList
@@ -177,7 +180,7 @@ class NetkeibaDB_IF:
         last_3f = self.netkeibaDB.sql_one_race_info(race_id, horse_id, "last_3f")
         return last_3f
 
-    def db_race_last_race(self, race_id, horse_id):
+    def db_race_last_race(self, race_id, horse_id, pattern):
         # horse_id が出走した重賞レースのうち、race_idの直前に走ったレースIDを返す
         # 見つからなかった場合、出走レース一覧から一番最近のrace_idを返す
         # 指定のrace_idより古いレースがない場合は指定のrace_idをそのまま返す
@@ -190,7 +193,8 @@ class NetkeibaDB_IF:
         # horse_idの重賞出走レース一覧を取得する
         # TODO: race_infoテーブルからも取得できるはず。
         # ラスト3fエンコードはrace_infoテーブルで完結できないか。
-        race_list = self.netkeibaDB.sql_mul_tbl_g1g2g3("race_result", ["race_id"], ["horse_id"], [horse_id])
+
+        race_list = self.netkeibaDB.sql_mul_tbl("race_result", ["race_id"], ["horse_id"], [horse_id], pattern)
 
         # 昇順ソート
         # race_id から開催日YYYYMMDD  が取得できるとは限らないため、
@@ -223,7 +227,7 @@ class NetkeibaDB_IF:
         # {race_id : 開催日} 辞書を作成
         race_date_dict = OrderedDict()
         for race_id in race_id_list:
-            race_data2 = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id])
+            race_data2 = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id], False)
             # 複数取れるけど1つで良い
             race_data2 = race_data2[0]
             # ex : "1988年11月13日 7回東京4日目 4歳以上オープン  (混)(指)(定量)" -> ['1988', '11', '13', '7', '4', '4']
@@ -351,7 +355,7 @@ class NetkeibaDB_IF:
         #- horse_profテーブル
         data_list = [[*prof_contents, *blood_list, horseID, horse_title, check, retired, *app_list]] #★順序対応確認
         # 存在確認して，あればUPDATE，なければINSERT
-        if len(self.netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID])) > 0:
+        if len(self.netkeibaDB.sql_mul_tbl("horse_prof",["*"],["horse_id"],[horseID], False)) > 0:
             self.netkeibaDB.sql_update_Row("horse_prof", target_col_hp, data_list, ["horse_id = '{}'".format(horseID)])
         else:
             self.netkeibaDB.sql_insert_Row("horse_prof", target_col_hp, data_list)
@@ -360,7 +364,7 @@ class NetkeibaDB_IF:
     def db_diff_insert_race_info(self, perform_contents, target_col_ri, horseID):
         #- race_infoテーブル
         # 既にdbに登録されている出走データ数と，スクレイプした出走データ数を比較して，差分を追加
-        dif = len(perform_contents) - len(self.netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID]))
+        dif = len(perform_contents) - len(self.netkeibaDB.sql_mul_tbl("race_info",["*"],["horse_id"],[horseID], False))
         logger.debug("dif = {}".format(dif))
         if dif > 0:
             data_list = perform_contents[:dif]

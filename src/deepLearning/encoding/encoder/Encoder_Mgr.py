@@ -23,7 +23,7 @@ class MgrClass:
 
         # (start_year <= 取得範囲 <=  end_year) の race_id, レース数保持
         nf = NetkeibaDB_IF("RAM")
-        self.totalRaceList = nf.db_race_list_id(start_year, end_year, limit)
+        self.totalRaceList = nf.db_race_list_id(start_year, end_year, limit, False)
         self.totalRaceNum  = len(self.totalRaceList)
 
         # エンコード結果保持リスト

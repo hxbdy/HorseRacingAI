@@ -22,15 +22,15 @@ class CornerPosClass(XClass):
         self.corner_pos_max = 4
         total_corner_list = []
         for horse_id in self.xList:
-            # 直前の重賞レースidを取得する
-            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id)
+            # 直前のレースidを取得する
+            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
             logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
 
             # 直前の race_idが見つからなかった場合、今回のrace_idをそのまま使う
             if len(last_race_id) == 0:
                 last_race_id = self.race_id
 
-            # 直前の重賞レースのコーナーポジションを取得する
+            # 直前のレースのコーナーポジションを取得する
             corner_pos_list = self.nf.db_corner_pos(last_race_id, horse_id)
 
             if corner_pos_list == None:

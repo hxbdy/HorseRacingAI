@@ -150,33 +150,19 @@ class NetkeibaDB:
         else:
             return data[0]
 
-    def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list):
-        # テーブル table_name から列 col_target を複数取得する
-        # 条件は 列 col_hint_list と値  data_list が一致する行
+    def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list, pattern):
+        """テーブル table_name から列 col_target を複数取得する
+        条件は 列 col_hint_list と値  data_list が一致する行
+        """
         col_hint_list_copied = copy.copy(col_hint_list)
         for idx in range(len(col_hint_list_copied)):
             col_hint_list_copied[idx] = col_hint_list_copied[idx] + " =?"
 
-        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + ";"
-        self.cur.execute(sql, data_list)
-        retList = []
-        for i in self.cur.fetchall():
-            if len(col_target_list) == 1:
-                retList.append(i[0])
-            else:
-                retList.append(i)
+        if pattern:
+            sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + " AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\");"
+        else:
+            sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + ";"
 
-        return retList
-
-    def sql_mul_tbl_g1g2g3(self, table_name, col_target_list, col_hint_list, data_list):
-        # 重賞のみを対象とした
-        # テーブル table_name から列 col_target を複数取得する
-        # 条件は 列 col_hint_list と値  data_list が一致する行
-        col_hint_list_copied = copy.copy(col_hint_list)
-        for idx in range(len(col_hint_list_copied)):
-            col_hint_list_copied[idx] = col_hint_list_copied[idx] + " =?"
-
-        sql = "SELECT " + ','.join(col_target_list) + " FROM " + table_name + " WHERE " + " AND ".join(col_hint_list_copied) + " AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\");"
         self.cur.execute(sql, data_list)
         retList = []
         for i in self.cur.fetchall():
@@ -216,17 +202,22 @@ class NetkeibaDB:
         jockey_list_raw = self.cur.fetchall()
         jockey_list = list(map(lambda x: x[0], jockey_list_raw))
         return jockey_list
-
-    def sql_mul_distinctColCnt_G1G2G3(self, lower, upper, limit):
-        # !!注意!! ソートは行っていないので必ず lower から順に limit 件取り出しているとは限らない
-        # DISTINCT を使用して
-        # 芝, ダートの G1, G2, G3 のレースIDを取り出す
-        # (条件に使われる数字はstring2grade()のコメント参照)
-        # 検索範囲 lower <= data <= upper
-        # limit 取り出し件数
+    
+    def sql_mul_distinctColCnt(self, lower, upper, limit, pattern):
+        """芝, ダートのレースIDを取り出す
+        (条件に使われる数字はstring2grade()のコメント参照)
+        検索範囲 lower <= data <= upper
+        limit 取り出し件数
+        pattern True重賞のみ False OP含む
+        """
         table_name = "race_result"
         col_name   = "race_id"
-        sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE (" + col_name + " <= \""+ upper +"\") AND (" + col_name + " >= \""+ lower + "\") AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\") LIMIT "+ str(limit) + ";"
+
+        if pattern:
+            sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE (" + col_name + " <= \""+ upper +"\") AND (" + col_name + " >= \""+ lower + "\") AND (grade=\"1\" OR grade=\"2\" OR grade=\"3\" OR grade=\"6\" OR grade=\"7\" OR grade=\"8\") LIMIT "+ str(limit) + ";"
+        else:
+            sql = "SELECT DISTINCT " + col_name + " FROM " + table_name + " WHERE (" + col_name + " <= \""+ upper +"\") AND (" + col_name + " >= \""+ lower + "\") LIMIT "+ str(limit) + ";"
+        
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():
