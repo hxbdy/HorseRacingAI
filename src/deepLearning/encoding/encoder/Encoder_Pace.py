@@ -22,7 +22,7 @@ class PaceClass(XClass):
     def fix(self):
         total_pace_list = []
         for horse_id in self.xList:
-            # 直前の重賞レースidを取得する
+            # 直前のレースidを取得する
             last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
             logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
 
