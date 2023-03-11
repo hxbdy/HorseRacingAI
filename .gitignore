@@ -4,3 +4,4 @@ resrc/
 *.exe
 .wdm/
 private.ini
+userdata/

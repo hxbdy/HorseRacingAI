@@ -1,10 +1,8 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_jockey, db_race_cnt_jockey
 import numpy as np
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from debug     import stream_hdl, file_hdl
+from Encoder_X import XClass
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -16,7 +14,7 @@ logger.addHandler(file_hdl("JockeyClass"))
 class JockeyClass(XClass):
 
     def get(self):
-        jockeyIDList = db_race_list_jockey(self.race_id)
+        jockeyIDList = self.nf.db_race_list_jockey(self.race_id)
         self.xList = jockeyIDList
 
     def fix(self):
@@ -27,7 +25,7 @@ class JockeyClass(XClass):
         for i in range(len(jockeyIDList)):
             upper_year = "{0:4d}".format(int(self.race_id[0:4]))
             lower_year = "{0:4d}".format(int(upper_year) - 5)
-            cnt = db_race_cnt_jockey(jockeyIDList[i], lower_year, upper_year)
+            cnt = self.nf.db_race_cnt_jockey(jockeyIDList[i], lower_year, upper_year)
             logger.debug("jockey_id = {0}, lower_year = {1}, upper_year = {2}, cnt = {3}".format(jockeyIDList[i], lower_year, upper_year, cnt))
             jockeyIDList[i] = cnt
         self.xList = jockeyIDList

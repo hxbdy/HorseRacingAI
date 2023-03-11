@@ -1,9 +1,7 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_prize
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,14 +13,14 @@ logger.addHandler(file_hdl("MoneyClass"))
 class MoneyClass(XClass):
 
     def get(self):
-        self.xList = db_race_list_prize(self.race_id)
+        self.xList = self.nf.db_race_list_prize(self.race_id)
     
     def fix(self):
         # 賞金リストをfloat変換する
         rowList = self.xList
         moneyList = []
         for m in rowList:
-            if m == "":
+            if (m == "") or (m == "None"):
                 fm = "0.0"
             else:
                 fm = m.replace(",","")

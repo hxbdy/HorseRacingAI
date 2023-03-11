@@ -1,11 +1,9 @@
-from Encoder_X import XClass
+import logging
 import re
-from getFromDB import db_horse_list_perform, db_race_list_horse_id
 import numpy as np
 
-from debug import stream_hdl, file_hdl
-
-import logging
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,17 +14,26 @@ logger.addHandler(file_hdl("CumPerformClass"))
 
 class CumPerformClass(XClass):
 
+    def __init__(self):
+        super().__init__()
+
+        # 辞書定義
+        self.cond_dict = {'良':-0.3145, '稍':0.1566, '重':0.1802, '不':-0.0223}
+        self.track_dict = {'芝':-1.2514, 'ダ': 1.2514}
+        self.loc_dict = {'札幌':1.1699, '函館':0.3113, '福島':-0.3205, '新潟':-0.2800, '東京':-0.8914,\
+                        '中山':0.2234, '中京':0.1815, '京都':-0.1556, '阪神':-0.4378, '小倉':0.1994, 'Other':0}
+
     def getForCalcPerformInfo(self, horse_list):
         horse_info_list = []
         for horse in horse_list:
-            race = db_horse_list_perform(horse)
+            race = self.nf.db_horse_list_perform(horse)
             horse_info_list.append(race)
         self.xList = horse_info_list
 
     def get(self):
         # race_id に出場した馬のリストを取得
         # fixでパフォーマンスを計算する
-        horse_list = db_race_list_horse_id(self.race_id)
+        horse_list = self.nf.db_race_list_horse_id(self.race_id)
         self.getForCalcPerformInfo(horse_list)
 
     def getStandardTime(self, distance, condition, track, location):
@@ -35,12 +42,8 @@ class CumPerformClass(XClass):
         # loc_dictのOtherは中央競馬10か所以外の場合の値．10か所の平均値を取って作成する．
         dis_coef = 0.066433
         intercept = -9.6875
-        cond_dict = {'良':-0.3145, '稍':0.1566, '重':0.1802, '不':-0.0223}
-        track_dict = {'芝':-1.2514, 'ダ': 1.2514}
-        loc_dict = {'札幌':1.1699, '函館':0.3113, '福島':-0.3205, '新潟':-0.2800, '東京':-0.8914,\
-             '中山':0.2234, '中京':0.1815, '京都':-0.1556, '阪神':-0.4378, '小倉':0.1994, 'Other':0}
         
-        std_time = dis_coef*distance + cond_dict[condition] + track_dict[track] + loc_dict[location] + intercept
+        std_time = dis_coef*distance + self.cond_dict[condition] + self.track_dict[track] + self.loc_dict[location] + intercept
         return std_time
 
     def getPerformance(self, standard_time, goal_time, weight, grade):
@@ -85,8 +88,8 @@ class CumPerformClass(XClass):
                     burden_weight = 40
                 # 馬場状態を取得
                 condition = horse_info[COURSE_CONDITION]
-                # condition が空なら良にしておく
-                if condition == '':
+                # condition が辞書にないなら良にしておく
+                if not(condition in self.cond_dict.keys()):
                     condition = '良'
                 # 競馬場を取得 '3小倉8' のような数字が入っていることがあるので数字を削除
                 location = re.sub(r'[0-9]+', '', horse_info[VENUE])

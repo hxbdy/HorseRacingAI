@@ -6,6 +6,8 @@ import re
 import argparse
 import pickle
 from dateutil.relativedelta import relativedelta
+from collections import deque
+import os
 
 from selenium.webdriver.common.by import By
 
@@ -21,10 +23,6 @@ logger.setLevel(logging.DEBUG)
 #loggerにハンドラを設定
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("output"))
-
-# load DB
-path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
-netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
 col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \
@@ -60,7 +58,9 @@ def create_table():
     jockey_infoテーブル: 騎手の騎乗回数を1年ごとに計上してまとめたテーブル
     """
 
-    dbname = config.get("common", "path_netkeibaDB")
+    dbname = path_ini("common", "path_netkeibaDB")
+    os.makedirs(os.path.dirname(dbname))
+
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
     cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT)')
@@ -560,13 +560,9 @@ def make_raceID_list():
     """race_idテーブルに存在し、かつrace_resultテーブル内に存在しないレースのraceIDリストを返す
     race_idテーブル -> race_resultテーブル
     """
-    raceID_list_ri = netkeibaDB.sql_mul_tbl("race_id",["DISTINCT id"],["1"],[1])
-    raceID_set_ri = set(raceID_list_ri)
-    raceID_list_rr = netkeibaDB.sql_mul_tbl("race_result",["DISTINCT race_id"],["1"],[1])
-    raceID_set_rr = set(raceID_list_rr)
+    raceID_list = netkeibaDB.sql_mul_diff("race_id", "id", "race_result", "race_id")
 
-    raceID_list = list(raceID_set_ri - raceID_set_rr)
-    # raceIDにアルファベットが入るレースを排除
+    # 数字のみのraceIDを対象とする
     raceID_list_out = []
     for raceID in raceID_list:
         if raceID.isdecimal():
@@ -697,27 +693,67 @@ def update_database_learning(driver, start_YYMM, end_YYMM, race_grade="-1"):
     race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, -1: G1&G2&G3
     """
 
-    # 期間内のrace_idを取得してrace_idテーブルへ保存
-    if race_grade== "-1":
-        for i in [1, 2, 3]:
-            scrape_raceID(driver, start_YYMM, end_YYMM, str(i))
+    path_untracked_raceid = "./src/scraping/untracked_raceid.pickle"
+
+    # 途中でクラッシュした場合は True にセットする
+    # 未調査のraceidのpickleファイルを読み込んでそこから再開する
+    RESUME_FLG = False
+
+    # =================================================================
+
+    # 未調査のraceidを用意する
+    if RESUME_FLG == True:
+        # load
+        with open(path_untracked_raceid, 'rb') as f:
+            stack:deque = pickle.load(f)
     else:
-        scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
+        # 期間内のrace_idを取得してrace_idテーブルへ保存
+        # このブロックはクラッシュしない前提
+        # ここでクラッシュした場合、RESUME_FLG = False でやり直しが必要
+        ##############################################################
+        if race_grade== "-1":
+            for i in [1, 2, 3]:
+                scrape_raceID(driver, start_YYMM, end_YYMM, str(i))
+        else:
+            scrape_raceID(driver, start_YYMM, end_YYMM, race_grade)
+        ##############################################################
+
+        # 未調査のrace_idのリストを作成
+        raceID_list = make_raceID_list()
+        stack = deque(raceID_list)
+
+    logger.info("scrape race_id count = {0}".format(len(stack)))
     
-    # 未調査のrace_idのリストを作成
-    raceID_list = make_raceID_list()
-    # レース結果をスクレイプしてrace_resultテーブルへ保存。レースで出走した馬のリストを得る。
-    horseID_list = scrape_racedata(driver, raceID_list)
+    # =================================================================
 
-    # 馬のリストから重複とhorse idが数字になっていない馬を削除
-    horseID_list = list(set(horseID_list))
-    horseID_list_cleaned = []
-    for horseID in horseID_list:
-        if horseID.isdecimal():
-            horseID_list_cleaned.append(horseID)
+    while len(stack)!=0:
+        race_id = stack.pop()
+        logger.info("update_database_learning() race_id = {0}".format(race_id))
 
-    # 馬の情報をスクレイプしてhorse_profテーブルとrace_infoテーブルへ保存
-    scrape_horsedata(driver, horseID_list_cleaned)
+        # race_id のレース情報をスクレイピングしてrace_resultテーブルのアップデート
+        # +
+        # 出走馬のスクレイピング
+        horseID_list = scrape_racedata(driver, [race_id])
+
+        # 馬のリストから重複とhorse idが数字になっていない馬を削除
+        horseID_list = list(set(horseID_list))
+        horseID_list_cleaned = []
+        for horseID in horseID_list:
+            if horseID.isdecimal():
+                horseID_list_cleaned.append(horseID)
+
+        # 馬の情報をスクレイプしてhorse_profテーブルとrace_infoテーブルへ保存
+        scrape_horsedata(driver, horseID_list_cleaned)
+
+        # save
+        with open(path_untracked_raceid, 'wb') as f:
+            pickle.dump(stack, f)
+
+    # delete stack
+    if os.path.isfile(path_untracked_raceid):
+        os.remove(path_untracked_raceid)
+
+    # =================================================================
 
     # 騎手の騎乗回数を更新
     head_year = datetime.datetime.strptime(start_YYMM, '%Y%m').year
@@ -785,7 +821,7 @@ def update_jockey_info(lower_year=1980, upper_year=2021):
         logger.info("year {} end".format(year))
     
 
-
+# TODO: netkeibaDBを操作する時はNetkeibaDB_IFを使うように変更する
 if __name__ == "__main__":
     # netkeiba ログイン情報読み込み
     browser      = private_ini("scraping", "browser")
@@ -808,13 +844,23 @@ if __name__ == "__main__":
         login(driver, mail_address, password)
         
         create_table()
+
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         start = "198601"
         end = datetime.datetime.now().strftime("%Y%m")
+        
         update_database_learning(driver, start, end)
 
     # 定期的なDBアップデート
     # 1ヶ月間隔更新前提
     elif args.db:
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)
 
@@ -828,6 +874,10 @@ if __name__ == "__main__":
         update_database_learning(driver, start, end)
     
     elif args.race_id:
+        # load DB
+        path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
+        netkeibaDB = NetkeibaDB(path_netkeibaDB, "ROM")
+
         driver = wf.start_driver(browser)
         login(driver, mail_address, password)
 

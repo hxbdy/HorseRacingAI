@@ -1,11 +1,10 @@
 import logging
+import numpy as np
 
 from iteration_utilities import deepflatten
-import numpy as np
 
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
-from getFromDB import db_race_list_horse_id, db_pace, db_race_last_race
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -18,13 +17,13 @@ class PaceClass(XClass):
 
     def get(self):
         # 出走する馬一覧取得
-        self.xList = db_race_list_horse_id(self.race_id)
+        self.xList = self.nf.db_race_list_horse_id(self.race_id)
     
     def fix(self):
         total_pace_list = []
         for horse_id in self.xList:
             # 直前の重賞レースidを取得する
-            last_race_id = db_race_last_race(self.race_id, horse_id)
+            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id)
             logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
 
             # 直前の race_idが見つからなかった場合、今回のrace_idをそのまま使う
@@ -32,7 +31,7 @@ class PaceClass(XClass):
                 last_race_id = self.race_id
 
             # 直前の重賞レースのコーナーポジションを取得する
-            pace_list = db_pace(last_race_id, horse_id)
+            pace_list = self.nf.db_pace(last_race_id, horse_id)
 
             if pace_list == None:
                 # DB に記録されていない場合

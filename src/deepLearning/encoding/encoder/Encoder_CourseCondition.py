@@ -1,9 +1,7 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_race_data1
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,7 +12,7 @@ logger.addHandler(file_hdl("CourseConditionClass"))
 class CourseConditionClass(XClass):
 
     def get(self):
-        raceData1List = db_race_list_race_data1(self.race_id)
+        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
         # コース状態取得
         # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
         sep1 = raceData1List[0].split(":")[2]

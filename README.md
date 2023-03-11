@@ -11,12 +11,16 @@
 # Setup
 
 ## conda env
-* Python 3.8.13
-* cuda 11.7.0
-* cupy 8.3.0
-* selenium 4.2.0
-* sqlite3 3.8.6
-* matplotlib 3.6.2
+| About | Ver |
+| ----       | ---    |
+| Python     | 3.8.13 |
+| cuda       | 11.7.0 |
+| cupy       | 8.3.0 |
+| selenium   | 4.2.0 |
+| sqlite3    | 3.8.6 |
+| matplotlib | 3.6.2 |
+| pandas     | 1.5.2 |
+| psutil     | 5.9.1 |
 
 ## conda installation
 ### app
@@ -31,6 +35,8 @@
 5. [Sqlite3 :: Anaconda.org](https://anaconda.org/blaze/sqlite3)
 6. [Matplotlib :: Anaconda.org](https://anaconda.org/conda-forge/matplotlib)
 7. [Iteration Utilities :: Anaconda.org](https://anaconda.org/conda-forge/iteration_utilities)
+8. [Pandas :: Anaconda.org](https://anaconda.org/anaconda/pandas)
+9. [Psutil :: Anaconda.org](https://anaconda.org/conda-forge/psutil)
 
 ## PATH
 conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
@@ -76,6 +82,7 @@ src;\
 browser = Chrome or FireFox
 mail = hogehoge@mail.com
 pass = password
+process_num = 4
 
 [nn]
 # 行列演算ハード指定 GPU or CPU
@@ -102,20 +109,11 @@ net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db �
 * エンコード時はRAM実行します。
 * ただし、プロセス毎にDRAMへ展開するため、(DBの容量 * エンコード数) 分のメモリを必要とします。
 * 2022/12/11 現在 約 2 [GB] 消費します。
-* 展開せずに実行することも可能です。設定方法は NetkeibaDBクラス を確認してください。
+* ROM実行することも可能です。XClass.__ init __() を確認してください。
 
 ## SCHEMA
-* DB用意後、インデックスを追加してください。
-* 現在、自動で追加しないため手動で以下を実行してください。
-
-```bash:
-      > sqlite3 resrc\netkeibaDB\netkeiba.db
-sqlite> CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);
-sqlite> CREATE INDEX race_result_grade ON race_result(horse_id, race_id, grade);
-sqlite> CREATE INDEX race_result_race_data2 on race_result(race_id, race_data2);
-```
-
-* 追加できたかは以下コマンドで確認できます。
+* DB初期化時、1度だけインデックスを自動で貼ります。
+* インデックスを追加できたかは以下コマンドで確認できます。
 ```bash:
 sqlite> .indices
 race_info_grade

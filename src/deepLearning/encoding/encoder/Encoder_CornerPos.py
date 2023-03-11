@@ -2,7 +2,6 @@ import logging
 
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
-from getFromDB import db_corner_pos, db_race_list_horse_id, db_race_last_race
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ logger.addHandler(file_hdl("CornerPosClass"))
 class CornerPosClass(XClass):
 
     def get(self):
-        self.xList = db_race_list_horse_id(self.race_id)
+        self.xList = self.nf.db_race_list_horse_id(self.race_id)
         self.fix0()
 
     def fix0(self):
@@ -24,7 +23,7 @@ class CornerPosClass(XClass):
         total_corner_list = []
         for horse_id in self.xList:
             # 直前の重賞レースidを取得する
-            last_race_id = db_race_last_race(self.race_id, horse_id)
+            last_race_id = self.nf.db_race_last_race(self.race_id, horse_id)
             logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
 
             # 直前の race_idが見つからなかった場合、今回のrace_idをそのまま使う
@@ -32,7 +31,7 @@ class CornerPosClass(XClass):
                 last_race_id = self.race_id
 
             # 直前の重賞レースのコーナーポジションを取得する
-            corner_pos_list = db_corner_pos(last_race_id, horse_id)
+            corner_pos_list = self.nf.db_corner_pos(last_race_id, horse_id)
 
             if corner_pos_list == None:
                 # DB に記録されていない場合

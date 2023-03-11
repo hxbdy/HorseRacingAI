@@ -7,18 +7,17 @@
 import pickle
 
 from matplotlib import pyplot as plt
-import xross
-np = xross.facttory_xp()
-
-import encoder
-
 from iteration_utilities import deepflatten
 
+import encoder
+from NetkeibaDB_IF import NetkeibaDB_IF
 from multi_layer_net_extend import MultiLayerNetExtend
-from getFromDB              import db_race_list_id, db_race_grade
-from deepLearning_common    import read_RaceInfo, prob_win
+from encoding_common        import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
+
+import xross
+np = xross.facttory_xp()
 
 # ==========================================================================
 
@@ -32,10 +31,11 @@ if __name__ == "__main__":
         network: MultiLayerNetExtend = pickle.load(f)
 
     # ======================================================================
+    nf = NetkeibaDB_IF("RAM")
 
     start_year = 1986
     end_year = 2020
-    race_id_list = db_race_list_id(start_year, end_year, -1)
+    race_id_list = nf.db_race_list_id(start_year, end_year, -1)
 
     ans_hist = {}
     ans_sum  = {}
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         # print("year = ", race_id[0:4])
         #     芝 G1: 1, G2: 2, G3: 3, 無印(OP): 4
         #     ダ G1: 6, G2: 7, G3: 8, 無印(OP): 9
-        grade = db_race_grade(str(race_id))
+        grade = nf.db_race_grade(str(race_id))
         if grade == 1 or grade == 6:
             grade = "G1"
         elif grade == 2 or grade == 7:

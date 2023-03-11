@@ -1,9 +1,7 @@
-from Encoder_X import XClass
-from getFromDB import db_race_list_race_data1
-
-from debug import stream_hdl, file_hdl
-
 import logging
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,7 +13,7 @@ logger.addHandler(file_hdl("WeatherClass"))
 class WeatherClass(XClass):
 
     def get(self):
-        raceData1List = db_race_list_race_data1(self.race_id)
+        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
         sep1 = raceData1List[0].split(":")[1]
         #  晴 / 芝 
         sep1 = sep1.split("/")[0]

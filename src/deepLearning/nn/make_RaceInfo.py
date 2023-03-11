@@ -1,6 +1,6 @@
 from RaceInfo import RaceInfo
 import encoder
-import getFromDB
+from NetkeibaDB_IF import NetkeibaDB_IF
 
 # horse_number別で実装
 
@@ -19,9 +19,10 @@ def raceinfo_by_raceID(race_id: str):
     raceID: レースの指定
     """
     raceInfo = RaceInfo()
+    nf = NetkeibaDB_IF("ROM")
     
     raceInfo.race_id = race_id
-    raceInfo.date = getFromDB.db_race_date(race_id)
+    raceInfo.date = nf.db_race_date(race_id)
     
     dict_key = list(class_var_dict.keys())
     for name in dict_key:

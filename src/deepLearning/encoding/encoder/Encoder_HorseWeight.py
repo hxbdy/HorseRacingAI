@@ -1,11 +1,11 @@
-from Encoder_X import XClass
-from debug import stream_hdl, file_hdl
 import logging
-from getFromDB import db_race_list_horse_id, db_horse_weight
 import re
 import numpy as np
 
 from iteration_utilities import deepflatten
+
+from Encoder_X import XClass
+from debug     import stream_hdl, file_hdl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -17,11 +17,11 @@ logger.addHandler(file_hdl("HorseWeightClass"))
 class HorseWeightClass(XClass):
 
     def get(self):
-        horse_id_list = db_race_list_horse_id(self.race_id)
+        horse_id_list = self.nf.db_race_list_horse_id(self.race_id)
 
         weight_list = []
         for horse_id in horse_id_list:
-            weight = db_horse_weight(self.race_id, horse_id)
+            weight = self.nf.db_horse_weight(self.race_id, horse_id)
             weight_list.append(weight)
 
         self.xList = weight_list
