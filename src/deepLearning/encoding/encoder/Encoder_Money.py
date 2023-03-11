@@ -20,7 +20,7 @@ class MoneyClass(XClass):
         rowList = self.xList
         moneyList = []
         for m in rowList:
-            if m == "":
+            if (m == "") or (m == "None"):
                 fm = "0.0"
             else:
                 fm = m.replace(",","")
