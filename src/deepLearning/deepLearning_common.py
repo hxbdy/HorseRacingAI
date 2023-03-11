@@ -7,7 +7,6 @@ import logging
 from iteration_utilities import deepflatten
 
 from file_path_mgr import path_ini
-from table         import encoded_file_name_list
 from debug         import stream_hdl, file_hdl
 from make_RaceInfo import raceinfo_by_raceID
 import RaceInfo
@@ -70,6 +69,12 @@ def encoding_load(dir_path=""):
     パスを指定しない時はpath.iniのpath_learningListから読み込む
     ATTENTION: パスを指定するときは最後にスラッシュをつけてください
     '''
+
+    # 学習データファイル名フォーマット
+    encoded_file_name_list = [
+        "x_data.pickle",
+        "t_data.pickle",
+    ]
     
     # パス読み込み
     if dir_path == "":

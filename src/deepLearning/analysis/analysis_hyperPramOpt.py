@@ -12,8 +12,8 @@ from multi_layer_net_extend import MultiLayerNetExtend
 from util import shuffle_dataset
 from trainer import Trainer
 
-from file_path_mgr import path_ini
-from encoding_common import encoding_load, encoding_serial_dir_path
+from file_path_mgr       import path_ini
+from deepLearning_common import encoding_load, encoding_serial_dir_path
 
 # 学習パラメータの保存先取得
 path_root_trainedParam = path_ini('nn', 'path_root_trainedParam')

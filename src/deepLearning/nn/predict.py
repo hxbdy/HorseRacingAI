@@ -7,7 +7,7 @@ np = xross.facttory_xp()
 from iteration_utilities import deepflatten
 
 from multi_layer_net_extend import MultiLayerNetExtend
-from encoding_common        import read_RaceInfo, prob_win
+from deepLearning_common    import read_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
 

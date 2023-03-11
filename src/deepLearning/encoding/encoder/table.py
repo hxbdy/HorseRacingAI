@@ -1,21 +1,5 @@
 import encoder
 
-# 学習用データ生成条件
-start_year_train = 1800 # 開始年
-end_year_train   = 2020 # 終了年
-limit_train      = -1   # 取得件数 -1 なら全件
-
-# テスト用データ生成条件
-start_year_test = 2021 # 開始年
-end_year_test   = 2021 # 終了年
-limit_test      = -1   # 取得件数 -1 なら全件
-
-# 学習データファイル名フォーマット
-encoded_file_name_list = [
-    "x_data.pickle",
-    "t_data.pickle",
-]
-
 # 学習時の入力用テーブル
 XTbl = [
     encoder.Encoder_Money.MoneyClass,

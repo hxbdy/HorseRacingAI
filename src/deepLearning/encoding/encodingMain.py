@@ -5,11 +5,11 @@
 import shutil
 import logging
 
-from Encoder_Mgr     import MgrClass
-from table           import XTbl, tTbl
-from encoding_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_newest_dir_path
-from debug           import stream_hdl, file_hdl
-from file_path_mgr   import path_ini
+from Encoder_Mgr         import MgrClass
+from table               import XTbl, tTbl
+from deepLearning_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_newest_dir_path
+from debug               import stream_hdl, file_hdl
+from file_path_mgr       import path_ini
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

@@ -6,7 +6,7 @@
 import TwoLayerNet
 import numpy as np
 
-from encoding_common import encoding_load
+from deepLearning_common import encoding_load
 
 x_train, t_train, x_test, t_test = encoding_load()
     
