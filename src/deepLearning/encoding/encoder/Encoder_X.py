@@ -20,7 +20,7 @@ class XClass:
 
     def __init__(self):
         self.xList = []
-        self.nf:NetkeibaDB_IF = NetkeibaDB_IF("RAM")
+        self.nf:NetkeibaDB_IF = NetkeibaDB_IF("RAM", read_only=True)
         
     def set(self, target_race_id):
         XClass.race_id = target_race_id

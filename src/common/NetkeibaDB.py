@@ -26,14 +26,15 @@ logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
-    def __init__(self, path_db, loc):
+    def __init__(self, path_db, loc, read_only=False):
         self.path_db = path_db
         self.loc = loc
+        self.read_only = read_only
 
         if not os.path.isfile(self.path_db):
             self.create_table(self.path_db)
 
-        self.conn = sqlite3.connect(self.path_db)
+        self.conn = sqlite3.connect(self.path_db, uri=self.read_only)
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
         if self.loc == "RAM":
@@ -70,7 +71,7 @@ class NetkeibaDB:
     def __del__(self):
         # データベースへのコネクションを閉じる
         # RAM展開時は変更内容をROMへ移す
-        if self.loc == "RAM":
+        if self.loc == "RAM" and self.read_only == False:
             self._switch_ROM()
 
         self.cur.close()

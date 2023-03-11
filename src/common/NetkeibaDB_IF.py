@@ -20,13 +20,13 @@ logger.addHandler(stream_hdl(logging.DEBUG))
 logger.addHandler(file_hdl("sql"))
 
 class NetkeibaDB_IF:
-    def __init__(self, loc) -> None:
+    def __init__(self, loc, read_only=False) -> None:
         """NetkeibaDBにアクセスするためのインタフェース
         loc: DBの展開場所の指定.書き込みを行う場合はROM, 読み取りのみならRAMを指定する
         """
         # load DB
         path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
-        self.netkeibaDB = NetkeibaDB(path_netkeibaDB, loc)
+        self.netkeibaDB = NetkeibaDB(path_netkeibaDB, loc, read_only)
 
     def db_race_1st_odds(self, race_id):
         # 指定レースの1位オッズをfloatで返す
