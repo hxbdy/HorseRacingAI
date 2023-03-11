@@ -24,7 +24,7 @@ logger.addHandler(file_hdl("output"))
 DRIVER_DIRECTORY = 'src\\scraping'
 
 
-def start_driver(browser_name, arg_list, pageLoadStrategy):
+def start_driver(browser_name, arg_list=[], pageLoadStrategy=False):
     """ブラウザの起動
     browser_name: 使用ブラウザ(Chrome or FireFox)
     arg_list: ブラウザ起動オプション(Chrome限定)
