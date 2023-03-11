@@ -30,11 +30,11 @@ class Last3fClass(XClass):
                 # 直前のレースあがり3ハロンのタイムを取得
                 t = self.nf.db_race_last_3f(last_race_id, horse_id)
 
-            if (t == None) or (t.isspace()):
-                # 空白文字のみだった -> 該当のレースがなかった
-                t = float(0.0)
-            else:
+            if (t is str) or (t is float):
                 t = float(t)
+            else:
+                # 該当のレースがなかった
+                t = float(0.0)
 
             last_3f_list.append(t)
             
