@@ -82,6 +82,7 @@ src;\
 browser = Chrome or FireFox
 mail = hogehoge@mail.com
 pass = password
+process_num = 4
 
 [nn]
 # 行列演算ハード指定 GPU or CPU
@@ -111,17 +112,8 @@ net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db �
 * ROM実行することも可能です。XClass.__ init __() を確認してください。
 
 ## SCHEMA
-* DB用意後、インデックスを追加してください。
-* 現在、自動で追加しないため手動で以下を実行してください。
-
-```bash:
-      > sqlite3 resrc\netkeibaDB\netkeiba.db
-sqlite> CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);
-sqlite> CREATE INDEX race_result_grade ON race_result(horse_id, race_id, grade);
-sqlite> CREATE INDEX race_result_race_data2 on race_result(race_id, race_data2);
-```
-
-* 追加できたかは以下コマンドで確認できます。
+* DB初期化時、1度だけインデックスを自動で貼ります。
+* インデックスを追加できたかは以下コマンドで確認できます。
 ```bash:
 sqlite> .indices
 race_info_grade

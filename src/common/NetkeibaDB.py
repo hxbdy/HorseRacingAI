@@ -32,7 +32,7 @@ class NetkeibaDB:
         self.read_only = read_only
 
         if not os.path.isfile(self.path_db):
-            self.create_table(self.path_db)
+            self._create_table(self.path_db)
 
         self.conn = sqlite3.connect(self.path_db, uri=self.read_only)
         # sqliteを操作するカーソルオブジェクトを作成
@@ -44,7 +44,7 @@ class NetkeibaDB:
             logger.info("DB will be located in ROM")
         logger.info("Database {0} loading complete".format(self.path_db))
 
-    def create_table(self, dbname):
+    def _create_table(self, dbname):
         """データベースの作成
         データベースを新規作成するときに実行する。
         untracked_idテーブル: スクレイピング対象のrace_idを一時的に保持しておく用
@@ -106,6 +106,14 @@ class NetkeibaDB:
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
         print("comp")
+
+    def make_index(self):
+        # インデックスを貼る
+        # エンコード高速化のため
+        self.cur.execute("CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);")
+        self.cur.execute("CREATE INDEX race_result_grade ON race_result(horse_id, race_id, grade);")
+        self.cur.execute("CREATE INDEX race_result_race_data2 on race_result(race_id, race_data2);")
+        self.conn.commit()
 
     def sql_mul_all(self, table_name):
         """table要素をすべて取得する

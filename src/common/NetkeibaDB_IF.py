@@ -371,3 +371,9 @@ class NetkeibaDB_IF:
 
     def db_insert_pandas(self, table, table_name):
         self.netkeibaDB.sql_upsert(table, table_name)
+
+    def interface_make_index(self):
+        # インデックスを貼る
+        # 現状、1度しか呼ばない。断片化を考慮していない。
+        logger.info("indexing")
+        self.netkeibaDB.make_index()

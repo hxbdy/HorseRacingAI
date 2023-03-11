@@ -62,7 +62,7 @@ if __name__ == "__main__":
     test = XXXClass()
 
     # テストに使うrace_id
-    nf = NetkeibaDB_IF("RAM")
+    nf = NetkeibaDB_IF("RAM", read_only=True)
     race_id_list = nf.db_race_list_id(1800, 2020, -1)
     
     result_list = []

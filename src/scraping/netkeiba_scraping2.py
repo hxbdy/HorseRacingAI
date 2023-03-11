@@ -985,6 +985,10 @@ if __name__ == "__main__":
         # jockey_infoテーブルアップデート
         update_jockey_info(start[:-2], end[:-2])
 
+        # インデックスを貼る
+        nf = NetkeibaDB_IF("ROM", read_only=False)
+        nf.interface_make_index()
+
     # 定期的なDBアップデート
     # 1ヶ月間隔更新
     elif args.db:
@@ -1025,7 +1029,8 @@ if __name__ == "__main__":
 
     elif args.debug:
         # debug用引数
-        update_jockey_info(1980, 2022)
+        nf = NetkeibaDB_IF("ROM", read_only=False)
+        nf.interface_make_index()
 
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
