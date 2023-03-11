@@ -18,7 +18,7 @@ class BradleyTerryClass(XClass):
 
     def getRankFromDB(self, race_id, horse_id):
         # race_id で horse_id は何位だったか取得
-        val = self.nf.db_race_rank(race_id, horse_id)
+        val = str(self.nf.db_race_rank(race_id, horse_id))
         if val.isdigit():
             rank = int(val)
         else:
