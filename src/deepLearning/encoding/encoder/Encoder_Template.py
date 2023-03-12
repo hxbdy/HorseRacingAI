@@ -23,11 +23,11 @@ class XXXClass(XClass):
 
     def get(self):
         # DB データ問い合わせを行う
-        # 問い合わせ関数は getFromDB.py に追記して呼び出して下さい
+        # 問い合わせ関数は NetkeibaDB_IF.py に追記して呼び出して下さい
         # !! 推測時にも入力できるデータのみをここで取得すること
         # エンコード対象の race_id は XClass の self.race_id に格納してから実行してください
         # 出走する馬一覧取得
-        # horse_id_list = db_race_list_horse_id(self.race_id)
+        # horse_id_list = self.nf.db_race_list_horse_id(self.race_id)
         # self.xList = DB問い合わせ結果
         pass
     
@@ -82,4 +82,7 @@ if __name__ == "__main__":
         result_list.append(list(deepflatten(test.xList)))
     
     # 結果の妥当性を確認する
+    # 最大値 or 最小値が nan になった場合、
+    # 標準化の過程でゼロ除算などを行った可能性がある。
+    # そのまま学習すると勾配が無限大に発散してしまうため、要修正
     selfcheck("XXXClass", result_list)

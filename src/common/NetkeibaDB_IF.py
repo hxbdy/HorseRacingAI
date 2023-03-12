@@ -377,3 +377,7 @@ class NetkeibaDB_IF:
         # 現状、1度しか呼ばない。断片化を考慮していない。
         logger.info("indexing")
         self.netkeibaDB.make_index()
+
+    def db_horse_review(self, horse_id):
+        review = self.netkeibaDB.sql_one_review(horse_id)
+        return review

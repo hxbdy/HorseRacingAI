@@ -248,6 +248,14 @@ class NetkeibaDB:
         for i in self.cur.fetchall():
             retList.append(i[0])
         return retList
+    
+    def sql_one_review(self, horse_id):
+        """horse_idのレビュー数値をfloat型で取得する"""
+        sql = "SELECT review_cource_left_text, review_cource_left, review_cource_right, review_cource_right_text, review_distance_left_text, review_distance_left, review_distance_right, review_distance_right_text, review_style_left_text, review_style_left, review_style_right, review_style_right_text, review_grow_left_text, review_grow_left, review_grow_right, review_grow_right_text, review_heavy_left_text, review_heavy_left, review_heavy_right, review_heavy_right_text FROM horse_prof WHERE horse_id=?;"
+        self.cur.execute(sql, [horse_id])
+        review = self.cur.fetchone()
+        review = list(map(float, review))
+        return review
 
     def sql_mul_diff(self, table1, col1, table2, col2):
         """col1 - col2 を返す

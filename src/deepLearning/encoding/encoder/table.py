@@ -19,7 +19,8 @@ XTbl = [
     encoder.Encoder_Last3f.Last3fClass,
     encoder.Encoder_HorseWeight.HorseWeightClass,
     encoder.Encoder_CornerPos.CornerPosClass,
-    encoder.Encoder_Pace.PaceClass
+    encoder.Encoder_Pace.PaceClass,
+    encoder.Encoder_Review.ReviewClass
 ]
 
 # 正解用テーブル

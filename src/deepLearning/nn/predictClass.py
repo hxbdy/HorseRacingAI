@@ -96,6 +96,10 @@ class PredictPace(encoder.Encoder_Pace.PaceClass):
     def get(self):
         # horse_id
         self.xList = self.race_info.horse_id
+class PredictReview(encoder.Encoder_Review.ReviewClass):
+    def get(self):
+        # horse_id
+        self.xList = self.race_info.horse_id
 # ==========================================================================
 
 # 推論時の入力用テーブル
@@ -117,5 +121,6 @@ predict_XTbl = [
     PredictLast3fClass,
     PredictHorseWeight,
     PredictCornerPos,
-    PredictPace
+    PredictPace,
+    PredictReview
 ]
