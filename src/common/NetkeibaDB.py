@@ -111,11 +111,16 @@ class NetkeibaDB:
         print("comp")
 
     def make_index(self):
-        # インデックスを貼る
-        # エンコード高速化のため
+        # エンコード高速化のためインデックスを貼る
+
+        # race_info 
+        self.cur.execute("CREATE INDEX race_info_date ON race_info(race_id, date);")
         self.cur.execute("CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);")
-        self.cur.execute("CREATE INDEX race_result_grade ON race_result(horse_id, race_id, grade);")
-        self.cur.execute("CREATE INDEX race_result_race_data2 on race_result(race_id, race_data2);")
+
+        # race_result
+        self.cur.execute("CREATE INDEX race_result_grade      ON race_result(horse_id, race_id, grade);")
+        self.cur.execute("CREATE INDEX race_result_race_data2 ON race_result(race_id, race_data2);")
+
         self.conn.commit()
 
     def sql_mul_all(self, table_name):
