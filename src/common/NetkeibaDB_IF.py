@@ -189,11 +189,8 @@ class NetkeibaDB_IF:
         # 直前のレースが重賞以外のとき、現状は重賞まで遡ってタイムを取得している。
         # が、直前のレースのグレードは関係ないと思う。ラスト3ハロンタイムは
 
-        # horse_idの重賞出走レース一覧を取得する
-        # TODO: race_infoテーブルからも取得できるはず。
-        # ラスト3fエンコードはrace_infoテーブルで完結できないか。
-
-        race_list = self.netkeibaDB.sql_mul_tbl("race_result", ["race_id"], ["horse_id"], [horse_id], pattern)
+        # horse_idの出走レース一覧をrace_infoテーブルから取得する
+        race_list = self.netkeibaDB.sql_mul_tbl("race_info", ["race_id"], ["horse_id"], [horse_id], pattern)
 
         # 昇順ソート
         # race_id から開催日YYYYMMDD  が取得できるとは限らないため、
@@ -221,16 +218,16 @@ class NetkeibaDB_IF:
 
     def db_race_list_sort(self, race_id_list):
         # race_id_list を開催日の昇順でソートする
-        # 開催日は race_result テーブルの race_data2 を参照する
+        # 開催日は race_info テーブルの date を参照する
 
         # {race_id : 開催日} 辞書を作成
         race_date_dict = OrderedDict()
         for race_id in race_id_list:
-            race_data2 = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id], False)
+            col_date = self.netkeibaDB.sql_mul_tbl("race_info", ["date"], ["race_id"], [race_id], False)
             # 複数取れるけど1つで良い
-            race_data2 = race_data2[0]
-            # ex : "1988年11月13日 7回東京4日目 4歳以上オープン  (混)(指)(定量)" -> ['1988', '11', '13', '7', '4', '4']
-            num_list = re.findall('\d+', race_data2)
+            col_date = col_date[0]
+            # ex : "2023/03/05"
+            num_list = re.findall('\d{4}|\d{2}', col_date)
             dt = date(int(num_list[0]), int(num_list[1]), int(num_list[2]))
             race_date_dict.update({race_id : dt})
 

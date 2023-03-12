@@ -58,8 +58,8 @@ def __train(lr, weight_decay, epocs=500):
 
 # 探索したハイパーパラメータの範囲を指定===============
 # パラメータの最適値は analysis_hyperParamOpt.py で探索可能
-weight_decay = 5.579198499089103e-08
-lr           = 0.007896321410337753
+weight_decay = 9.537102818748489e-06
+lr           = 0.003490531606323423
 # ================================================
 
 test_acc_list, train_acc_list = __train(lr, weight_decay)
