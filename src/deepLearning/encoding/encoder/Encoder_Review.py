@@ -39,5 +39,12 @@ class ReviewClass(XClass):
 
     def nrm(self):
         np_xList = np.array(self.xList)
-        np_xList = self.zscore(np_xList, axis=0)
+        xList_max = np.max(np_xList, axis=0)
+
+        # 各列最大値で割る方法
+        np_xList = np.divide(np_xList, xList_max, out = np.zeros_like(np_xList), where = (xList_max != 0))
+
+        # zscoreを求める方法
+        # np_xList = self.zscore(np_xList, axis=0)
+
         self.xList = np_xList.tolist()
