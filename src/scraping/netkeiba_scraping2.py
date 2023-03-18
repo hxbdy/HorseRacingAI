@@ -21,6 +21,7 @@ from collections            import deque
 
 from selenium.webdriver.common.by import By
 import pandas as pd
+import numpy as np
 import psutil
 
 import webdriver_functions as wf
@@ -580,9 +581,20 @@ def build_perform_contents(driver, horseID):
             dfs[0].drop(col, axis=1, inplace=True)
 
     # jockey id 取得
-    jockey_link_list = re.findall('/jockey/result/recent/[0-9a-zA-Z]{5}', html)
-    jockey_link_list = list(map(lambda x: (x.replace("/jockey/result/recent/", '')), jockey_link_list))
-    # print("jockey_link_list = ", jockey_link_list)
+    # 騎手列の名前をtitleとしたリンクがあるなら騎手idが存在する
+    jockey_link_list = []
+    for jockey_name in dfs[0][col_name_dict["騎手"]]:
+        # 騎手名のtitleタグがあるか確認
+        title_jockey_id = 'title="{0}"'.format(jockey_name)
+        jockey_id = re.search('/jockey/result/recent/[0-9a-zA-Z]{5}/" ' + title_jockey_id, html)
+        # あるならidを登録
+        if jockey_id:
+            jockey_id = jockey_id.group()
+            jockey_id = jockey_id.replace("/jockey/result/recent/", '')
+            jockey_id = jockey_id.replace('/" '+title_jockey_id, '')
+        else:
+            jockey_id = np.nan
+        jockey_link_list.append(jockey_id)
 
     # race_id 取得
     race_link_list = re.findall('/race/[0-9a-zA-Z]{12}', html)
@@ -677,8 +689,13 @@ def scrape_horsedata(driver, horseID):
 
     ## プロフィールテーブルの取得
     logger.debug('get profile table')
-    trainer = re.findall('/trainer/[0-9a-zA-Z]{5}', html)[0]
-    trainer = trainer.replace("/trainer/", "")
+
+    trainer = re.search('/trainer/[0-9a-zA-Z]{5}', html)
+    if trainer:
+        trainer = trainer.group()
+        trainer = trainer.replace("/trainer/", "")
+    else:
+        trainer = np.nan
 
     num_entry_race = re.findall('\d+戦\d+勝', html)[0]
     num_entry_race = int(num_entry_race[:num_entry_race.find("戦")])
@@ -1036,8 +1053,12 @@ if __name__ == "__main__":
 
     elif args.debug:
         # debug用引数
-        nf = NetkeibaDB_IF("ROM", read_only=False)
-        nf.interface_make_index()
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
+        driver = wf.start_driver(browser, arg_list, False)
+        prof, race_info = scrape_horsedata(driver, "2008190006")
+        print("prof = ", prof)
+        print("race_info = ", race_info)
+        driver.close()
 
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
