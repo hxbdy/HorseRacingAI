@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 #loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.DEBUG))
+logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("sql"))
 
 class NetkeibaDB_IF:

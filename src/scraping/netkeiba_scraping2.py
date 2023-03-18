@@ -946,6 +946,8 @@ if __name__ == "__main__":
     parser.add_argument('--race_id', help='scrape race_id info')                                                   # 特定のレースのみスクレイピング
     parser.add_argument('--debug', action='store_true', default=False, help='for debug scraping')                  # デバッグ用
     parser.add_argument('--skip_login', action='store_true', default=False, help='skip login')                     # netkeibaへのログイン作業をスキップする
+    parser.add_argument('--skip_untracked', action='store_true', default=False, help='retry')                      # 前回スクレイピングで取得に失敗したページの再取得をスキップする
+    parser.add_argument('--untracked', action='store_true', default=False, help='retry')                           # 前回スクレイピングで取得に失敗したページの再取得をのみを実行する
 
     args = parser.parse_args()
 
@@ -980,10 +982,10 @@ if __name__ == "__main__":
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
         driver.close()
-        main_process(race_id, process_num, False)
+        main_process(race_id, process_num, args.skip_untracked)
         
         # jockey_infoテーブルアップデート
-        update_jockey_info(start[:-2], end[:-2])
+        update_jockey_info(int(start[:-2]), int(end[:-2]))
 
         # インデックスを貼る
         nf = NetkeibaDB_IF("ROM", read_only=False)
@@ -1005,10 +1007,10 @@ if __name__ == "__main__":
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
         driver.close()
-        main_process(race_id, process_num, False)
+        main_process(race_id, process_num, args.skip_untracked)
 
         # jockey_infoテーブルアップデート
-        update_jockey_info(start[:-2], end[:-2])
+        update_jockey_info(int(start[:-2]), int(end[:-2]))
 
     # 当日予想
     elif args.race_id:
@@ -1026,6 +1028,11 @@ if __name__ == "__main__":
             pickle.dump(a, f)
 
         driver.close()
+
+    elif args.untracked:
+        main_process([], process_num, True)
+        # jockey_infoテーブルアップデート
+        update_jockey_info(1986, int(datetime.datetime.now().strftime("%Y")))
 
     elif args.debug:
         # debug用引数
