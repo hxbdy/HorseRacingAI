@@ -150,11 +150,18 @@ class NetkeibaDB_IF:
         return race
 
     def db_race_list_margin(self, race_id):
-        # 着差を文字列のリストで返す
+        """順位でソートされた{馬番:着差}形式の辞書を返す"""
+
+        # 着差を文字列のリストで返す(着順)
         marginList = self.netkeibaDB.sql_mul_tbl("race_result", ["margin"], ["race_id"], [race_id], False)
         for i in range(len(marginList)):
             marginList[i] = str(marginList[i])
-        return marginList
+        
+        # 順位でソートされた馬番を取得
+        horse_number_list = self.netkeibaDB.sql_mul_sortRank(["race_info.horse_number"], "race_info.race_id", race_id)
+
+        margin_dict = OrderedDict(zip(horse_number_list, marginList))
+        return margin_dict
 
     def db_race_rank(self, race_id, horse_id):
         # race_id で horse_id は何位だったか取得

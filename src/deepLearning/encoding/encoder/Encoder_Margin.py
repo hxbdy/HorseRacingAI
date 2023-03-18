@@ -14,8 +14,8 @@ logger.addHandler(file_hdl("MarginClass"))
 class MarginClass(XClass):
 
     def get(self):
-        marginList = self.nf.db_race_list_margin(self.race_id)
-        self.xList = marginList
+        marginDict = self.nf.db_race_list_margin(self.race_id)
+        self.xList = marginDict
 
     def fix(self):
         # 着差をfloatにして返す
@@ -43,13 +43,12 @@ class MarginClass(XClass):
         # 10馬身 - タイム差は16/10秒   = 1.6
         # 大差 - タイム差は17/10秒以上 = 1.7
         # ['', '5', '2', '2', '1.1/4', '5', '1', '9']
-        marginDict = {'同着':0, '':0, 'ハナ':0.0125, 'アタマ':0.025, 'クビ':0.05, '1/2':0.1, '3/4':0.15, '1':0.2, \
+        marginDict = {'同着':0, '':0, 'None':0, 'ハナ':0.0125, 'アタマ':0.025, 'クビ':0.05, '1/2':0.1, '3/4':0.15, '1':0.2, \
                       '1.1/4':0.2, '1.1/2':0.25, '1.3/4':0.3, '2':0.3, '2.1/2':0.4, '3':0.5, '3.1/2':0.6, '4':0.7, '5':0.9, \
                       '6':1.0, '7':1.2, '8':1.3, '9':1.5, '10':1.6, '大':1.7}
         time = 0
-        retList = []
-        for i in range(len(self.xList)):
-            margin = self.xList[i]
+        horse_num_time_dict = {}
+        for horse_num, margin in self.xList.items():
             # 'クビ+1/2' などの特殊な表記に対応する
             if '+' in margin:
                 m = margin.split('+')
@@ -60,8 +59,14 @@ class MarginClass(XClass):
                     time += marginDict[margin]
                 else:
                     pass
-            retList.append(time)
-        self.xList = retList
+            horse_num_time_dict[horse_num] = time
+
+        logger.debug(horse_num_time_dict)
+
+        self.xList = sorted(horse_num_time_dict.items())
+        self.xList = list(map(lambda x: x[1], self.xList))
+
+        logger.debug(self.xList)
 
     def pad(self):
         # 着差リスト拡張
@@ -83,8 +88,10 @@ class MarginClass(XClass):
 
     def nrm(self):
         # 着差標準化
+        # 最下位が0、1位が1になるような二次関数で評価する
+        # y = - (1 / max^2)x^2 + 1
         x = np.array(self.xList)
-        ny = 1/(1+np.exp(-x))
+        ny = -(1/(np.max(x)+0.001)**2) * x**2 + 1
         y = ny.tolist()
         # リストを逆順にする。元のリストを破壊するため注意。
         # 戻り値はNoneであることも注意
