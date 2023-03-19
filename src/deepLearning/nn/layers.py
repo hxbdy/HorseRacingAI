@@ -92,6 +92,27 @@ class SoftmaxWithLoss:
         
         return dx
 
+class IdentityWithLoss:
+    def __init__(self):
+        self.loss = None
+        self.y = None # 恒等関数の出力
+        self.t = None # 教師データ
+
+    def forward(self, x, t):
+        self.t = t
+        self.y = x
+        self.loss = sum_squared_error(self.y, self.t)
+        
+        return self.loss
+
+    def backward(self, dout=1):
+        batch_size = self.t.shape[0]
+        if self.t.size == self.y.size:
+            dx = (self.y - self.t) / batch_size
+        else:
+            raise "ERROR CAN NOT CALC sum squared error"
+        
+        return dx
 
 class Dropout:
     """

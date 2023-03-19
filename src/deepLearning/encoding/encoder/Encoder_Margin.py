@@ -92,6 +92,8 @@ class MarginClass(XClass):
         # y = - (1 / max^2)x^2 + 1
         x = np.array(self.xList)
         ny = -(1/(np.max(x)+0.001)**2) * x**2 + 1
+        # 小数点以下4位まで
+        ny = np.round(ny, 4)
         y = ny.tolist()
         # リストを逆順にする。元のリストを破壊するため注意。
         # 戻り値はNoneであることも注意
