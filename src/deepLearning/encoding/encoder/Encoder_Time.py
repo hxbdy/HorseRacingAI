@@ -10,6 +10,9 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("TimeClass"))
 
+# TODO: 平均が0、標準偏差が1になるように変換した得点を正解としている
+# -> 出走馬のうち、一番遅い馬が一番良いスコアになっているので要修正
+
 class TimeClass(XClass):
 
     def get(self):
