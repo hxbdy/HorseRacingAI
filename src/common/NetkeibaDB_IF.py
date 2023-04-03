@@ -74,6 +74,23 @@ class NetkeibaDB_IF:
         # 不明の場合-1を返す
         raceGrade = self.netkeibaDB.sql_mul_tbl("race_info", ["grade"], ["race_id"], [race_id], False)
         return int(raceGrade[0])
+    
+    def db_race_time(self, race_id, horse_id):
+        """ race_info テーブルから走破タイム[sec]を返す """
+        race_time = self.netkeibaDB.sql_one_race_info(race_id, horse_id, "time")
+
+        if (race_time is None) or (race_time == "") or (race_time == "None"):
+            sec = float(0)
+        else:
+            t = re.findall("\d+", race_time)
+            # ex) 1:18.7 -> [1, 18, 7] -> 78.7 [sec]
+            if len(t) == 3:
+                min, sec, msec = t
+                sec = 60 * float(min) + float(sec) + 0.1 * float(msec)
+            else:
+                sec = float(0)
+
+        return sec
 
     def db_race_list_prize(self, race_id):
         # レースの賞金をリストで返す

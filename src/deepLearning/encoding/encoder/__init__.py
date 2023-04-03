@@ -22,12 +22,10 @@ from . import Encoder_CumPerform
 from . import Encoder_HorseAge
 from . import Encoder_HorseNum
 from . import Encoder_Jockey
-from . import Encoder_Margin
 from . import Encoder_Money
 from . import Encoder_ParentBradleyTerry
 from . import Encoder_PostPosition
 from . import Encoder_RaceStartTime
-from . import Encoder_RankOneHot
 from . import Encoder_Umamusume
 from . import Encoder_Weather
 from . import Encoder_Last3f
@@ -35,3 +33,8 @@ from . import Encoder_HorseWeight
 from . import Encoder_CornerPos
 from . import Encoder_Pace
 from . import Encoder_Review
+
+# 正解ラベル用
+from . import Encoder_Margin
+from . import Encoder_RankOneHot
+from . import Encoder_Time

@@ -26,6 +26,7 @@ XTbl = [
 # 正解用テーブル
 # !! 1つしか入れないで !!
 tTbl = [
+    encoder.Encoder_Time.TimeClass             # 走破タイム
     # encoder.Encoder_RankOneHot.RankOneHotClass # 1位のOne-Hot表現
-    encoder.Encoder_Margin.MarginClass   # 着差標準化
+    # encoder.Encoder_Margin.MarginClass           # 着差標準化
 ]
