@@ -10,8 +10,9 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("TimeClass"))
 
-# TODO: 平均が0、標準偏差が1になるように変換した得点を正解としている
-# -> 出走馬のうち、一番遅い馬が一番良いスコアになっているので要修正
+# 1位のタイムをゼロとする。
+# 2位以降のタイムを1位との差分にする。
+# 平均0偏差1に均す
 
 class TimeClass(XClass):
 
@@ -26,6 +27,17 @@ class TimeClass(XClass):
         
         self.xList = time_list
         logger.debug(self.xList)
+    
+    def fix(self):
+        # NN学習では最大値が正解になるので、一位のタイムをゼロとして、それ以降の順位は差分で負の値を入れる
+        nx = np.array(self.xList)
+        m = np.min(nx) - nx
+        self.xList = m.tolist()
+        logger.debug(self.xList)
+
+    def pad(self):
+        # 最下位のタイムで埋める
+        super().pad(min(self.xList))
 
     def zscore(self, x, axis = None):
         xmean  = np.mean(x, axis=axis, keepdims=True, where = (x != 0))
