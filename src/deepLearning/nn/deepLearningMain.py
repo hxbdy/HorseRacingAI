@@ -33,13 +33,13 @@ t_test = t_data[train_num:]
 
 def __train(lr, weight_decay, epocs=500):
     network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[150, 75, 37],
-                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True, use_dropout=True)
+                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_batchnorm=True)
 
     # 学習前のパラメータをnpy形式で保存
     network.save(serial_dir_path + "init/")
 
     trainer = Trainer(network, x_train, t_train, x_test, t_test,
-                      epochs=epocs, mini_batch_size=5,
+                      epochs=epocs, mini_batch_size=50,
                       optimizer='sgd', optimizer_param={'lr': lr}, verbose=True)
     
     # 学習
