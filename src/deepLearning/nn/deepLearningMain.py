@@ -62,7 +62,7 @@ weight_decay = 9.537102818748489e-06
 lr           = 0.003490531606323423
 # ================================================
 
-test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=5000)
+test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=1500)
 print("train acc:" + str(train_acc_list[-1]))
 
 plt.figure() # 新規ウインドウ

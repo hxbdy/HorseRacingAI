@@ -133,10 +133,10 @@ class Bet:
         """ワイド
         3着以内に入る2頭を選ぶ"""        
         
-        # 3位までの予想
+        # 2位までの予想
         sort_y = y.copy()
         sort_y = sort_y.argsort(axis=1)
-        sort_y = sort_y[:, -3:]
+        sort_y = sort_y[:, -2:]
 
         # 3位までの正解
         sort_t = t.copy()
