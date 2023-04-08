@@ -6,6 +6,7 @@ np = xross.facttory_xp()
 from collections import OrderedDict
 from layers import *
 from gradient import numerical_gradient
+from bet      import Bet
 
 class MultiLayerNetExtend:
     """拡張版の全結合による多層ニューラルネットワーク
@@ -128,10 +129,7 @@ class MultiLayerNetExtend:
 
     def accuracy(self, x, t):
         y = self.predict(x, train_flg=False)
-        y = np.argmax(y, axis=1)
-        if t.ndim != 1 : t = np.argmax(t, axis=1)
-
-        accuracy = np.sum(y == t) / float(x.shape[0])
+        accuracy = Bet.win(y, t)
         return accuracy
 
     def numerical_gradient(self, x, t):
