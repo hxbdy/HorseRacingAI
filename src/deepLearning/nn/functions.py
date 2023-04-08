@@ -35,7 +35,9 @@ def softmax(x):
 
 
 def sum_squared_error(y, t):
-    return 0.5 * np.sum((y-t)**2)
+    """ミニバッチ対応版二乗和誤差"""
+    batch_size = y.shape[0]
+    return (0.5 * np.sum((y-t)**2)) / batch_size
 
 
 def cross_entropy_error(y, t):

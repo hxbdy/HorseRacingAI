@@ -129,7 +129,7 @@ class MultiLayerNetExtend:
 
     def accuracy(self, x, t):
         y = self.predict(x, train_flg=False)
-        accuracy = Bet.win(y, t)
+        accuracy = Bet.win_box3(y, t)
         return accuracy
 
     def numerical_gradient(self, x, t):
