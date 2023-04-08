@@ -43,6 +43,7 @@ if __name__ == "__main__":
     x = np.array(list(deepflatten(x))).reshape(1, -1)
 
     # ======================================================================
+    print("x.shape = ", x.shape)
 
     # 推測
     y = list(deepflatten(network.predict(x)))

@@ -158,3 +158,35 @@ class Bet:
         accuracy = cnt_hit / float(t.shape[0])
 
         return accuracy
+
+    @classmethod
+    def quinella_place_box3(cls, y:np, t:np):
+        """ワイド
+        3着以内に入る2頭を選ぶ
+        3頭でボックス買いした場合の正答率"""        
+        
+        # 3位までの予想
+        sort_y = y.copy()
+        sort_y = sort_y.argsort(axis=1)
+        sort_y = sort_y[:, -3:]
+
+        # 3位までの正解
+        sort_t = t.copy()
+        sort_t = sort_t.argsort(axis=1)
+        sort_t = sort_t[:, -3:]
+
+        # print("predict y[0] = ", sort_y[0])
+        # print("        t[0] = ", sort_t[0])
+
+        # y が t に含まれている数を計上
+        isin = numpy_isin2D(sort_y, sort_t)
+        # print("isin?        = ", isin[0])
+
+        isin_sum = np.sum(isin, axis=1)
+        # 2頭以上の予想が含まれている
+        cnt_hit = np.sum(isin_sum >= 2)
+        
+        # print("hit?        = ", cnt_hit)
+        accuracy = cnt_hit / float(t.shape[0])
+
+        return accuracy
