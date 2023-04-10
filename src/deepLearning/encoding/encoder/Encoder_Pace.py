@@ -35,22 +35,37 @@ class PaceClass(XClass):
 
             if pace_list == None:
                 # DB に記録されていない場合
-                pace_list = [float(0), float(0)]
+                pace_list = [np.nan, np.nan]
 
             total_pace_list.append(pace_list)
 
-        self.xList = total_pace_list
+        # NN学習では最大値が正解になるので、一位のタイムをゼロとして、それ以降の順位は差分で負の値を入れる
+        np_total_pace_list = np.array(total_pace_list)
+        np_total_pace_list = np_total_pace_list.reshape(-1, 2)
+
+        m = np.nanmin(np_total_pace_list, axis=0) - np_total_pace_list
+        self.xList = m.tolist()
+
+        logger.debug(self.xList)
 
     def pad(self):
-        super().pad([float(0), float(0)])
+        nx = np.array(self.xList)
+        nx = nx.reshape(-1, 2)
+        nx_min = np.nanmin(nx, axis=0)
+
+        logger.debug("nx_min = {0}".format(nx_min))
+        super().pad(nx_min.tolist())
+
+        rep = np.nan_to_num(self.xList)
+        logger.debug("rep = {0}".format(rep))
+        self.xList = rep.tolist()
 
     def nrm(self):
         # self.xList = [[first3f, last3f], ... ]
         np_pace_list = np.array(self.xList).reshape(-1, 2)
 
-        # 最大値で割る
-        max_pace = np.max(np.abs(np_pace_list), axis=0)
-        ans_pace = np.divide(np_pace_list, max_pace, out = np.zeros_like(np_pace_list), where = (max_pace != 0))
+        # zscore
+        ans_pace = self.zscore(np_pace_list, axis=0)
 
         # self.xList = [first3f1, first3f2, ... last3f1, last3f2, ...]
         self.xList = list(deepflatten(ans_pace.T.tolist()))
