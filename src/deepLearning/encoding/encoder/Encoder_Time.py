@@ -39,12 +39,7 @@ class TimeClass(XClass):
         # 最下位のタイムで埋める
         super().pad(min(self.xList))
 
-    def zscore(self, x, axis = None):
-        xmean  = np.mean(x, axis=axis, keepdims=True, where = (x != 0))
-        xstd   = np.std(x, axis=axis, keepdims=True, where = (x != 0))
-        zscore = np.divide((x - xmean), xstd, out = np.zeros_like(x), where = (xstd != 0))
-        return zscore
-
     def nrm(self):
-        val = self.zscore(self.xList, axis=0)
-        self.xList = val
+        np_xList = np.array(self.xList)
+        val = self.zscore(np_xList, axis=-1)
+        self.xList = val.tolist()

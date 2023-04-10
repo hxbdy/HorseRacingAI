@@ -58,3 +58,27 @@ class XClass:
         if (np.max(self.xList) > 1.1) or (np.min(self.xList) < -0.1):
             logger.debug("CHECK encoded value !! , max = {0:4.2f}, min = {1:4.2f}, encoder = {2}".format(np.max(self.xList), np.min(self.xList), self.__class__))
         return self.xList
+    
+    # =======================
+    # = util functions      =
+    # =======================
+    
+    def zscore(self, x, axis = None):
+        """平均が0, 標準偏差が1になるように変換した得点
+
+        Parameters
+        ----------
+        x : numpy
+            計算対象
+        axis : int
+            計算方向。2Dの場合、0は列、1は行方向
+
+        Returns
+        -------
+        zscore : numpy
+            変換後の値
+        """
+        xmean = x.mean(axis=axis, keepdims=True)
+        xstd = np.std(x, axis=axis, keepdims=True)
+        zscore = np.divide((x - xmean), xstd, out = np.zeros_like(x), where = (xstd != 0))
+        return zscore

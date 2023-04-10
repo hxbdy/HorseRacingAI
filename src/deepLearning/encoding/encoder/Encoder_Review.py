@@ -31,20 +31,16 @@ class ReviewClass(XClass):
         pad_list.extend(pad_50 * 5)
         super().pad(pad_list)
 
-    def zscore(self, x, axis = None):
-        xmean = x.mean(axis=axis, keepdims=True)
-        xstd = np.std(x, axis=axis, keepdims=True)
-        zscore = np.divide((x - xmean), xstd, out = np.zeros_like(x), where = (xstd != 0))
-        return zscore
-
     def nrm(self):
         np_xList = np.array(self.xList)
-        xList_max = np.max(np_xList, axis=0)
 
         # 各列最大値で割る方法
-        np_xList = np.divide(np_xList, xList_max, out = np.zeros_like(np_xList), where = (xList_max != 0))
+        # xList_max = np.max(np_xList, axis=0)
+        # np_xList = np.divide(np_xList, xList_max, out = np.zeros_like(np_xList), where = (xList_max != 0))
 
         # zscoreを求める方法
-        # np_xList = self.zscore(np_xList, axis=0)
+        # 4つのパラメータがあるレビューが5個あるので、列数は20。
+        np_xList = np_xList.reshape(-1, 20)
+        np_xList = self.zscore(np_xList, axis=0)
 
         self.xList = np_xList.tolist()
