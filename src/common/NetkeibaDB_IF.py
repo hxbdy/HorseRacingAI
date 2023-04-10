@@ -299,6 +299,10 @@ class NetkeibaDB_IF:
             return None
 
         pace_list = pace.split("-")
+
+        if len(pace_list) != 2:
+            pace_list = [float(0), float(0)]
+
         pace_list = list(map(float, pace_list))
 
         return pace_list
