@@ -33,11 +33,11 @@ class Last3fClass(XClass):
                 # 直前のレースあがり3ハロンのタイムを取得
                 t = self.nf.db_race_last_3f(last_race_id, horse_id)
 
-            if isinstance(t, str) or isinstance(t, float):
+            try:
                 t = float(t)
-            else:
+            except (ValueError, TypeError):
                 # 該当のレースがなかった
-                t = float(0.0)
+                t = float(0.0)               
 
             last_3f_list.append(t)
 
