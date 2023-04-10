@@ -47,10 +47,13 @@ class Last3fClass(XClass):
 
     def nrm(self):
         np_xList     = np.array(self.xList)
-        np_sum_xList = np.sum(self.xList)
+
+        # zscore
+        np_xList = self.zscore(np_xList, axis=-1)
 
         # ans = np_xList / np_sum_xList
         # ただし、0除算する要素は0とする
-        ans = np.divide(np_xList, np_sum_xList, out = np.zeros_like(np_xList), where = (np_sum_xList != 0))
+        # np_sum_xList = np.sum(self.xList)
+        # ans = np.divide(np_xList, np_sum_xList, out = np.zeros_like(np_xList), where = (np_sum_xList != 0))
         
-        self.xList = ans.tolist()
+        self.xList = np_xList.tolist()
