@@ -63,7 +63,7 @@ class XClass:
     # = util functions      =
     # =======================
     
-    def zscore(self, x, axis = None):
+    def zscore(self, x, axis = None, reverse = False):
         """平均が0, 標準偏差が1になるように変換した得点
 
         Parameters
@@ -72,12 +72,17 @@ class XClass:
             計算対象
         axis : int
             計算方向。2Dの場合、0は列、1は行方向
+        reverse : bool
+            全ての値にマイナスをかけて、大小関係を反転させてから計算する
+            1位の値が一番小さいときに使う
 
         Returns
         -------
         zscore : numpy
             変換後の値
         """
+        if reverse:
+            x = -x
         xmean = x.mean(axis=axis, keepdims=True)
         xstd = np.std(x, axis=axis, keepdims=True)
         zscore = np.divide((x - xmean), xstd, out = np.zeros_like(x), where = (xstd != 0))

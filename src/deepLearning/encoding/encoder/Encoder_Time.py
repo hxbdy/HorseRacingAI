@@ -10,10 +10,6 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("TimeClass"))
 
-# 1位のタイムをゼロとする。
-# 2位以降のタイムを1位との差分にする。
-# 平均0偏差1に均す
-
 class TimeClass(XClass):
 
     def get(self):
@@ -27,19 +23,12 @@ class TimeClass(XClass):
         
         self.xList = time_list
         logger.debug(self.xList)
-    
-    def fix(self):
-        # NN学習では最大値が正解になるので、一位のタイムをゼロとして、それ以降の順位は差分で負の値を入れる
-        nx = np.array(self.xList)
-        m = np.min(nx) - nx
-        self.xList = m.tolist()
-        logger.debug(self.xList)
 
     def pad(self):
         # 最下位のタイムで埋める
-        super().pad(min(self.xList))
+        super().pad(max(self.xList))
 
     def nrm(self):
         np_xList = np.array(self.xList)
-        val = self.zscore(np_xList, axis=-1)
+        val = self.zscore(np_xList, axis=-1, reverse=True)
         self.xList = val.tolist()
