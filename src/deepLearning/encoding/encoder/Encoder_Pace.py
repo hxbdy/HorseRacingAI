@@ -46,9 +46,9 @@ class PaceClass(XClass):
         nx = nx.reshape(-1, 2)
         
         # 最大値(ビリ)のペースで馬番を18番まで埋める
-        # 全要素がnp.nanなら0に置換する
         nx_max = np.nanmax(nx, axis=0, out=np.zeros_like([1, 2]))
         super().pad(nx_max.tolist())
+        nx = np.array(self.xList)
 
         # 取得できなった値も最大値で埋める
         np.nan_to_num(nx[:, 0], nan=nx_max[0], copy=False)
