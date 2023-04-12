@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
 
@@ -84,3 +86,7 @@ class BradleyTerryClass(XClass):
     def fix(self):
         self.calcPower()
         self.xList = self.p
+
+    def nrm(self):
+        a = self.zscore(np.array(self.xList, dtype=np.float64), axis=-1, reverse=False)
+        self.xList = a.tolist()

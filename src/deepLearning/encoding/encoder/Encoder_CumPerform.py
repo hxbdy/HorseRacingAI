@@ -131,6 +131,9 @@ class CumPerformClass(XClass):
 
     def nrm(self):
         # sigmoidで標準化
-        nPerformList = np.array(self.xList)
-        nPerformList = 1/(1+np.exp(nPerformList))
+        # nPerformList = np.array(self.xList)
+        # nPerformList = 1/(1+np.exp(nPerformList))
+        # self.xList = nPerformList.tolist()
+        
+        nPerformList = self.zscore(np.array(self.xList), axis=-1, reverse=False)
         self.xList = nPerformList.tolist()

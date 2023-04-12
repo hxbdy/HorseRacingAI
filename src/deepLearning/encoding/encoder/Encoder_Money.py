@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
@@ -31,8 +32,10 @@ class MoneyClass(XClass):
         # 賞金標準化
         # 1位賞金で割る
         # moneyList は float前提
-        money1st = self.xList[0]
-        moneyNrmList = []
-        for m in self.xList:
-            moneyNrmList.append(m / money1st)
-        self.xList = moneyNrmList
+        # money1st = self.xList[0]
+        # moneyNrmList = []
+        # for m in self.xList:
+        #     moneyNrmList.append(m / money1st)
+        # self.xList = moneyNrmList
+        money = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        self.xList = money.tolist()

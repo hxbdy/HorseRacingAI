@@ -1,8 +1,10 @@
 import logging
 
+import numpy as np
+from iteration_utilities import deepflatten
+
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
-import numpy as np
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -60,14 +62,16 @@ class CornerPosClass(XClass):
         np_xlist = np.array(self.xList, dtype=np.float64).reshape(-1, self.corner_pos_max)
 
         # 最大値で割る
-        div_pos = np.max(np_xlist, axis=1).reshape(-1, 1)
+        # div_pos = np.max(np_xlist, axis=1).reshape(-1, 1)
+        # ans_pos = np.divide(np_xlist, div_pos, out = np.zeros_like(np_xlist), where = (div_pos != 0))
+        # self.xList = ans_pos.tolist()
         
         # 1列目を抽出
         # 最初の順位から各コーナーでどれだけ順位が変動したかがわかる
         # 他の馬の順位の変動の影響を受けない
         # div_pos = np_xlist[:, 0].reshape(-1, 1)
 
-        ans_pos = np.divide(np_xlist, div_pos, out = np.zeros_like(np_xlist), where = (div_pos != 0))
-        self.xList = ans_pos.tolist()
+        np_xlist = self.zscore(np_xlist, axis=0, reverse=False)
+        self.xList = np_xlist.tolist()
 
         logger.debug("self.xList = {0}".format(self.xList))

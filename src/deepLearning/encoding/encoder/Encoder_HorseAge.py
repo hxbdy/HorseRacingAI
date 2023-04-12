@@ -43,13 +43,18 @@ class HorseAgeClass(XClass):
     def pad(self):
         # 年齢リスト拡張
         # ダミーデータ：平均値
-        super().pad(np.mean(self.xList))
+        # super().pad(np.mean(self.xList))
+
+        # ダミーデータ：0
+        super().pad(0)
 
     def nrm(self):
         # 馬年齢標準化
         # 若いほうが強いのか, 年季があるほうが強いのか...
         # 最高値ですべてを割る
-        nHorseAgeList = np.array(self.xList)
-        maxAge = np.max(nHorseAgeList)
-        nHorseAgeList = nHorseAgeList / maxAge
+        # nHorseAgeList = np.array(self.xList)
+        # maxAge = np.max(nHorseAgeList)
+        # nHorseAgeList = nHorseAgeList / maxAge
+        # self.xList = nHorseAgeList.tolist()
+        nHorseAgeList = self.zscore(np.array(self.xList), axis=-1, reverse=False)
         self.xList = nHorseAgeList.tolist()

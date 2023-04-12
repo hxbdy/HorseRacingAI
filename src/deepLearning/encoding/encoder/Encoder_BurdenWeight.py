@@ -24,7 +24,10 @@ class BurdenWeightClass(XClass):
     def nrm(self):
         # 斤量の標準化
         # 一律60で割る
-        SCALE_PARAMETER = 60
-        n_weight_list = np.array(self.xList)
-        n_weight_list = n_weight_list / SCALE_PARAMETER
-        self.xList = n_weight_list.tolist()
+        # SCALE_PARAMETER = 60
+        # n_weight_list = np.array(self.xList)
+        # n_weight_list = n_weight_list / SCALE_PARAMETER
+        # self.xList = n_weight_list.tolist()
+
+        weight = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        self.xList = weight.tolist()

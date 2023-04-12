@@ -17,7 +17,7 @@ def selfcheck(class_name, x):
     # 最大値、最小値
     logger.info("MAX = {0}, MIN = {1}".format(np.max(x), np.min(x)))
     # メモリは0.1刻みで表示
-    range_tick = [i / 10 for i in range(0, 11)]
+    range_tick = [i / 10 for i in range(-5, 15)]
     plt.xticks(range_tick)
     # ヒストグラム
     # 幅は0.1刻み

@@ -34,6 +34,11 @@ class PostPositionClass(XClass):
     def nrm(self):
         # 枠番標準化
         # sigmoidで標準化
-        nPostPositionList = np.array(self.xList)
-        nPostPositionList = 1/(1+np.exp(nPostPositionList))
+        # nPostPositionList = np.array(self.xList)
+        # nPostPositionList = 1/(1+np.exp(nPostPositionList))
+        # self.xList = nPostPositionList.tolist()
+
+        # zscore
+        # 内側有利とする
+        nPostPositionList = self.zscore(np.array(self.xList), axis=-1, reverse=True)
         self.xList = nPostPositionList.tolist()

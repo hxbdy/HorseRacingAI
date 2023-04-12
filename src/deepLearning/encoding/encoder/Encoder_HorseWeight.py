@@ -54,9 +54,12 @@ class HorseWeightClass(XClass):
         # self.xList = [[馬体重, 増減], ... ]
         np_weight_list = np.array(self.xList).reshape(-1, 2)
 
+        np_weight_list = self.zscore(np_weight_list, axis=0, reverse=False)
+        self.xList = list(deepflatten(np_weight_list.tolist()))
+
         # 馬体重を最大値で割る
-        max_weight = np.max(np.abs(np_weight_list), axis=0)
-        ans_weight = np.divide(np_weight_list, max_weight, out = np.zeros_like(np_weight_list), where = (max_weight != 0))
+        # max_weight = np.max(np.abs(np_weight_list), axis=0)
+        # ans_weight = np.divide(np_weight_list, max_weight, out = np.zeros_like(np_weight_list), where = (max_weight != 0))
 
         # self.xList = [馬体重1, 馬体重2, ... 増減1, 増減2, ...]
-        self.xList = list(deepflatten(ans_weight.T.tolist()))
+        # self.xList = list(deepflatten(ans_weight.T.tolist()))

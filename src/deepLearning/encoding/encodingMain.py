@@ -22,7 +22,7 @@ if __name__ == "__main__":
     
     # エンコード
     logger.info("========================================")
-    total_train_list = MgrClass(start_year = 1800, end_year = 2021, XclassTbl = XTbl, tclassTbl = tTbl, limit = -1)
+    total_train_list = MgrClass(start_year = 1800, end_year = 2023, XclassTbl = XTbl, tclassTbl = tTbl, limit = -1)
     x_data, t_data = total_train_list.getTotalList()
 
     # 書き込み

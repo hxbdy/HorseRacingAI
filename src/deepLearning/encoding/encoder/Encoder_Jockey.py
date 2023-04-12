@@ -33,13 +33,19 @@ class JockeyClass(XClass):
     def pad(self):
         # 騎手ダミーデータ挿入
         # ダミーデータ：出場回数50を追加．
-        super().pad(50)
+        # super().pad(50)
+        super().pad(0)
 
     def nrm(self):
         # 騎手標準化
-        # 最高値ですべてを割る
         njockeyList = np.array(self.xList)
-        maxJockey = np.max(njockeyList)
-        logger.debug("njockeyList = {0}, maxJockey = {1}".format(njockeyList, maxJockey))
-        njockeyList = njockeyList / maxJockey
+        
+        # 最高値ですべてを割る
+        # maxJockey = np.max(njockeyList)
+        # logger.debug("njockeyList = {0}, maxJockey = {1}".format(njockeyList, maxJockey))
+        # njockeyList = njockeyList / maxJockey
+        # self.xList = njockeyList.tolist()
+        
+        # zscore
+        njockeyList = self.zscore(njockeyList, axis=-1, reverse=False)
         self.xList = njockeyList.tolist()
