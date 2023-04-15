@@ -5,7 +5,9 @@ from discord import Option
 
 from file_path_mgr import private_ini
 
-DISCORD_SERVER_ID = int(private_ini("discord", "DISCORD_SERVER_ID"))
+DISCORD_SERVER_IDs = private_ini("discord", "DISCORD_SERVER_ID").split(',')
+DISCORD_SERVER_IDs = list(map(int, DISCORD_SERVER_IDs))
+
 TOKEN = str(private_ini("discord", "TOKEN"))
 client = discord.Bot()
  
@@ -14,7 +16,7 @@ async def on_ready():
     print(f"{client.user} WAITING CMD...")
 
 
-@client.slash_command(description="当日スクレイピング", guild_ids=[DISCORD_SERVER_ID])
+@client.slash_command(description="当日スクレイピング", guild_ids=DISCORD_SERVER_IDs)
 async def scraping2(
     ctx: discord.ApplicationContext,
     race_id: Option(str, required=True, description="input race_id"),
@@ -31,7 +33,7 @@ async def scraping2(
     await exe_cmd(ctx, scraping_cmd)
 
 
-@client.slash_command(description="当日レース予想", guild_ids=[DISCORD_SERVER_ID])
+@client.slash_command(description="当日レース予想", guild_ids=DISCORD_SERVER_IDs)
 async def predict(
     ctx: discord.ApplicationContext,
 ):
@@ -40,7 +42,7 @@ async def predict(
     predict_cmd = ['python', './src/deepLearning/nn/predict.py']
     await exe_cmd(ctx, predict_cmd)
 
-@client.slash_command(description="バッチ実行", guild_ids=[DISCORD_SERVER_ID])
+@client.slash_command(description="バッチ実行", guild_ids=DISCORD_SERVER_IDs)
 async def bat(
     ctx: discord.ApplicationContext,
     race_id: Option(str, required=True, description="input race_id")
