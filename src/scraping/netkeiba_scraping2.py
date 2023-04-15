@@ -389,6 +389,7 @@ def main_process(untracked_race_id_list, children_num, roll):
 
     # 終了したかの確認
     # 終了していない場合(joinタイムアウト発生)、子プロセスが終了できなくなっているため強制終了する
+    child_db_process.kill()
     for i in range(children_num):
         if(children_process[i].is_alive()):
             logger.critical('failed to terminate scrape process !! force kill ID:{0}'.format(i))
@@ -982,7 +983,7 @@ if __name__ == "__main__":
             arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
             driver = wf.start_driver(browser, arg_list, False)
             login(driver, mail_address, password)
-            driver.close()
+            driver.quit()
 
     # DB初期化
     if args.init:
@@ -998,7 +999,7 @@ if __name__ == "__main__":
         driver = wf.start_driver(browser, arg_list, False)
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
-        driver.close()
+        driver.quit()
         main_process(race_id, process_num, args.skip_untracked)
         
         # jockey_infoテーブルアップデート
@@ -1023,7 +1024,7 @@ if __name__ == "__main__":
         driver = wf.start_driver(browser, arg_list, False)
         for race_id_list in regist_scrape_race_id(driver, start, end, grade):
             race_id.extend(race_id_list)
-        driver.close()
+        driver.quit()
         main_process(race_id, process_num, args.skip_untracked)
 
         # jockey_infoテーブルアップデート
@@ -1044,7 +1045,7 @@ if __name__ == "__main__":
         with open(path_tmp, 'wb') as f:
             pickle.dump(a, f)
 
-        driver.close()
+        driver.quit()
 
     elif args.untracked:
         main_process([], process_num, True)
