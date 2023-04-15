@@ -59,7 +59,7 @@ class CornerPosClass(XClass):
 
     def nrm(self):
         # numpy / cupy 化
-        np_xlist = np.array(self.xList, dtype=np.float64).reshape(-1, self.corner_pos_max)
+        np_xlist = np.array(self.xList).reshape(-1, self.corner_pos_max)
 
         # 最大値で割る
         # div_pos = np.max(np_xlist, axis=1).reshape(-1, 1)
