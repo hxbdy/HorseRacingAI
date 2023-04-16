@@ -37,6 +37,7 @@
 7. [Iteration Utilities :: Anaconda.org](https://anaconda.org/conda-forge/iteration_utilities)
 8. [Pandas :: Anaconda.org](https://anaconda.org/anaconda/pandas)
 9. [Psutil :: Anaconda.org](https://anaconda.org/conda-forge/psutil)
+10. [Py Cord :: Anaconda.org](https://anaconda.org/conda-forge/py-cord)
 
 ## PATH
 conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
@@ -76,6 +77,7 @@ src;\
 ## private.ini
 ./src/private.ini を作成して以下を記入して保存してください。  
 メールとパスワードはネット競馬にログインするために使用します。
+discordカテゴリはdiscordからコードを実行するために必要です。
 
 ```txt:whatprivate.ini
 [scraping]
@@ -87,6 +89,11 @@ process_num = 4
 [nn]
 # 行列演算ハード指定 GPU or CPU
 calculator = GPU
+
+[discord]
+DISCORD_SERVER_ID = XXXXXXXXXX
+TOKEN = XXXXXXXXXX.XXXXXXXXXX.XXXXXXXXXX
+
 ```
 ## resrc
 net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db に保存します  

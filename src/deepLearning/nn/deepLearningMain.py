@@ -32,8 +32,8 @@ x_test = x_data[train_num:]
 t_test = t_data[train_num:]
 
 def __train(lr, weight_decay, epocs=500):
-    network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[40],
-                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay)
+    network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[200, 75],
+                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_dropout=True)
 
     # 学習前のパラメータをnpy形式で保存
     network.save(serial_dir_path + "init/")
@@ -58,8 +58,8 @@ def __train(lr, weight_decay, epocs=500):
 
 # 探索したハイパーパラメータの範囲を指定===============
 # パラメータの最適値は analysis_hyperParamOpt.py で探索可能
-weight_decay = 9.537102818748489e-06
-lr           = 0.003490531606323423
+weight_decay = 8.865554344288922e-05
+lr           = 0.0017072433461073357
 # ================================================
 
 test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=1500)
