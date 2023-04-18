@@ -156,8 +156,13 @@ class NetkeibaDB:
             return data[0]
 
     def sql_mul_tbl(self, table_name, col_target_list, col_hint_list, data_list, pattern):
-        """テーブル table_name から列 col_target を複数取得する
+        """テーブルから複数列取得する
         条件は 列 col_hint_list と値  data_list が一致する行
+        table_name: テーブル名
+        col_target_list: 取得したい列名
+        col_hint_list: 取得したい行の検索のための列
+        data_list: col_hint_listで一致する値
+        pattern: 重賞のみとするか。True=重賞のみ, False:全てを対象
         """
         col_hint_list_copied = copy.copy(col_hint_list)
         for idx in range(len(col_hint_list_copied)):
