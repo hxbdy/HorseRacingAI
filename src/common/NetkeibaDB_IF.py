@@ -59,15 +59,14 @@ class NetkeibaDB_IF:
         return totalRaceList
 
     def db_race_date(self, race_id):
-        # レース開催日を取り出す
-        # 以下の前提で計算する
-        # race_data2 にレース開催日が含まれていること
-        raceDate = self.netkeibaDB.sql_mul_tbl("race_result", ["race_data2"], ["race_id"], [race_id], False)
+        """レース開催日をdate型で返す
+        race_info テーブルの date から検索する"""
+
+        raceDate = self.netkeibaDB.sql_mul_tbl("race_info", ["date"], ["race_id"], [race_id], False)
         raceDate = raceDate[0]
-        raceDateYear = int(raceDate.split("年")[0])
-        raceDateMon = int(raceDate.split("年")[1].split("月")[0])
-        raceDateDay = int(raceDate.split("月")[1].split("日")[0])
-        return date(raceDateYear, raceDateMon, raceDateDay)
+
+        year, month, day = raceDate.split('/')
+        return date(int(year), int(month), int(day))
 
     def db_race_grade(self, race_id):
         # レースのグレードを返す
