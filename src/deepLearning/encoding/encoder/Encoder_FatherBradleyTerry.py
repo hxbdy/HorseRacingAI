@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream_hdl(logging.INFO))
 logger.addHandler(file_hdl("ParentBradleyTerryClass"))
 
-class ParentBradleyTerryClass(BradleyTerryClass):
+class FatherBradleyTerryClass(BradleyTerryClass):
     def get(self):
         childList = self.nf.db_race_list_horse_id(self.race_id)
         parentList = []

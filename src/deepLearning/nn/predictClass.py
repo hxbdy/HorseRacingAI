@@ -66,7 +66,7 @@ class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
     def get(self):
         # horse_id
         self.xList = self.race_info.horse_id
-class PredictParentBradleyTerryClass(encoder.Encoder_ParentBradleyTerry.ParentBradleyTerryClass):
+class PredictFatherBradleyTerryClass(encoder.Encoder_FatherBradleyTerry.FatherBradleyTerryClass):
     def get(self):
         # horse_id
         childList = self.race_info.horse_id
@@ -123,7 +123,7 @@ predict_XTbl = [
     PredictCumPerformClass,
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
-    PredictParentBradleyTerryClass,
+    PredictFatherBradleyTerryClass,
     PredictLast3fClass,
     PredictHorseWeight,
     PredictCornerPos,
