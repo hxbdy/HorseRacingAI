@@ -16,7 +16,7 @@ class ParentBradleyTerryClass(BradleyTerryClass):
         parentList = []
         for i in range(len(childList)):
             # 父のidを取得
-            parent = self.nf.db_horse_father(childList[i])
+            parent = self.nf.db_horse_parent(childList[i], 'f')
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)

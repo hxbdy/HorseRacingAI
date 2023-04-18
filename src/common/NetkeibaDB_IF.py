@@ -186,10 +186,14 @@ class NetkeibaDB_IF:
     def db_race_list_1v1(self, horse_id_1, horse_id_2):
         # horse_id_1, horse_id_2 が出走したレースリストを返す
         return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2)
-
-    def db_horse_father(self, horse_id):
-        # 父のidを返す
-        return self.netkeibaDB.sql_one_horse_prof(horse_id, "blood_f")
+    
+    def db_horse_parent(self, horse_id, parent):
+        """親のhorse_idを返す
+        horse_id
+        parent: f,ff,fm,m,mf,mm
+        """
+        blood = "blood_" + parent
+        return self.netkeibaDB.sql_one_horse_prof(horse_id, blood)
 
     def db_race_list_rank(self, race_id):
         # 馬番で昇順ソートされた順位を文字列で返す
