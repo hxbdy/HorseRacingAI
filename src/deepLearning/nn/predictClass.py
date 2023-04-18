@@ -77,6 +77,17 @@ class PredictFatherBradleyTerryClass(encoder.Encoder_FatherBradleyTerry.FatherBr
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)
+class PredictMotherBradleyTerryClass(encoder.Encoder_MotherBradleyTerry.MotherBradleyTerryClass):
+    def get(self):
+        # horse_id
+        childList = self.race_info.horse_id
+        parentList = []
+        for i in range(len(childList)):
+            # 母のidを取得
+            parent = self.nf.db_horse_parent(childList[i], 'm')
+            parentList.append(parent)
+        self.xList = parentList
+        self.col_num = len(self.xList)
 class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
     def get(self):
         # race_id
@@ -124,6 +135,7 @@ predict_XTbl = [
     PredictBradleyTerryClass,
     PredictUmamusumeClass,
     PredictFatherBradleyTerryClass,
+    PredictMotherBradleyTerryClass,
     PredictLast3fClass,
     PredictHorseWeight,
     PredictCornerPos,

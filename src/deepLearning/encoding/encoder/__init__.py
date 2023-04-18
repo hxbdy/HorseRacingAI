@@ -24,6 +24,7 @@ from . import Encoder_HorseNum
 from . import Encoder_Jockey
 from . import Encoder_Money
 from . import Encoder_FatherBradleyTerry
+from . import Encoder_MotherBradleyTerry
 from . import Encoder_PostPosition
 from . import Encoder_RaceStartTime
 from . import Encoder_Umamusume

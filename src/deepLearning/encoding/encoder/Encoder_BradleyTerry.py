@@ -1,7 +1,5 @@
 import logging
 
-import numpy as np
-
 from Encoder_X import XClass
 from debug     import stream_hdl, file_hdl
 
