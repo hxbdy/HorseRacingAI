@@ -33,7 +33,8 @@ t_test = t_data[train_num:]
 
 def __train(lr, weight_decay, epocs=500):
     network = MultiLayerNetExtend(input_size=x_train.shape[1], hidden_size_list=[200, 75],
-                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay, use_dropout=True)
+                            output_size=t_train.shape[1], weight_decay_lambda=weight_decay,
+                            use_dropout=False, activation='sigmoid', weight_init_std='sigmoid')
 
     # 学習前のパラメータをnpy形式で保存
     network.save(serial_dir_path + "init/")
@@ -62,7 +63,7 @@ weight_decay = 8.865554344288922e-05
 lr           = 0.0017072433461073357
 # ================================================
 
-test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=1500)
+test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=500)
 print("train acc:" + str(train_acc_list[-1]))
 
 plt.figure() # 新規ウインドウ

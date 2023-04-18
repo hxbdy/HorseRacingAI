@@ -100,6 +100,12 @@ class PredictReview(encoder.Encoder_Review.ReviewClass):
     def get(self):
         # horse_id
         self.xList = self.race_info.horse_id
+class PredictLastRaceLeft(encoder.Encoder_LastRaceLeft.LastRaceLeftClass):
+    def get(self):
+        # レース開催日
+        self.d0 = self.race_info.date
+        # horse_id
+        self.xList = self.race_info.horse_id
 # ==========================================================================
 
 # 推論時の入力用テーブル
@@ -122,5 +128,6 @@ predict_XTbl = [
     PredictHorseWeight,
     PredictCornerPos,
     PredictPace,
-    PredictReview
+    PredictReview,
+    PredictLastRaceLeft
 ]

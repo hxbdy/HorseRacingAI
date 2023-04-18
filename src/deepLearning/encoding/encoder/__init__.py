@@ -33,6 +33,7 @@ from . import Encoder_HorseWeight
 from . import Encoder_CornerPos
 from . import Encoder_Pace
 from . import Encoder_Review
+from . import Encoder_LastRaceLeft
 
 # 正解ラベル用
 from . import Encoder_Margin

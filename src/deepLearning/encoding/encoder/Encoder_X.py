@@ -68,7 +68,7 @@ class XClass:
 
         Parameters
         ----------
-        x : numpy
+        x : numpy or list
             計算対象。32bit floatに変換して計算する
         axis : int
             計算方向。2Dの場合、0は列、1は行方向
@@ -81,7 +81,10 @@ class XClass:
         zscore : numpy
             変換後の値
         """
-        x_float32 = x.astype(np.float32)
+
+        # numpyに変換して行う
+        x_float32 = np.array(x, copy=True, dtype=np.float32)
+
         if reverse:
             x_float32 = -x_float32
         xmean = x_float32.mean(axis=axis, keepdims=True)

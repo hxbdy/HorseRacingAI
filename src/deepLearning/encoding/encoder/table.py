@@ -20,13 +20,14 @@ XTbl = [
     encoder.Encoder_HorseWeight.HorseWeightClass,
     encoder.Encoder_CornerPos.CornerPosClass,
     encoder.Encoder_Pace.PaceClass,
-    encoder.Encoder_Review.ReviewClass
+    encoder.Encoder_Review.ReviewClass,
+    encoder.Encoder_LastRaceLeft.LastRaceLeftClass
 ]
 
 # 正解用テーブル
 # !! 1つしか入れないで !!
 tTbl = [
-    encoder.Encoder_Time.TimeClass             # 走破タイム
+    encoder.Encoder_Time.TimeClass               # 走破タイム
     # encoder.Encoder_RankOneHot.RankOneHotClass # 1位のOne-Hot表現
-    # encoder.Encoder_Margin.MarginClass           # 着差標準化
+    # encoder.Encoder_Margin.MarginClass         # 着差標準化
 ]
