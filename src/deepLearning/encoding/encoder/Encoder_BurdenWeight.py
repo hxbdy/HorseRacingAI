@@ -29,5 +29,5 @@ class BurdenWeightClass(XClass):
         # n_weight_list = n_weight_list / SCALE_PARAMETER
         # self.xList = n_weight_list.tolist()
 
-        weight = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        weight = self.zscore(self.xList, axis=-1, reverse=False)
         self.xList = weight.tolist()

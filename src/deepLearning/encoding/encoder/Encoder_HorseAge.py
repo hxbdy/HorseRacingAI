@@ -56,5 +56,5 @@ class HorseAgeClass(XClass):
         # maxAge = np.max(nHorseAgeList)
         # nHorseAgeList = nHorseAgeList / maxAge
         # self.xList = nHorseAgeList.tolist()
-        nHorseAgeList = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        nHorseAgeList = self.zscore(self.xList, axis=-1, reverse=False)
         self.xList = nHorseAgeList.tolist()

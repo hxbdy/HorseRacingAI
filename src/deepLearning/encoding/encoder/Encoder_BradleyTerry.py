@@ -88,5 +88,5 @@ class BradleyTerryClass(XClass):
         self.xList = self.p
 
     def nrm(self):
-        a = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        a = self.zscore(self.xList, axis=-1, reverse=False)
         self.xList = a.tolist()

@@ -40,5 +40,5 @@ class PostPositionClass(XClass):
 
         # zscore
         # 内側有利とする
-        nPostPositionList = self.zscore(np.array(self.xList), axis=-1, reverse=True)
+        nPostPositionList = self.zscore(self.xList, axis=-1, reverse=True)
         self.xList = nPostPositionList.tolist()

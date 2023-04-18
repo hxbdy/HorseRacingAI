@@ -37,5 +37,5 @@ class MoneyClass(XClass):
         # for m in self.xList:
         #     moneyNrmList.append(m / money1st)
         # self.xList = moneyNrmList
-        money = self.zscore(np.array(self.xList), axis=-1, reverse=False)
+        money = self.zscore(self.xList, axis=-1, reverse=False)
         self.xList = money.tolist()
