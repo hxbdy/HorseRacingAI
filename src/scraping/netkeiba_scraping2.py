@@ -28,6 +28,8 @@ import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
 from debug         import stream_hdl, file_hdl
+
+from deepLearning_common import write_RaceInfo
 from RaceInfo      import RaceInfo
 
 logger = logging.getLogger(__name__)
@@ -66,6 +68,10 @@ col_name_dict = {
     "獲得賞金":"earned", "通算成績":"lifetime_record", "主な勝鞍":"main_winner", "近親馬":"relative", "調教師":"trainer"
 }
 
+# 曜日辞書
+# date.weekday()で取得できる曜日と文字列の対応
+weekday = {0: "月", 1: "火", 2: "水", 3: "木", 4: "金", 5: "土", 6: "日"}
+
 # race_info テーブル
 race_info_col_name_dict = (
     "date","venue","horse_num","post_position","horse_number","odds","fav","result","jockey_id",
@@ -83,12 +89,6 @@ race_result_col_name_dict = (
 )
 
 ####################################################################################
-
-# TODO: マージまでの残件
-# 1. jockeyテーブル更新
-# 2. DBのインデックス貼り付けを自動でやる
-# 3. DBの初期化、当日の予測、定期更新ができることを確認する
-# 4. エンコードを実行し互換性を保持できていることを確認する
 
 def update_database_predict(driver, horseID_list):
     """レース直前に、レース結果の予想に必要なデータのみを集める。
@@ -114,6 +114,10 @@ def scrape_race_today(driver, raceID):
     """
     raceInfo = RaceInfo()
     raceInfo.race_id = raceID
+
+    # 何レース目かはrace_idの末尾2文字
+    # 自動投票に必要
+    raceInfo.race_no = raceID[-2:] + 'R'
     
     # サイトにアクセス
     url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
@@ -143,9 +147,13 @@ def scrape_race_today(driver, raceID):
         raceInfo.course_condition = '良'
     
     racedata02 = driver.find_element(By.CLASS_NAME, "RaceData02").find_elements(By.TAG_NAME, "span")
-    #venue = racedata02[1].text            # '中山'
+    venue = racedata02[1].text            # '中山'
     prize_str = racedata02[-1].text       # '本賞金:1840,740,460,280,184万円'
     raceInfo.prize = re.findall(r"\d+", prize_str) # ['1840', '740', '460', '280', '184']
+
+    # 開催地 + 曜日 表記
+    # 自動投票に必要
+    raceInfo.venue = venue + '(' + weekday[raceInfo.date.weekday()] + ')'
 
     # テーブルから
     shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
@@ -196,6 +204,10 @@ def scrape_race_today(driver, raceID):
     raceInfo.jockey_id = list(map(lambda x: x[4], contents))
     raceInfo.horse_weight = list(map(lambda x: x[5], contents))
     
+    print("開催地")
+    print(raceInfo.venue)
+    print("レース")
+    print(raceInfo.race_no)
     print("枠")
     print(raceInfo.post_position)
     print("馬番")
@@ -954,9 +966,6 @@ if __name__ == "__main__":
     # 並列スクレイピング数読み込み
     process_num = int(private_ini("scraping", "process_num"))
 
-    # tmpファイルパス読み込み
-    path_tmp = path_ini("common", "path_tmp")
-
     # 引数パース
     parser = argparse.ArgumentParser()
     parser.add_argument('--init', action='store_true', default=False, help='init database and scrape until today') # DB初期化
@@ -1042,8 +1051,7 @@ if __name__ == "__main__":
         update_database_predict(driver, a.horse_id)
 
         # 推測用に取得したレース情報を一時保存
-        with open(path_tmp, 'wb') as f:
-            pickle.dump(a, f)
+        write_RaceInfo(a)
 
         driver.quit()
 

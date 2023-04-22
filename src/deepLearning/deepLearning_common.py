@@ -137,3 +137,12 @@ def read_RaceInfo(race_id = ""):
     else:
         param = raceinfo_by_raceID(str(race_id))
         return param
+
+def write_RaceInfo(param: RaceInfo):
+    """RaceInfoオブジェクトを保存
+    """
+    path_tmp = path_ini('common', 'path_tmp')
+
+    # 推測用に取得したレース情報を一時保存
+    with open(path_tmp, 'wb') as f:
+        pickle.dump(param, f)

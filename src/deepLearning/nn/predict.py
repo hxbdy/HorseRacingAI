@@ -7,9 +7,10 @@ np = xross.facttory_xp()
 from iteration_utilities import deepflatten
 
 from multi_layer_net_extend import MultiLayerNetExtend
-from deepLearning_common    import read_RaceInfo, prob_win
+from deepLearning_common    import read_RaceInfo, write_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
+import RaceInfo
 
 # ==========================================================================
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     # 推測するレースを設定する
     # tmp_param = read_RaceInfo('202206050811') # race_id 指定(データベースから)
-    tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
+    tmp_param:RaceInfo = read_RaceInfo() # 当日推測用(pickleファイルから)
     print("predict race_id = ", tmp_param.race_id)
 
     # ======================================================================
@@ -48,3 +49,6 @@ if __name__ == "__main__":
     # 推測
     y = list(deepflatten(network.predict(x)))
     prob_win(y)
+
+    # 推測結果を保存
+    write_RaceInfo(y)

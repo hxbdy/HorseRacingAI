@@ -1,8 +1,10 @@
 import time
 
 import webdriver_functions as wf
+import RaceInfo
 
-from file_path_mgr import private_ini
+from file_path_mgr       import private_ini
+from deepLearning_common import read_RaceInfo
 
 class AutoBet:
     def __init__(self) -> None:
@@ -33,7 +35,7 @@ class AutoBet:
         wf.input_text(self.driver, '//*[@id="main_area"]/div/div[1]/table/tbody/tr[3]/td[2]/span/input', self.p_ars_id)
         wf.click_button(self.driver, '//*[@id="main_area"]/div/div[1]/table/tbody/tr[1]/td[3]/p/a')
 
-    # Venew
+    # venue
     def _click_tokyo_sat(self):
         wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[1]/div[1]/button')
     def _click_tokyo_sun(self):
@@ -71,7 +73,7 @@ class AutoBet:
     def _click_12R(self):
         wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[4]/div[12]/button')
 
-    def _getVenew(self, venew):
+    def _getvenue(self, venue):
         d = {
             "東京(土)" : self._click_tokyo_sat,
             "東京(日)" : self._click_tokyo_sun,
@@ -79,7 +81,7 @@ class AutoBet:
             "京都(日)" : self._click_kyoto_sun,
             "福島(土)" : self._click_fukushima_sat
         }
-        return d[venew]
+        return d[venue]
 
     def _getRaceNo(self, race_no):
         d = {
@@ -133,7 +135,7 @@ class AutoBet:
 
     ####################################################################
 
-    def bet(self, venew, race_no, type, method, horse_no, money):
+    def bet(self, venue, race_no, type, method, horse_no, money):
         # driver init
         self._init_driver()
         
@@ -145,7 +147,7 @@ class AutoBet:
         self._normal_bet()
 
         time.sleep(1)
-        self._getVenew(venew)()
+        self._getvenue(venue)()
         self._getRaceNo(race_no)()
         self._select_type(type)
         self._select_method(method)
@@ -166,9 +168,10 @@ class AutoBet:
 
         if confirm.lower == "y":
             self._buy()
+        else:
+            print("betting cancel")
 
         # driver finalize
-        print("betting cancel")
         time.sleep(10)
         self._final_driver()
 
@@ -177,4 +180,7 @@ class AutoBet:
 if __name__ == "__main__":
     better = AutoBet()
 
-    better.bet(venew="東京(土)", race_no="12R", type="ワイド", method="ボックス", horse_no=[1, 2, 3], money=100)
+    # レース情報読み込み
+    tmp_param:RaceInfo = read_RaceInfo()
+
+    better.bet(venue=tmp_param.venue, race_no=tmp_param.race_no, type="ワイド", method="ボックス", horse_no=[1, 2, 3], money=100)
