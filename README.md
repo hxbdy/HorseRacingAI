@@ -38,6 +38,8 @@
 8. [Pandas :: Anaconda.org](https://anaconda.org/anaconda/pandas)
 9. [Psutil :: Anaconda.org](https://anaconda.org/conda-forge/psutil)
 10. [Py Cord :: Anaconda.org](https://anaconda.org/conda-forge/py-cord)
+11. [Schedule :: Anaconda.org](https://anaconda.org/conda-forge/schedule)
+12. [Rich :: Anaconda.org](https://anaconda.org/conda-forge/rich)
 
 ## PATH
 conda 仮想環境上で各フォルダへパスを通す作業が必要です。  

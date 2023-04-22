@@ -1,7 +1,13 @@
+# 推測後に保存されるraceinfo構造体の情報を使って
+# お金を賭ける直前までブラウザを制御する
+# 最終確認はコンソールで行う
+
 import time
 
 import webdriver_functions as wf
 import RaceInfo
+
+from selenium.webdriver.common.by import By
 
 from file_path_mgr       import private_ini
 from deepLearning_common import read_RaceInfo
@@ -36,16 +42,16 @@ class AutoBet:
         wf.click_button(self.driver, '//*[@id="main_area"]/div/div[1]/table/tbody/tr[1]/td[3]/p/a')
 
     # venue
-    def _click_tokyo_sat(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[1]/div[1]/button')
-    def _click_tokyo_sun(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[2]/div[1]/button')
-    def _click_kyoto_sat(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[1]/div[2]/button')
-    def _click_kyoto_sun(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[2]/div[2]/button')
-    def _click_fukushima_sat(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[2]/div[1]/div[3]/button')
+    def _click_venue(self, venue):
+        elements = self.driver.find_elements(By.CLASS_NAME, 'place-btn-area block-inline gutter-sm ng-scope')
+        for element in elements:
+            text = element.text
+            print("text = ", text)
+            text = text.replace('(','（')
+            text = text.replace(')','）')
+            if text == venue:
+                element.click()
+                break
 
     # RaceNo
     def _click_1R(self):
@@ -72,16 +78,6 @@ class AutoBet:
         wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[4]/div[11]/button')
     def _click_12R(self):
         wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/select-course-race/div/div[2]/div[2]/div[4]/div[12]/button')
-
-    def _getvenue(self, venue):
-        d = {
-            "東京(土)" : self._click_tokyo_sat,
-            "東京(日)" : self._click_tokyo_sun,
-            "京都(土)" : self._click_kyoto_sat,
-            "京都(日)" : self._click_kyoto_sun,
-            "福島(土)" : self._click_fukushima_sat
-        }
-        return d[venue]
 
     def _getRaceNo(self, race_no):
         d = {
@@ -149,7 +145,7 @@ class AutoBet:
         self._normal_bet()
 
         time.sleep(1)
-        self._getvenue(venue)()
+        self._click_venue(venue)
         self._getRaceNo(race_no)()
         self._select_type(type)
         self._select_method(method)
@@ -166,7 +162,7 @@ class AutoBet:
         # confirm
         self._vote()
 
-        confirm = input("BET? PRESS Y/[N] : ")
+        confirm = input("BET? PRESS Y/[N]\n")
 
         if confirm.lower() == "y":
             self._buy()
@@ -174,7 +170,7 @@ class AutoBet:
             print("bet cancel")
 
         # driver finalize
-        input("input any key to exit...")
+        input("input any key to exit...\n")
         self._final_driver()
 
 

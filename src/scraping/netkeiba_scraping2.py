@@ -117,7 +117,8 @@ def scrape_race_today(driver, raceID):
 
     # 何レース目かはrace_idの末尾2文字
     # 自動投票に必要
-    raceInfo.race_no = raceID[-2:] + 'R'
+    # 01R は 1R に直す必要があるので、一度intにしてからstrに変換する
+    raceInfo.race_no = str(int(raceID[-2:])) + 'R'
     
     # サイトにアクセス
     url = "https://race.netkeiba.com/race/shutuba.html?race_id={}&rf=top_pickup".format(str(raceID))
