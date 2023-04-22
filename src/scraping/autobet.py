@@ -131,7 +131,9 @@ class AutoBet:
         wf.input_text(self.driver, '//*[@id="bet-list-top"]/div[5]/table/tbody/tr[6]/td/input', money)
 
     def _buy(self):
-        wf.click_button(self.driver, '//*[@id="bet-list-top"]/div[5]/table/tbody/tr[5]/td/button')
+        wf.click_button(self.driver, '//*[@id="bet-list-top"]/div[5]/table/tbody/tr[7]/td/button')
+        time.sleep(1)
+        wf.click_button(self.driver, '/html/body/error-window/div/div/div[3]/button[1]')
 
     ####################################################################
 
@@ -164,15 +166,15 @@ class AutoBet:
         # confirm
         self._vote()
 
-        confirm = input("BET? PRESS Y/[N]")
+        confirm = input("BET? PRESS Y/[N] : ")
 
-        if confirm.lower == "y":
+        if confirm.lower() == "y":
             self._buy()
         else:
-            print("betting cancel")
+            print("bet cancel")
 
         # driver finalize
-        time.sleep(10)
+        input("input any key to exit...")
         self._final_driver()
 
 
@@ -183,4 +185,7 @@ if __name__ == "__main__":
     # レース情報読み込み
     tmp_param:RaceInfo = read_RaceInfo()
 
-    better.bet(venue=tmp_param.venue, race_no=tmp_param.race_no, type="ワイド", method="ボックス", horse_no=[1, 2, 3], money=100)
+    # ベット内容確認
+    bet1, bet2, bet3 = tmp_param.predict_y[0:3]
+
+    better.bet(venue=tmp_param.venue, race_no=tmp_param.race_no, type="ワイド", method="ボックス", horse_no=[bet1 + 1, bet2 + 1, bet3 + 1], money=100)

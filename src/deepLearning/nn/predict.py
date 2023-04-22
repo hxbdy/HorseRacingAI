@@ -48,7 +48,8 @@ if __name__ == "__main__":
 
     # 推測
     y = list(deepflatten(network.predict(x)))
-    prob_win(y)
+    y = prob_win(y)
 
     # 推測結果を保存
-    write_RaceInfo(y)
+    tmp_param.predict_y = y
+    write_RaceInfo(tmp_param)
