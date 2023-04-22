@@ -76,23 +76,33 @@ src;\
 
 ## private.ini
 ./src/private.ini を作成して以下を記入して保存してください。  
+- scrapingカテゴリ  
 メールとパスワードはネット競馬にログインするために使用します。
-discordカテゴリはdiscordからコードを実行するために必要です。
+- discordカテゴリ  
+discordのbotを用意するとチャットを通じてコードを実行することができます。
+- jraカテゴリ  
+学習結果を用いて自動投票するために必要です。
 
 ```txt:whatprivate.ini
 [scraping]
 browser = Chrome or FireFox
-mail = hogehoge@mail.com
-pass = password
-process_num = 4
+mail = 
+pass = 
+process_num = 
 
 [nn]
 # 行列演算ハード指定 GPU or CPU
-calculator = GPU
+calculator = 
 
 [discord]
-DISCORD_SERVER_ID = XXXXXXXXXX
-TOKEN = XXXXXXXXXX.XXXXXXXXXX.XXXXXXXXXX
+DISCORD_SERVER_ID = 
+TOKEN = 
+
+[jra]
+INET_ID = 
+MEMBER_ID = 
+P_ARS_ID = 
+PASS = 
 
 ```
 ## resrc

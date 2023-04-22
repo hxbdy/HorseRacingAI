@@ -81,12 +81,34 @@ def select_from_dropdown(driver, select_name, select_value):
     select = Select(driver.find_element(By.NAME, str(select_name)))
     select.select_by_value(str(select_value))
 
+def select_from_id_dropdown(driver, id, select_value):
+    """ドロップダウン から値を適用する(id使用)
+    """
+    select = Select(driver.find_element(By.ID, id))
+    select.select_by_visible_text(str(select_value))
+
 def click_checkbox(driver, checkbox_id):
     """チェックボックスをクリックする
     """
     driver.find_element(By.ID, str(checkbox_id)).click()
 
+def click_js_checkbox(driver, checkbox_id):
+    """チェックボックスをjsでクリックする
+    """
+    element = driver.find_element(By.ID, str(checkbox_id))
+    driver.execute_script('arguments[0].click();', element)
+
 def click_button(driver, xpath):
     """ボタンをクリックする
     """
     driver.find_element(By.XPATH, xpath).click()
+
+def input_text(driver, xpath, text):
+    """テキストボックスに入力する
+    """
+    driver.find_element(By.XPATH, xpath).send_keys(text)
+
+def get_class_text(driver, xpath):
+    """タグの中から文字列を取得する
+    """
+    return driver.find_element(By.XPATH, xpath).text
