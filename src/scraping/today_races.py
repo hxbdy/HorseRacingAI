@@ -74,6 +74,16 @@ class TodayRaces:
     
     def _sort_dict_value(self, dic):
         return dict(sorted(dic.items(), key = lambda dic : dic[1]))
+    
+    def _del_finished_race(self, dic):
+        dt_now = datetime.datetime.now()
+        dt_now = dt_now.strftime('%H:%M')
+        resize_race_time_dict = dic.copy()
+        for race_id in dic.keys():
+            start_time = dic[race_id]
+            if dt_now > start_time:
+                del resize_race_time_dict[race_id]
+        return resize_race_time_dict
 
     def get(self):
         self._init_driver()
@@ -85,9 +95,12 @@ class TodayRaces:
         race_time_dict = self._sort_dict_value(race_time_dict)
         print(race_time_dict)
 
+        # 既に過ぎたレースは削除
+        resize_race_time_dict = self._del_finished_race(race_time_dict)
+        
         self._final_driver()
 
-        return race_time_dict
+        return resize_race_time_dict
 
 
 ############################################################################

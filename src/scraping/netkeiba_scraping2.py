@@ -19,6 +19,7 @@ from dateutil.relativedelta import relativedelta
 from multiprocessing        import Process, Queue
 from collections            import deque
 
+import selenium
 from selenium.webdriver.common.by import By
 import pandas as pd
 import numpy as np
@@ -100,9 +101,11 @@ def update_database_predict(driver, horseID_list):
     nf = NetkeibaDB_IF("ROM")
 
     for horse_id in horseID_list:
+        # race_infoは取得に失敗するとNoneが返ってくる
         prof, race_info = scrape_horsedata(driver, horse_id)
         nf.db_insert_pandas(prof, "horse_prof")
-        nf.db_insert_pandas(race_info, "race_info")
+        if race_info is not None:
+            nf.db_insert_pandas(race_info, "race_info")
 
     #reconfirm_check()
     logger.info("update_horsedata_only comp")
@@ -571,10 +574,15 @@ def login(driver, mail_address, password):
 ####################################################################################
 
 def build_perform_contents(driver, horseID):
-    ## 競走成績テーブルの取得
+    """ 競走成績テーブルの取得 
+    取得に失敗した場合はNoneを返す"""
+
     logger.debug('get result table')
 
-    element_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
+    try:
+        element_table = driver.find_element(By.XPATH, "//*[@class='db_h_race_results nk_tb_common']")
+    except selenium.common.exceptions.NoSuchElementException:
+        return None
     
     # 表のテキスト取得
     html = element_table.get_attribute('outerHTML')
@@ -751,7 +759,7 @@ def scrape_horsedata(driver, horseID):
     race_info = build_perform_contents(driver, horseID)
 
     ## 競走成績のデータ取得が成功したかどうかを、通算成績の出走数と競走成績の行数で判定
-    if num_entry_race == len(race_info):
+    if (race_info is not None) and (num_entry_race == len(race_info)):
         check = "1" # OK
     else:
         check = "0" # データ欠損アリ (prof_tableとperform_tableで一致しない)
@@ -951,6 +959,8 @@ def scrape_horse_result(queue, horse_id_list, driver):
     try:
         for race_id in checked_list:
             horse_prof_data, race_info_data = scrape_horsedata(driver, race_id)
+            if race_info_data is None:
+                raise Exception
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
     except Exception as e:
         print("Exception", e.args)
