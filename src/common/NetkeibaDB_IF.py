@@ -105,7 +105,61 @@ class NetkeibaDB_IF:
 
     def db_race_list_race_data1(self, race_id):
         # race_result テーブルの race_data1 列のデータを取得する
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        # TODO: それぞれを分割して取得しやすいようにリファクタ
         return self.netkeibaDB.sql_mul_tbl("race_result", ["race_data1"], ["race_id"], [race_id], False)
+    
+    def db_race_start_time(self, race_id):
+        raceData1List = self.db_race_list_race_data1(race_id)
+        # 出走時刻取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = raceData1List[0].split("/")[3]
+        #  発走 : 15:35
+        sep1 = sep1.split(" : ")[1]
+        #  15:35
+        sep1 = sep1.replace(" ", "")
+        return sep1
+    
+    def db_race_distance(self, race_id):
+        raceData1List = self.db_race_list_race_data1(race_id)
+        # 距離取得
+        # 3桁以上4桁以下の数値のみ取り出す。
+        # 例えば、https://race.netkeiba.com/race/result.html?race_id=201306050111 では
+        # '芝右 内2周3600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:25'
+        # のように、距離よりも前に別情報の数値があるケースに対応する。
+        num_list = re.findall('\d{3,4}', raceData1List[0])
+        return float(num_list[0])
+    
+    def db_race_weather(self, race_id):
+        raceData1List = self.db_race_list_race_data1(race_id)
+        sep1 = raceData1List[0].split(":")[1]
+        #  晴 / 芝 
+        sep1 = sep1.split("/")[0]
+        # 晴 
+        sep1 = sep1.replace(" ", "")
+        return sep1
+    
+    def db_race_cource_condition(self, race_id):
+        raceData1List = self.db_race_list_race_data1(race_id)
+        # コース状態取得
+        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
+        sep1 = raceData1List[0].split(":")[2]
+        #  良 / 発走 
+        sep1 = sep1.split("/")[0]
+        # 良
+        sep1 = sep1.replace(" ", "")
+
+        return sep1
+    
+    def db_race_horse_weight(self, race_id):
+        horse_id_list = self.db_race_list_horse_id(race_id)
+
+        weight_list = []
+        for horse_id in horse_id_list:
+            weight = self.db_horse_weight(race_id, horse_id)
+            weight_list.append(weight)
+
+        return weight_list
 
     def db_race_list_horse_id(self, race_id):
         # 馬番でソートされた出走する馬のIDリストを返す

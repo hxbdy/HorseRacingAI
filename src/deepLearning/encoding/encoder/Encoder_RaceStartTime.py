@@ -13,16 +13,7 @@ logger.addHandler(file_hdl("RaceStartTimeClass"))
 class RaceStartTimeClass(XClass):
 
     def get(self):
-        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
-        # 出走時刻取得
-        # race_data1 => 芝右1600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:35
-        sep1 = raceData1List[0].split("/")[3]
-        #  発走 : 15:35
-        sep1 = sep1.split(" : ")[1]
-        #  15:35
-        sep1 = sep1.replace(" ", "")
-
-        self.xList = sep1
+        self.xList = self.nf.db_race_start_time(self.race_id)
 
     def fix(self):
         # 発走時刻の数値化(時*60 + 分)
