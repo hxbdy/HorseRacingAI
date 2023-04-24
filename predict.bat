@@ -1,5 +1,7 @@
-REM å½“æ—¥ãƒ¬ãƒ¼ã‚¹ã‚¹ã‚¯ãƒ¬ã‚¤ãƒ”ãƒ³ã‚° + æŽ¨æ¸¬ + è³­ã‘ã‚‹
-REM !! ã“ã“ã§å­¦ç¿’ã¯è¡Œã‚ãªã„ã€‚å­¦ç¿’ã¯ prepare.bat
+CHCP 932
+
+REM “–“úƒŒ[ƒXƒXƒNƒŒƒCƒsƒ“ƒO + „‘ª + “q‚¯‚é
+REM !! ‚±‚±‚ÅŠwK‚Ís‚í‚È‚¢BŠwK‚Í prepare.bat
 
 REM scrape
 python ./src/scraping/netkeiba_scraping2.py %1 %2 %3
