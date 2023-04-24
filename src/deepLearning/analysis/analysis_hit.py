@@ -2,6 +2,7 @@
 # 正解したレース、不正解だったレースを確認できるSQLファイルを生成する
 
 import pickle
+import os
 
 from iteration_utilities import deepflatten
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 
     start_year = 1986
     end_year = 2020
-    race_id_list = nf.db_race_list_id(start_year, end_year, 10)
+    race_id_list = nf.db_race_list_id(start_year, end_year, -1)
     hit = []
     miss = []
     # ======================================================================
@@ -77,11 +78,12 @@ if __name__ == "__main__":
         print("acc = {0}".format(len(hit) / len(race_id_list)))
 
     # 予測したrace_idの的中/非的中を確認するためのSQL作成
-    with open("hit.sql", 'w') as f:
+    os.makedirs("./dst/analysis", exist_ok=True)
+    with open("./dst/analysis/hit.sql", 'w') as f:
         hit_race_id = " OR ".join(map(lambda x: 'race_id="{0}"'.format(x), hit))
         hit_race_id = "SELECT * FROM race_info WHERE " + hit_race_id + ";"
         f.write(hit_race_id)
-    with open("miss.sql", 'w') as f:
+    with open("./dst/analysis/miss.sql", 'w') as f:
         miss_race_id = " OR ".join(map(lambda x: 'race_id="{0}"'.format(x), miss))
         miss_race_id = "SELECT * FROM race_info WHERE " + miss_race_id + ";"
         f.write(miss_race_id)
