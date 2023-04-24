@@ -1,3 +1,4 @@
+CHCP 932
 
 REM encoding
 python ./src/deepLearning/encoding/encodingMain.py
