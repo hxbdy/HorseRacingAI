@@ -1,18 +1,13 @@
-import logging
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import re
 import numpy as np
 
 from iteration_utilities import deepflatten
 
 from Encoder_X import XClass
-from debug     import stream_hdl, file_hdl
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("HorseWeightClass"))
 
 class HorseWeightClass(XClass):
 

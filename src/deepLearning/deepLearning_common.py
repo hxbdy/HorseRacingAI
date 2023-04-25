@@ -2,23 +2,18 @@ import pickle
 import os
 import shutil
 import datetime
-import logging
+
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 from iteration_utilities import deepflatten
 
 from file_path_mgr import path_ini
-from debug         import stream_hdl, file_hdl
 from make_RaceInfo import raceinfo_by_raceID
 import RaceInfo
 import xross
 np = xross.facttory_xp()
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # 連番保存フォルダまでのパスを取得する
 def encoding_serial_dir_path(path_root):

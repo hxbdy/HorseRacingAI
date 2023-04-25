@@ -16,14 +16,9 @@ import os
 import sqlite3
 import pandas as pd
 
-from debug import stream_hdl, file_hdl
-
+from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("db"))
 
 class NetkeibaDB:
     def __init__(self, path_db, loc, read_only=False):

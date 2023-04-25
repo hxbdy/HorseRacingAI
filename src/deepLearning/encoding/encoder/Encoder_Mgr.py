@@ -1,18 +1,13 @@
-import copy
-import time
-import logging
-from multiprocessing import Process, Queue
-
-from debug     import stream_hdl, file_hdl
-from Encoder_X import XClass
-from NetkeibaDB_IF import NetkeibaDB_IF
-
+from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
+import copy
+import time
+from multiprocessing import Process, Queue
+
+from Encoder_X     import XClass
+from NetkeibaDB_IF import NetkeibaDB_IF
 
 class MgrClass:
     def __init__(self, start_year, end_year, XclassTbl, tclassTbl, limit = -1):

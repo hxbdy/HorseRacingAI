@@ -1,16 +1,11 @@
-import logging
-import numpy as np
-
-from NetkeibaDB_IF import NetkeibaDB_IF
-from debug     import stream_hdl, file_hdl
-from RaceInfo  import RaceInfo
-
+from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
+import numpy as np
+
+from NetkeibaDB_IF import NetkeibaDB_IF
+from RaceInfo      import RaceInfo
 
 class XClass:
     # 全インスタンス共通の変数

@@ -3,20 +3,15 @@
 # start_year <= data <= end_year のレースから limit 件取得する
 
 import shutil
-import logging
+
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 from Encoder_Mgr         import MgrClass
 from table               import XTbl, tTbl
 from deepLearning_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_newest_dir_path
-from debug               import stream_hdl, file_hdl
 from file_path_mgr       import path_ini
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 if __name__ == "__main__":
     

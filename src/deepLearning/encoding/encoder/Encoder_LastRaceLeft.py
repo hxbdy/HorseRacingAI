@@ -1,15 +1,10 @@
 from dateutil.relativedelta import relativedelta
 
-from Encoder_X import XClass
-from debug import stream_hdl, file_hdl
-import logging
-
+from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("LastRaceLeftClass"))
+from Encoder_X import XClass
 
 class LastRaceLeftClass(XClass):
 

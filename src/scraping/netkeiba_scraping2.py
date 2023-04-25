@@ -8,13 +8,15 @@
 # 1. 取得に失敗したIDを再度取得チャレンジするオプションの追加
 # 2. ログがフォーマット通り出力されない問題の対処
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import re
 import os
 import time
-import logging
 import argparse
 import datetime
-import pickle
 from dateutil.relativedelta import relativedelta
 from multiprocessing        import Process, Queue
 from collections            import deque
@@ -28,17 +30,9 @@ import psutil
 import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
-from debug         import stream_hdl, file_hdl
 
 from deepLearning_common import write_RaceInfo
 from RaceInfo      import RaceInfo
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # プロセス優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
