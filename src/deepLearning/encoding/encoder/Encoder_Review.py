@@ -1,8 +1,6 @@
 import numpy as np
 
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 from Encoder_X import XClass
 

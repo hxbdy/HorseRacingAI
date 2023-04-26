@@ -2,7 +2,7 @@
 # 正解したレース、不正解だったレースを確認できるSQLファイルを生成する
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import pickle
 import os

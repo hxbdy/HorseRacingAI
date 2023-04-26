@@ -18,7 +18,7 @@ import pandas as pd
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class NetkeibaDB:
     def __init__(self, path_db, loc, read_only=False):

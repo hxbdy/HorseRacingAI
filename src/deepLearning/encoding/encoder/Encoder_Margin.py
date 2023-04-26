@@ -1,6 +1,4 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 import numpy as np
 
@@ -56,12 +54,12 @@ class MarginClass(XClass):
                     pass
             horse_num_time_dict[horse_num] = time
 
-        logger.debug(horse_num_time_dict)
+        self.logger.debug(horse_num_time_dict)
 
         self.xList = sorted(horse_num_time_dict.items())
         self.xList = list(map(lambda x: x[1], self.xList))
 
-        logger.debug(self.xList)
+        self.logger.debug(self.xList)
 
     def pad(self):
         # 着差リスト拡張

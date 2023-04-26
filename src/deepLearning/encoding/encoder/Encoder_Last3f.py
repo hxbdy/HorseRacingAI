@@ -1,6 +1,4 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 import numpy as np
 
@@ -11,7 +9,7 @@ class Last3fClass(XClass):
     def get(self):
         # 出走馬リスト取得
         self.xList = self.nf.db_race_list_horse_id(self.race_id)
-        logger.debug("horse_id = {0}".format(self.xList))
+        self.logger.debug("horse_id = {0}".format(self.xList))
 
     def fix(self):
         # 直前のレースのあがり3Fのリストを作成する
@@ -19,7 +17,7 @@ class Last3fClass(XClass):
         for horse_id in self.xList:
             # 直前のレースIDを取得
             last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
-            logger.debug("last_race_id = {0}".format(last_race_id))
+            self.logger.debug("last_race_id = {0}".format(last_race_id))
 
             if (last_race_id == "None") or (len(last_race_id) == 0):
                 # 直前にレースに出走していないもしくはデータがない
@@ -36,7 +34,7 @@ class Last3fClass(XClass):
 
             last_3f_list.append(t)
 
-        logger.debug("last_3f_list = {0}".format(last_3f_list))
+        self.logger.debug("last_3f_list = {0}".format(last_3f_list))
             
         self.xList = last_3f_list
 

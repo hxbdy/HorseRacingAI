@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 def selfcheck(class_name, x):
     # コンソール表示上、有効桁数は2桁とする

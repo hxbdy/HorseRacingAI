@@ -9,7 +9,7 @@ from typing   import OrderedDict
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 from NetkeibaDB    import NetkeibaDB
 from file_path_mgr import path_ini

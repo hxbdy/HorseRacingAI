@@ -1,6 +1,4 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 import numpy as np
 
@@ -19,7 +17,7 @@ class PaceClass(XClass):
         for horse_id in self.xList:
             # 直前のレースidを取得する
             last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
-            logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
+            self.logger.debug("(race_id = {0}, horse_id = {1}) -> last race_id = {2}".format(self.race_id, horse_id, last_race_id))
 
             # 直前の race_idが見つからなかった場合、今回のrace_idをそのまま使う
             if len(last_race_id) == 0:

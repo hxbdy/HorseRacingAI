@@ -8,13 +8,14 @@
 # 5. ログの整理, __main__ エントリーポイントの削除
 # 6. 完
 
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 from Encoder_X import XClass
 
 class XXXClass(XClass):
+    # クラス内で使用するログは以下のようにself.を使用してください
+    # マルチプロセス用とシングル用でロガーに登録するハンドラが異なるためです
+    # self.log.debug('debug message')
 
     def get(self):
         # DB データ問い合わせを行う
@@ -49,6 +50,9 @@ if __name__ == "__main__":
     from NetkeibaDB_IF import NetkeibaDB_IF
     from selfcheck import selfcheck
     from iteration_utilities import deepflatten
+    from log import *
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
     # コンソール表示上、有効桁数は2桁とする
     np.set_printoptions(precision=2, linewidth=150)

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 from multi_layer_net_extend import MultiLayerNetExtend
 from util                   import shuffle_dataset

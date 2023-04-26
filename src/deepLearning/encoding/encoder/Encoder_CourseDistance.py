@@ -1,10 +1,5 @@
-import logging
 import re
 import numpy as np
-
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 from Encoder_X import XClass
 
@@ -34,6 +29,6 @@ class CourseDistanceClass(XClass):
         npcdList = np.array(self.xList)
         if ((npcdList > MAX_DISTANCE) or (npcdList < MIN_DISTANCE)):
             # データ取得に失敗している可能性
-            logger.warning("npcdList = {0}, race_id = {1}".format(npcdList, self.race_id))
+            self.logger.warning("npcdList = {0}, race_id = {1}".format(npcdList, self.race_id))
         npcdList = npcdList / MAX_DISTANCE
         self.xList = npcdList.tolist()

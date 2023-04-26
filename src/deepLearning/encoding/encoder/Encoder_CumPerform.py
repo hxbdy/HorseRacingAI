@@ -1,7 +1,3 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 import re
 
 from Encoder_X import XClass

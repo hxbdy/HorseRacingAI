@@ -6,7 +6,7 @@ import importlib
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 from file_path_mgr import private_ini
 

@@ -7,7 +7,7 @@ import os
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 from matplotlib import pyplot as plt
 

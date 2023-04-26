@@ -1,6 +1,4 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 import re
 import numpy as np
@@ -25,7 +23,7 @@ class HorseWeightClass(XClass):
         weight_list = []
         for row in self.xList:
             # row = 530(+5)
-            logger.debug("raw = {0}".format(row))
+            self.logger.debug("raw = {0}".format(row))
 
             try:
                 # base = "530"
@@ -33,7 +31,7 @@ class HorseWeightClass(XClass):
                 base, delta = re.findall("[\+\-]*\d+", row) 
             except (ValueError, TypeError):
                 # raw = 計不, None
-                logger.debug("failed to get horse_weight race_id = {0}".format(self.race_id))
+                self.logger.debug("failed to get horse_weight race_id = {0}".format(self.race_id))
                 # 競争馬平均kg
                 base = 470
                 delta = 0

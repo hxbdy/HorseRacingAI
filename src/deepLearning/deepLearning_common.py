@@ -5,7 +5,7 @@ import datetime
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 from iteration_utilities import deepflatten
 

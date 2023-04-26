@@ -1,6 +1,4 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 from Encoder_X import XClass
 
@@ -116,7 +114,7 @@ class UmamusumeClass(XClass):
                 for j in range(len(umamusumeTbl)):
                     if parent == umamusumeTbl[j]:
                         umamusume_family[j] = 1
-                        # logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
+                        # self.logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
 
     def pad(self):
