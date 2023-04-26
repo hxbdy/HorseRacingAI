@@ -4,6 +4,10 @@
 
 import time
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import webdriver_functions as wf
 import RaceInfo
 
@@ -46,7 +50,6 @@ class AutoBet:
         elements = self.driver.find_elements(By.CLASS_NAME, 'place-btn-area block-inline gutter-sm ng-scope')
         for element in elements:
             text = element.text
-            print("text = ", text)
             text = text.replace('(','（')
             text = text.replace(')','）')
             if text == venue:
@@ -167,7 +170,7 @@ class AutoBet:
         if confirm.lower() == "y":
             self._buy()
         else:
-            print("bet cancel")
+            logger.info("bet cancel")
 
         # driver finalize
         input("input any key to exit...\n")

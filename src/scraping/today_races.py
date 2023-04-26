@@ -6,8 +6,11 @@ import datetime
 import re
 import subprocess
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import schedule
-from rich.console import Console
 from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
@@ -93,7 +96,7 @@ class TodayRaces:
 
         # 出走時間でソート
         race_time_dict = self._sort_dict_value(race_time_dict)
-        print(race_time_dict)
+        logger.info(race_time_dict)
 
         # 既に過ぎたレースは削除
         resize_race_time_dict = self._del_finished_race(race_time_dict)
@@ -113,7 +116,7 @@ def bat_exe(race_id):
         
         line = proc.stdout.readline()
         if line:
-            print(line, end='')
+            logger.info(line, end='')
 
         if not line and proc.poll() is not None:
             break
@@ -129,7 +132,7 @@ if __name__ == "__main__":
     # race_time_dict = {"202305020201":"23:40"}
 
     for race_id in race_time_dict.keys():
-        print(race_id, race_time_dict[race_id])
+        logger.info("{0} {1}".format(race_id, race_time_dict[race_id]))
         schedule.every().day.at(race_time_dict[race_id]).do(bat_exe, race_id=race_id)
 
     console = Console()

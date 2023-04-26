@@ -78,7 +78,7 @@ if __name__ == "__main__":
         else:
             miss.append(race_id)
 
-        print("acc = {0}".format(len(hit) / len(race_id_list)))
+        logger.info("acc = {0}".format(len(hit) / len(race_id_list)))
 
     # 予測したrace_idの的中/非的中を確認するためのSQL作成
     os.makedirs("./dst/analysis", exist_ok=True)

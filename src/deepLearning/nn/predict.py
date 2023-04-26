@@ -1,5 +1,9 @@
 # レースを推測する
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import pickle
 import xross
 np = xross.facttory_xp()
@@ -28,7 +32,7 @@ if __name__ == "__main__":
     # 推測するレースを設定する
     # tmp_param = read_RaceInfo('202206050811') # race_id 指定(データベースから)
     tmp_param:RaceInfo = read_RaceInfo() # 当日推測用(pickleファイルから)
-    print("predict race_id = ", tmp_param.race_id)
+    logger.info("predict race_id = ", tmp_param.race_id)
 
     # ======================================================================
 
@@ -44,7 +48,7 @@ if __name__ == "__main__":
     x = np.array(list(deepflatten(x))).reshape(1, -1)
 
     # ======================================================================
-    print("x.shape = ", x.shape)
+    logger.info("x.shape = ", x.shape)
 
     # 推測
     y = list(deepflatten(network.predict(x)))

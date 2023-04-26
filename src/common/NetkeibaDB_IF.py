@@ -407,7 +407,6 @@ class NetkeibaDB_IF:
     def db_horse_review(self, horse_id):
         """レビュー値をfloatで返す。Noneはデフォルト値で埋める"""
         review = list(self.netkeibaDB.sql_one_review(horse_id))
-        # print("review = ", review)
         # レビューグラフの中央のピクセル数値
         pad_50 = (26.0, 58.0, 58.0, 26.0)
 

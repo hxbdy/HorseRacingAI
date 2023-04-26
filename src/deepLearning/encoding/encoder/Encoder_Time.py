@@ -1,7 +1,3 @@
-from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 import numpy as np
 from Encoder_X import XClass
 
@@ -17,7 +13,7 @@ class TimeClass(XClass):
             time_list.append(self.nf.db_race_time(self.race_id, horse_id))
         
         self.xList = time_list
-        logger.debug(self.xList)
+        self.logger.debug(self.xList)
 
     def pad(self):
         # 最下位のタイムで埋める

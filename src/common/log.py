@@ -8,6 +8,7 @@ import logging
 import logging.config
 
 from rich.logging import RichHandler
+from rich.console import Console
 
 CONFIG = '''
 {
@@ -15,7 +16,7 @@ CONFIG = '''
     "disable_existing_loggers": false,
     "formatters": {
         "simple_format": {
-            "format": "%(asctime)s %(filename)18s [%(levelname)10s] %(message)s"
+            "format": "%(asctime)s %(filename)23s [%(levelname)10s] %(message)s"
         }
     },
     "handlers": {
@@ -24,7 +25,7 @@ CONFIG = '''
             "formatter": "simple_format",
             "filename": "./dst/log/output.log",
             "mode": "w",
-            "level": "WARN"
+            "level": "WARNING"
         },
         "rich": {
             "class": "rich.logging.RichHandler",

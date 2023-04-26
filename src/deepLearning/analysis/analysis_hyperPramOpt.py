@@ -8,9 +8,13 @@ import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 from multi_layer_net_extend import MultiLayerNetExtend
-from util import shuffle_dataset
-from trainer import Trainer
+from util                   import shuffle_dataset
+from trainer                import Trainer
 
 from file_path_mgr       import path_ini
 from deepLearning_common import encoding_load, encoding_serial_dir_path
@@ -62,20 +66,20 @@ for i in range(optimization_trial):
     # ================================================
 
     val_acc_list, train_acc_list = __train(lr, weight_decay)
-    print("attempts No." + str(i) +" val acc:" + str(val_acc_list[-1]) + " | lr:" + str(lr) + ", weight decay:" + str(weight_decay))
+    logger.info("attempts No." + str(i) +" val acc:" + str(val_acc_list[-1]) + " | lr:" + str(lr) + ", weight decay:" + str(weight_decay))
     key = "lr:" + str(lr) + ", weight decay:" + str(weight_decay)
     results_val[key] = val_acc_list
     results_train[key] = train_acc_list
 
 # グラフの描画========================================================
-print("=========== Hyper-Parameter Optimization Result ===========")
+logger.info("=========== Hyper-Parameter Optimization Result ===========")
 graph_draw_num = 20
 col_num = 5
 row_num = int(np.ceil(graph_draw_num / col_num))
 i = 0
 
 for key, val_acc_list in sorted(results_val.items(), key=lambda x:x[1][-1], reverse=True):
-    print("Best-" + str(i+1) + "(val acc:" + str(val_acc_list[-1]) + ") | " + key)
+    logger.info("Best-" + str(i+1) + "(val acc:" + str(val_acc_list[-1]) + ") | " + key)
 
     plt.subplot(row_num, col_num, i+1)
     plt.title("Best-" + str(i+1))

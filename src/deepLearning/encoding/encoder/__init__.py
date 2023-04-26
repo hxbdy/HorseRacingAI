@@ -6,9 +6,6 @@
 # python - relative import from __init__.py file throws error - Stack Overflow
 # https://stackoverflow.com/questions/22942650/relative-import-from-init-py-file-throws-error
 
-# マネージャ
-from . import Encoder_Mgr
-
 # 各エンコーダの親
 from . import Encoder_X
 

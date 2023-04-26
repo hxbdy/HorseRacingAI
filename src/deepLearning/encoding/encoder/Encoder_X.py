@@ -1,6 +1,6 @@
 from log import *
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
+import multiprocessing
 
 import numpy as np
 
@@ -12,17 +12,26 @@ class XClass:
     race_id:str        = '0'
     pad_size:int       = 18
     race_info:RaceInfo = RaceInfo()
+    
+    # 自身が子プロセスか判断するために使う
+    is_child:bool      = False
 
     def __init__(self):
         self.xList = []
         self.nf:NetkeibaDB_IF = NetkeibaDB_IF("RAM", read_only=True)
+
+        if XClass.is_child:
+            self.logger = multiprocessing.get_logger()
+            self.logger.setLevel(logging.WARNING)
+        else:
+            self.logger = logging.getLogger(self.__class__.__name__)
+            self.logger.setLevel(logging.INFO)
         
     def set(self, target_race_id):
         XClass.race_id = target_race_id
 
     def get(self):
-        if XClass.race_id == '0':
-            logger.critical("race_id == 0 !!")
+        pass
 
     def fix(self):
         pass
@@ -50,8 +59,6 @@ class XClass:
         self.fix()
         self.pad()
         self.nrm()
-        if (np.max(self.xList) > 1.1) or (np.min(self.xList) < -0.1):
-            logger.debug("CHECK encoded value !! , max = {0:4.2f}, min = {1:4.2f}, encoder = {2}".format(np.max(self.xList), np.min(self.xList), self.__class__))
         return self.xList
     
     # =======================
