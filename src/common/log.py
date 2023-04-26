@@ -34,7 +34,7 @@ CONFIG = '''
         }
     },
     "root": {
-        "level": "DEBUG",
+        "level": "INFO",
         "handlers": [
             "file",
             "rich"

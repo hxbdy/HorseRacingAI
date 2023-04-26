@@ -4,6 +4,7 @@ import time
 from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+console = Console()
 
 import xross
 np = xross.facttory_xp()
@@ -71,14 +72,18 @@ class Trainer:
 
             if self.verbose:
                 time_epoch = time.perf_counter()
-                logger.info("=== epoch:" + str(self.current_epoch) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc) + ", time:" + str(time_epoch - self.time_now) + " ===")
+                c = "=== epoch :" + str(self.current_epoch) + ", train acc :" + str(train_acc) + ", test acc :" + str(test_acc) + ", time :" + str(time_epoch - self.time_now) + " ==="
+                console.log(c)
                 self.time_now = time_epoch
 
         self.current_iter += 1
 
     def train(self):
-        for _ in range(self.max_iter):
-            self.train_step()
+        
+        with console.status("[bold green]Waiting for learning ...", spinner='material') as status:
+            for _ in range(self.max_iter):
+                status.update(self.train_step())
+            console.log(f'[bold][red]Done')
 
         test_acc = self.network.accuracy(self.x_test, self.t_test)
 
