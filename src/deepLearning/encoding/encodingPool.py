@@ -29,6 +29,8 @@ def encode(encoder, race_id_list):
     # マルチプロセス実行なので、各エンコードクラスは子プロセスにて実行する
     instance.is_child = True
 
+    # TODO: 同じ行に複数エンコーダが表示される
+    # imapは複数argsを渡せないため要別案
     for race_id in track(race_id_list, description="[bold green]{0:25s} encoding... ".format(instance.__class__.__name__)):
         # エンコード対象のrace_idをセットする
         instance.set(race_id)
