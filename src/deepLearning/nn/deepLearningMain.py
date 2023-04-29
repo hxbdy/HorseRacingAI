@@ -5,6 +5,10 @@
 import shutil
 from matplotlib import pyplot as plt
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 from multi_layer_net_extend import MultiLayerNetExtend
 from trainer                import Trainer
 from util                   import shuffle_dataset
@@ -64,7 +68,7 @@ lr           = 0.0017072433461073357
 # ================================================
 
 test_acc_list, train_acc_list = __train(lr, weight_decay, epocs=500)
-print("train acc:" + str(train_acc_list[-1]))
+logger.info("train acc:" + str(train_acc_list[-1]))
 
 plt.figure() # 新規ウインドウ
 plt.title("acc")

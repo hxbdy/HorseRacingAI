@@ -1,14 +1,6 @@
-import logging
+
 
 from Encoder_X import XClass
-from debug     import stream_hdl, file_hdl
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("UmamusumeClass"))
 
 class UmamusumeClass(XClass):
 
@@ -122,7 +114,7 @@ class UmamusumeClass(XClass):
                 for j in range(len(umamusumeTbl)):
                     if parent == umamusumeTbl[j]:
                         umamusume_family[j] = 1
-                        # logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
+                        # self.logger.debug("parent has umamusume : {0}".format(umamusumeTbl[j]))
         self.xList = umamusume_family
 
     def pad(self):

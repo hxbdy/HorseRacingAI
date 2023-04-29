@@ -16,14 +16,9 @@ import os
 import sqlite3
 import pandas as pd
 
-from debug import stream_hdl, file_hdl
-
+from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("db"))
+logger.setLevel(logging.INFO)
 
 class NetkeibaDB:
     def __init__(self, path_db, loc, read_only=False):
@@ -82,33 +77,35 @@ class NetkeibaDB:
 
     # DBをRAM上に移して、以降の操作をRAM上で行う
     def _switch_RAM(self):
-        print("DB flush ROM -> RAM")
-        # RAM DBへのコネクション作成
-        dest = sqlite3.connect(':memory:')
-        self.conn.backup(dest)
-        # ROM DBへのコネクションを閉じる
-        self.cur.close()
-        self.conn.close()
-        # コネクション変数譲渡
-        self.conn = dest
-        # sqliteを操作するカーソルオブジェクトを作成
-        self.cur = self.conn.cursor()
-        print("comp")
+        console = Console()
+        with console.status("[bold green] DB ROM 2 RAM ...") as status:
+            # RAM DBへのコネクション作成
+            dest = sqlite3.connect(':memory:')
+            self.conn.backup(dest)
+            # ROM DBへのコネクションを閉じる
+            self.cur.close()
+            self.conn.close()
+            # コネクション変数譲渡
+            self.conn = dest
+            # sqliteを操作するカーソルオブジェクトを作成
+            self.cur = self.conn.cursor()
+            console.log("[bold green] DB ROM 2 RAM COMP !!")
 
     # DBをROM上に移して、以降の操作をROM上で行う
     def _switch_ROM(self):
-        print("DB flush RAM -> ROM")
-        # ROM DBへのコネクション作成
-        dest = sqlite3.connect(self.path_db)
-        self.conn.backup(dest)
-        # RAM DBへのコネクションを閉じる
-        self.cur.close()
-        self.conn.close()
-        # コネクション変数譲渡
-        self.conn = dest
-        # sqliteを操作するカーソルオブジェクトを作成
-        self.cur = self.conn.cursor()
-        print("comp")
+        console = Console()
+        with console.status("[bold green] DB RAM 2 ROM ...") as status:
+            # ROM DBへのコネクション作成
+            dest = sqlite3.connect(self.path_db)
+            self.conn.backup(dest)
+            # RAM DBへのコネクションを閉じる
+            self.cur.close()
+            self.conn.close()
+            # コネクション変数譲渡
+            self.conn = dest
+            # sqliteを操作するカーソルオブジェクトを作成
+            self.cur = self.conn.cursor()
+            console.log("[bold green] DB RAM 2 ROM COMP !!")
 
     def make_index(self):
         # エンコード高速化のためインデックスを貼る
@@ -386,8 +383,6 @@ class NetkeibaDB:
         sql += ' AND '.join(add_place_holder)
         sql += ';'
 
-        # print(sql)
-
         self.cur.execute(sql, key_data_list)
         self.conn.commit()
 
@@ -412,8 +407,6 @@ class NetkeibaDB:
 
 
         sql = "INSERT OR REPLACE INTO {0} ( {1} ) VALUES ( {2} );".format(table_name, col_name, replacement)
-
-        # print(sql)
 
         self.cur.executemany(sql, data_list)
         self.conn.commit()

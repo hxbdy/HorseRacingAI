@@ -49,8 +49,6 @@ if __name__ == "__main__":
         # 推測するレースを設定する
         tmp_param = read_RaceInfo(str(race_id)) # race_id 指定(データベースから)
         # tmp_param = read_RaceInfo() # 当日推測用(pickleファイルから)
-        # print("predict race_id = ", tmp_param.race_id)
-        # print("year = ", race_id[0:4])
         #     芝 G1: 1, G2: 2, G3: 3, 無印(OP): 4
         #     ダ G1: 6, G2: 7, G3: 8, 無印(OP): 9
         grade = nf.db_race_grade(str(race_id))
@@ -89,9 +87,6 @@ if __name__ == "__main__":
                 if predict_y[0] == i:
                     ans_hist[race_id[0:4]][grade] += 1
         ans_sum[race_id[0:4]][grade] += 1
-
-    print("ans_hist", ans_hist)
-    print("ans_sum", ans_sum)
 
     # 各年代のヒット率(ヒット数/レース数)
     percent_list_G1 = []

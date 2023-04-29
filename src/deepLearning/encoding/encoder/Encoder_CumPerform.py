@@ -1,16 +1,6 @@
-import logging
 import re
-import numpy as np
 
 from Encoder_X import XClass
-from debug     import stream_hdl, file_hdl
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("CumPerformClass"))
 
 class CumPerformClass(XClass):
 

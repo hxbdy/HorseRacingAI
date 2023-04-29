@@ -1,23 +1,14 @@
-import logging
-import numpy as np
+
+
 from dateutil.relativedelta import relativedelta
 
 from Encoder_X import XClass
-from debug     import stream_hdl, file_hdl
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("HorseAgeClass"))
 
 class HorseAgeClass(XClass):
 
     def get(self):
         if self.race_id == '0':
-            logger.critical("ERROR : SET race_id")
+            self.logger.critical("ERROR : SET race_id")
         else:
             # 出走馬の誕生日リストを作成
             horseList = self.nf.db_race_list_horse_id(self.race_id)
@@ -31,7 +22,7 @@ class HorseAgeClass(XClass):
 
     def fix(self):
         if self.d0 == 0:
-            logger.critical("ERROR : SET d0")
+            self.logger.critical("ERROR : SET d0")
         # 標準化の前に誕生日を日数表記にしておく
         bdList = self.xList
         for i in range(len(bdList)):

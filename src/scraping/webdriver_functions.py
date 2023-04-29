@@ -9,16 +9,10 @@ from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import time
-import logging
 
-from debug import stream_hdl, file_hdl
-
+from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # webdriver を保存するディレクトリ
 DRIVER_DIRECTORY = 'src\\scraping'

@@ -1,14 +1,5 @@
-from Encoder_X import XClass
-from debug import stream_hdl, file_hdl
-import logging
 import numpy as np
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("TimeClass"))
+from Encoder_X import XClass
 
 class TimeClass(XClass):
 
@@ -22,7 +13,7 @@ class TimeClass(XClass):
             time_list.append(self.nf.db_race_time(self.race_id, horse_id))
         
         self.xList = time_list
-        logger.debug(self.xList)
+        self.logger.debug(self.xList)
 
     def pad(self):
         # 最下位のタイムで埋める

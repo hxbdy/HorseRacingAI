@@ -4,6 +4,10 @@
 
 import time
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 import webdriver_functions as wf
 import RaceInfo
 
@@ -43,13 +47,11 @@ class AutoBet:
 
     # venue
     def _click_venue(self, venue):
-        elements = self.driver.find_elements(By.CLASS_NAME, 'place-btn-area block-inline gutter-sm ng-scope')
+        elements = self.driver.find_elements(By.CLASS_NAME, 'ng-binding')
         for element in elements:
-            text = element.text
-            print("text = ", text)
-            text = text.replace('(','（')
-            text = text.replace(')','）')
-            if text == venue:
+            text = element.text.strip()
+            logger.debug("{0} == {1} ?  {2}".format(text, venue, text == venue))
+            if venue in text:
                 element.click()
                 break
 
@@ -144,7 +146,7 @@ class AutoBet:
         # 通常投票
         self._normal_bet()
 
-        time.sleep(1)
+        time.sleep(3)
         self._click_venue(venue)
         self._getRaceNo(race_no)()
         self._select_type(type)
@@ -167,7 +169,7 @@ class AutoBet:
         if confirm.lower() == "y":
             self._buy()
         else:
-            print("bet cancel")
+            logger.info("bet cancel")
 
         # driver finalize
         input("input any key to exit...\n")

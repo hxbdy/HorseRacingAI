@@ -2,9 +2,6 @@
 
 import numpy as np
 
-# TODO: 1次元にも対応する
-
-
 def numpy_isin(a, b):
     """1D/2D用isin()
     a が b に含まれているかを True/Falseでaの形状を保持して返す
@@ -27,7 +24,6 @@ class Bet:
         1位を予想する賭け方"""
         y = np.argmax(y, axis=1)
         if t.ndim != 1 : t = np.argmax(t, axis=1)
-        # print("hit?        = ", np.sum(y == t))
         accuracy = np.sum(y == t) / float(t.shape[0])
         return accuracy
 
@@ -37,9 +33,6 @@ class Bet:
         1位、2位の組み合わせを予想する賭け方。着順は問わない"""
 
         # 昇順ソート済みインデックスのリストを作成
-        # print("predict y[0] = ", y[0])
-        # print("        t[0] = ", t[0])
-        
         sort_y = y.copy()
         sort_y = sort_y.argsort(axis=1)
 
@@ -60,7 +53,6 @@ class Bet:
         # (予想1位 == 正解2位) かつ (予想2位 == 正解1位)
         cnt_hit = np.sum(sort_y_1st == sort_t_1st) + np.sum(sort_y_2nd == sort_t_2nd) + \
                   np.sum(sort_y_1st == sort_t_2nd) + np.sum(sort_y_2nd == sort_t_1st)
-        # print("hit?        = ", cnt_hit)
 
         # Trueの数を数える
         accuracy = cnt_hit / float(t.shape[0])
@@ -73,9 +65,6 @@ class Bet:
         単勝を3頭買う。大体の場合赤字"""
 
         # 昇順ソート済みインデックスのリストを作成
-        # print("predict y[0] = ", y[0])
-        # print("        t[0] = ", t[0])
-        
         sort_y = y.copy()
         sort_y = sort_y.argsort(axis=1)
 
@@ -93,7 +82,6 @@ class Bet:
         
         # 予想の1位～3位と正解の1位を比較、
         cnt_hit = np.sum(sort_y_1st == sort_t_1st) + np.sum(sort_y_2nd == sort_t_1st) + np.sum(sort_y_3rd == sort_t_1st)
-        # print("hit?        = ", cnt_hit)
 
         # Trueの数を数える
         accuracy = cnt_hit / float(t.shape[0])
@@ -106,9 +94,6 @@ class Bet:
         単勝を2頭買う。おそらく赤字"""
 
         # 昇順ソート済みインデックスのリストを作成
-        # print("predict y[0] = ", y[0])
-        # print("        t[0] = ", t[0])
-        
         sort_y = y.copy()
         sort_y = sort_y.argsort(axis=1)
 
@@ -126,7 +111,6 @@ class Bet:
         
         # 予想の1位～2位と正解の1位を比較、
         cnt_hit = np.sum(sort_y_1st == sort_t_1st) + np.sum(sort_y_2nd == sort_t_1st)
-        # print("hit?        = ", cnt_hit)
 
         # Trueの数を数える
         accuracy = cnt_hit / float(t.shape[0])
@@ -148,9 +132,6 @@ class Bet:
         sort_t = sort_t.argsort(axis=1)
         sort_t = sort_t[:, -3:]
 
-        # print("predict y[0] = ", sort_y[0])
-        # print("        t[0] = ", sort_t[0])
-
         # y が t に含まれている数を計上
         isin = numpy_isin(sort_y, sort_t)
         # print("isin?        = ", isin[0])
@@ -159,7 +140,6 @@ class Bet:
         # 2頭以上の予想が含まれている
         cnt_hit = np.sum(isin_sum >= 2)
         
-        # print("hit?        = ", cnt_hit)
         accuracy = cnt_hit / float(t.shape[0])
 
         return accuracy
