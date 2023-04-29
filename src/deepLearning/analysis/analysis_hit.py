@@ -34,7 +34,7 @@ if __name__ == "__main__":
         network: MultiLayerNetExtend = pickle.load(f)
 
     # ======================================================================
-    nf = NetkeibaDB_IF("RAM")
+    nf = NetkeibaDB_IF("ROM", read_only=False)
 
     start_year = 1986
     end_year = 2020
@@ -81,12 +81,5 @@ if __name__ == "__main__":
         logger.info("acc = {0}".format(len(hit) / len(race_id_list)))
 
     # 予測したrace_idの的中/非的中を確認するためのSQL作成
-    os.makedirs("./dst/analysis", exist_ok=True)
-    with open("./dst/analysis/hit.sql", 'w') as f:
-        hit_race_id = " OR ".join(map(lambda x: 'race_id="{0}"'.format(x), hit))
-        hit_race_id = "SELECT * FROM race_info WHERE " + hit_race_id + ";"
-        f.write(hit_race_id)
-    with open("./dst/analysis/miss.sql", 'w') as f:
-        miss_race_id = " OR ".join(map(lambda x: 'race_id="{0}"'.format(x), miss))
-        miss_race_id = "SELECT * FROM race_info WHERE " + miss_race_id + ";"
-        f.write(miss_race_id)
+    nf.db_race_make_debug_table("hit", hit)
+    nf.db_race_make_debug_table("miss", miss)

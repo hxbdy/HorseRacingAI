@@ -6,16 +6,9 @@ from Encoder_X import XClass
 class CourseDistanceClass(XClass):
 
     def get(self):
-        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
-        # 距離取得
-        # 3桁以上4桁以下の数値のみ取り出す。
-        # 例えば、https://race.netkeiba.com/race/result.html?race_id=201306050111 では
-        # '芝右 内2周3600m / 天候 : 晴 / 芝 : 良 / 発走 : 15:25'
-        # のように、距離よりも前に別情報の数値があるケースに対応する。
-        num_list = re.findall('\d{3,4}', raceData1List[0])
-        num = float(num_list[0])
+        distance = self.nf.db_race_distance(self.race_id)
         # 他と統一するためリストにする
-        self.xList = [num]
+        self.xList = [distance]
         
     def pad(self):
         # paddingしない

@@ -5,13 +5,8 @@ from Encoder_X import XClass
 class WeatherClass(XClass):
 
     def get(self):
-        raceData1List = self.nf.db_race_list_race_data1(self.race_id)
-        sep1 = raceData1List[0].split(":")[1]
-        #  晴 / 芝 
-        sep1 = sep1.split("/")[0]
-        # 晴 
-        sep1 = sep1.replace(" ", "")
-        self.xList = sep1
+        weather = self.nf.db_race_weather(self.race_id)
+        self.xList = weather
 
     def fix(self):
         ALGO = 1

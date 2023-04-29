@@ -2,17 +2,19 @@
 
 import numpy as np
 
-# TODO: ボックス買い時の正答率を求めてみたい
-
-
-def numpy_isin2D(a, b):
-    """2D用isin()
+def numpy_isin(a, b):
+    """1D/2D用isin()
     a が b に含まれているかを True/Falseでaの形状を保持して返す
     ex) a = [[1, 2, 3], [...]]
         b = [[4, 1, 2], [...]]
         -> return [[True, True, False], [...]]
     """
-    return (a[:, None, :, None] == b[:, None, None]).any(-1).reshape(-1, a.shape[1])
+    if a.ndim == 2:
+        return (a[:, None, :, None] == b[:, None, None]).any(-1).reshape(-1, a.shape[1])
+    elif a.ndim == 1:
+        return np.isin(a, b)
+    else:
+        return None
 
 
 class Bet:
@@ -131,7 +133,8 @@ class Bet:
         sort_t = sort_t[:, -3:]
 
         # y が t に含まれている数を計上
-        isin = numpy_isin2D(sort_y, sort_t)
+        isin = numpy_isin(sort_y, sort_t)
+        # print("isin?        = ", isin[0])
 
         isin_sum = np.sum(isin, axis=1)
         # 2頭以上の予想が含まれている
@@ -145,25 +148,37 @@ class Bet:
     def quinella_place_box3(cls, y:np, t:np):
         """ワイド
         3着以内に入る2頭を選ぶ
-        3頭でボックス買いした場合の正答率"""        
-        
-        # 3位までの予想
-        sort_y = y.copy()
-        sort_y = sort_y.argsort(axis=1)
-        sort_y = sort_y[:, -3:]
+        3頭でボックス買いした場合の正答率"""
 
-        # 3位までの正解
+        sort_y = y.copy()
         sort_t = t.copy()
-        sort_t = sort_t.argsort(axis=1)
-        sort_t = sort_t[:, -3:]
+
+        # 昇順ソート
+        sort_y = sort_y.argsort(axis=-1)
+        sort_t = sort_t.argsort(axis=-1)
+
+        # 先頭3頭の情報のみにする
+        if sort_y.ndim == 1:
+            sort_y = sort_y[-3:]
+            sort_t = sort_t[-3:]
+        elif sort_y.ndim == 2:
+            sort_y = sort_y[:, -3:]
+            sort_t = sort_t[:, -3:]
+
+        # print("sort_y = ", sort_y)
+        # print("sort_t = ", sort_t)
 
         # y が t に含まれている数を計上
-        isin = numpy_isin2D(sort_y, sort_t)
+        isin = numpy_isin(sort_y, sort_t)
+        # print("isin?        = ", isin)
 
-        isin_sum = np.sum(isin, axis=1)
+        isin_sum = np.sum(isin, axis=-1)
         # 2頭以上の予想が含まれている
         cnt_hit = np.sum(isin_sum >= 2)
         
-        accuracy = cnt_hit / float(t.shape[0])
+        if sort_y.ndim == 1:
+            accuracy = cnt_hit
+        elif sort_y.ndim == 2:       
+            accuracy = cnt_hit / float(sort_t.shape[0])
 
         return accuracy

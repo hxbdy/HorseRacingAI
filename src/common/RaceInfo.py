@@ -5,8 +5,7 @@ class RaceInfo():
     """
     def __init__(self):
         self.date: date = date(1900, 1, 1)
-        self.venue = ""
-        self.race_no = ""
+        
         self.horse_num = 0
         self.race_id = ""
 
@@ -27,3 +26,8 @@ class RaceInfo():
         # 推測結果
         # predictを実行することで結果が格納される
         self.predict_y = []
+
+        # 自動で投票する時の投票先選択時に使用する
+        # 推測時、エンコード時には使用しない
+        self.venue = ""
+        self.race_no = ""
