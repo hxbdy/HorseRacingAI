@@ -147,7 +147,7 @@ class AutoBet:
         # 通常投票
         self._normal_bet()
 
-        time.sleep(1)
+        time.sleep(3)
         self._click_venue(venue)
         self._getRaceNo(race_no)()
         self._select_type(type)

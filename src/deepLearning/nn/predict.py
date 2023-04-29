@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # 推測するレースを設定する
     # tmp_param = read_RaceInfo('202206050811') # race_id 指定(データベースから)
     tmp_param:RaceInfo = read_RaceInfo() # 当日推測用(pickleファイルから)
-    logger.info("predict race_id = ", tmp_param.race_id)
+    logger.info("predict race_id = {0}".format(tmp_param.race_id))
 
     # ======================================================================
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     x = np.array(list(deepflatten(x))).reshape(1, -1)
 
     # ======================================================================
-    logger.info("x.shape = ", x.shape)
+    logger.info("x.shape = {0}".format(x.shape))
 
     # 推測
     y = list(deepflatten(network.predict(x)))

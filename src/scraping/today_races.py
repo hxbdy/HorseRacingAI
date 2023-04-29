@@ -116,7 +116,8 @@ def bat_exe(race_id):
         
         line = proc.stdout.readline()
         if line:
-            logger.info(line, end='')
+            line = line.rstrip()
+            logger.info(line)
 
         if not line and proc.poll() is not None:
             break
