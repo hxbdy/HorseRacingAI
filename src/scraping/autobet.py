@@ -49,10 +49,9 @@ class AutoBet:
     def _click_venue(self, venue):
         elements = self.driver.find_elements(By.CLASS_NAME, 'ng-binding')
         for element in elements:
-            text = element.text
-            text = text.replace('(','（')
-            text = text.replace(')','）')
-            if text == venue:
+            text = element.text.strip()
+            logger.debug("{0} == {1} ?  {2}".format(text, venue, text == venue))
+            if venue in text:
                 element.click()
                 break
 

@@ -151,7 +151,7 @@ def scrape_race_today(driver, raceID):
 
     # 開催地 + 曜日 表記
     # 自動投票に必要
-    raceInfo.venue = venue + '(' + weekday[raceInfo.date.weekday()] + ')'
+    raceInfo.venue = venue + '（' + weekday[raceInfo.date.weekday()] + '）'
 
     # テーブルから
     shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
