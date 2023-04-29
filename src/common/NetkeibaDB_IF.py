@@ -23,6 +23,9 @@ class NetkeibaDB_IF:
         path_netkeibaDB = path_ini('common', 'path_netkeibaDB')
         self.netkeibaDB = NetkeibaDB(path_netkeibaDB, loc, read_only)
 
+    def db_race_make_debug_table(self, table_name, race_id_list):
+        self.netkeibaDB.make_table_debug(table_name, race_id_list)
+
     def db_race_1st_odds(self, race_id):
         # 指定レースの1位オッズをfloatで返す
         odds = self.netkeibaDB.sql_mul_tbl("race_info", ["odds"], ["race_id", "result"], [race_id, "1"], False)

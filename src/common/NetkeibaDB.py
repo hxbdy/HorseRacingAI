@@ -120,6 +120,29 @@ class NetkeibaDB:
 
         self.conn.commit()
 
+    def make_table_debug(self, table_name, race_id_list):
+        """デバッグ用テーブルを作る
+        既にテーブルが有る場合は、テーブルを削除してから作り直す
+        table_name: _debug_{table_name} テーブルを作成する
+        race_id_list: race_id_listを条件にrace_infoテーブルからコピーする"""
+
+        # テーブルが既にあるなら削除
+        self.cur.execute(f"DROP TABLE IF EXISTS _debug_{table_name};")
+        self.conn.commit()
+
+        # デバッグ用テーブル準備
+        self.cur.execute(f"CREATE TABLE _debug_{table_name} AS SELECT * FROM race_info WHERE 1=2;")
+        self.conn.commit()
+
+        for i in range(0, len(race_id_list), 50):
+            race_ids = race_id_list[i:i+50]
+            param = [' race_id = ? '] * len(race_ids)
+            param = ' OR '.join(param)
+
+            sql = f"INSERT INTO _debug_{table_name} SELECT * FROM race_info WHERE {param};"
+            self.cur.execute(sql, race_id_list)
+        self.conn.commit()
+
     def sql_mul_all(self, table_name):
         """table要素をすべて取得する
         テーブルの要素数に注意"""
