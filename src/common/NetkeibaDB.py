@@ -77,35 +77,30 @@ class NetkeibaDB:
 
     # DBをRAM上に移して、以降の操作をRAM上で行う
     def _switch_RAM(self):
-        console = Console()
-        with console.status("[bold green] DB ROM 2 RAM ...") as status:
-            # RAM DBへのコネクション作成
-            dest = sqlite3.connect(':memory:')
-            self.conn.backup(dest)
-            # ROM DBへのコネクションを閉じる
-            self.cur.close()
-            self.conn.close()
-            # コネクション変数譲渡
-            self.conn = dest
-            # sqliteを操作するカーソルオブジェクトを作成
-            self.cur = self.conn.cursor()
-            console.log("[bold green] DB ROM 2 RAM COMP !!")
+        # RAM DBへのコネクション作成
+        dest = sqlite3.connect(':memory:')
+        self.conn.backup(dest)
+        # ROM DBへのコネクションを閉じる
+        self.cur.close()
+        self.conn.close()
+        # コネクション変数譲渡
+        self.conn = dest
+        # sqliteを操作するカーソルオブジェクトを作成
+        self.cur = self.conn.cursor()
 
     # DBをROM上に移して、以降の操作をROM上で行う
     def _switch_ROM(self):
-        console = Console()
-        with console.status("[bold green] DB RAM 2 ROM ...") as status:
-            # ROM DBへのコネクション作成
-            dest = sqlite3.connect(self.path_db)
-            self.conn.backup(dest)
-            # RAM DBへのコネクションを閉じる
-            self.cur.close()
-            self.conn.close()
-            # コネクション変数譲渡
-            self.conn = dest
-            # sqliteを操作するカーソルオブジェクトを作成
-            self.cur = self.conn.cursor()
-            console.log("[bold green] DB RAM 2 ROM COMP !!")
+        logger.info("DB RAM 2 ROM")
+        # ROM DBへのコネクション作成
+        dest = sqlite3.connect(self.path_db)
+        self.conn.backup(dest)
+        # RAM DBへのコネクションを閉じる
+        self.cur.close()
+        self.conn.close()
+        # コネクション変数譲渡
+        self.conn = dest
+        # sqliteを操作するカーソルオブジェクトを作成
+        self.cur = self.conn.cursor()
 
     def make_index(self):
         # エンコード高速化のためインデックスを貼る

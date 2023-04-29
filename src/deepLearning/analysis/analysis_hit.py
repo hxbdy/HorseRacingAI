@@ -3,6 +3,7 @@
 from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+from rich.progress import track
 
 import pickle
 import os
@@ -38,12 +39,12 @@ if __name__ == "__main__":
 
     start_year = 1986
     end_year = 2020
-    race_id_list = nf.db_race_list_id(start_year, end_year, 10)
+    race_id_list = nf.db_race_list_id(start_year, end_year, -1)
     hit = []
     miss = []
     # ======================================================================
 
-    for race_id in race_id_list:
+    for race_id in track(race_id_list, description="Predict..."):
         # 推測するレースを設定する
         tmp_param = read_RaceInfo(str(race_id)) # race_id 指定(データベースから)
         # ======================================================================
