@@ -3,14 +3,12 @@
 # どちらを使うかは private.ini で設定
 
 import importlib
-import logging
+
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 from file_path_mgr import private_ini
-from debug import stream_hdl
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(stream_hdl(logging.INFO))
 
 def get_calc_device():
     return private_ini('nn', 'calculator')

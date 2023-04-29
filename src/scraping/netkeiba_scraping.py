@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
 import datetime
-import logging
 import re
 import argparse
 import pickle
@@ -9,20 +8,16 @@ from dateutil.relativedelta import relativedelta
 from collections import deque
 import os
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 from selenium.webdriver.common.by import By
 
 import webdriver_functions as wf
 from NetkeibaDB import NetkeibaDB
 from RaceInfo import RaceInfo
-from debug import stream_hdl, file_hdl
 from file_path_mgr import path_ini, private_ini
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # netkeiba上の列名とデータベース上の名前をつなぐ辞書
 col_name_dict = {"日付":"date", "開催":"venue", "頭数":"horse_num", "枠番":"post_position", \

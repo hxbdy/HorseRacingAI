@@ -1,15 +1,8 @@
+
+
 import numpy as np
-import logging
 
-from debug     import stream_hdl, file_hdl
 from Encoder_X import XClass
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("JockeyClass"))
 
 class JockeyClass(XClass):
 
@@ -26,7 +19,7 @@ class JockeyClass(XClass):
             upper_year = "{0:4d}".format(int(self.race_id[0:4]))
             lower_year = "{0:4d}".format(int(upper_year) - 5)
             cnt = self.nf.db_race_cnt_jockey(jockeyIDList[i], lower_year, upper_year)
-            logger.debug("jockey_id = {0}, lower_year = {1}, upper_year = {2}, cnt = {3}".format(jockeyIDList[i], lower_year, upper_year, cnt))
+            self.logger.debug("jockey_id = {0}, lower_year = {1}, upper_year = {2}, cnt = {3}".format(jockeyIDList[i], lower_year, upper_year, cnt))
             jockeyIDList[i] = cnt
         self.xList = jockeyIDList
 
@@ -42,7 +35,7 @@ class JockeyClass(XClass):
         
         # 最高値ですべてを割る
         # maxJockey = np.max(njockeyList)
-        # logger.debug("njockeyList = {0}, maxJockey = {1}".format(njockeyList, maxJockey))
+        # self.logger.debug("njockeyList = {0}, maxJockey = {1}".format(njockeyList, maxJockey))
         # njockeyList = njockeyList / maxJockey
         # self.xList = njockeyList.tolist()
         

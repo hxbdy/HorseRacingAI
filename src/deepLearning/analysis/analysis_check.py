@@ -5,6 +5,10 @@ import numpy as np
 import pickle
 import os
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 from matplotlib import pyplot as plt
 
 from file_path_mgr import path_ini

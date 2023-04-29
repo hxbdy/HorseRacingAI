@@ -1,6 +1,11 @@
 # coding: utf-8
 import time
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+console = Console()
+
 import xross
 np = xross.facttory_xp()
 from optimizer import *
@@ -48,7 +53,7 @@ class Trainer:
         
         loss = self.network.loss(x_batch, t_batch)
         self.train_loss_list.append(loss)
-        # if self.verbose: print("train loss:" + str(loss))
+        # if self.verbose: logger.info("train loss:" + str(loss))
         
         if self.current_iter % self.iter_per_epoch == 0:
             self.current_epoch += 1
@@ -67,14 +72,18 @@ class Trainer:
 
             if self.verbose:
                 time_epoch = time.perf_counter()
-                print("=== epoch:" + str(self.current_epoch) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc) + ", time:" + str(time_epoch - self.time_now) + " ===")
+                c = "=== epoch :" + str(self.current_epoch) + ", train acc :" + str(train_acc) + ", test acc :" + str(test_acc) + ", time :" + str(time_epoch - self.time_now) + " ==="
+                console.log(c)
                 self.time_now = time_epoch
 
         self.current_iter += 1
 
     def train(self):
-        for _ in range(self.max_iter):
-            self.train_step()
+        
+        with console.status("[bold green]Waiting for learning ...", spinner='material') as status:
+            for _ in range(self.max_iter):
+                status.update(self.train_step())
+            console.log(f'[bold][red]Done')
 
         test_acc = self.network.accuracy(self.x_test, self.t_test)
 
@@ -84,5 +93,5 @@ class Trainer:
         self.test_acc_list   = xross.move2RAM(self.test_acc_list)
 
         if self.verbose:
-            print("=============== Final Test Accuracy ===============")
-            print("test acc:" + str(test_acc))
+            logger.info("=============== Final Test Accuracy ===============")
+            logger.info("test acc:" + str(test_acc))

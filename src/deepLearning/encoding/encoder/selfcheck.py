@@ -1,14 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from debug import stream_hdl
-import logging
-
+from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
+logger.setLevel(logging.INFO)
 
 def selfcheck(class_name, x):
     # コンソール表示上、有効桁数は2桁とする

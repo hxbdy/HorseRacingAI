@@ -1,14 +1,5 @@
-import logging
-
 from Encoder_X import XClass
-from debug     import stream_hdl, file_hdl
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("CourseConditionClass"))
 class CourseConditionClass(XClass):
 
     def get(self):

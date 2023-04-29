@@ -1,14 +1,6 @@
-import logging
+
 
 from Encoder_BradleyTerry import BradleyTerryClass
-from debug                import stream_hdl, file_hdl
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("FatherBradleyTerryClass"))
 
 class FatherBradleyTerryClass(BradleyTerryClass):
     def get(self):

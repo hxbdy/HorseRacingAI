@@ -1,15 +1,8 @@
 from dateutil.relativedelta import relativedelta
 
+
+
 from Encoder_X import XClass
-from debug import stream_hdl, file_hdl
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("LastRaceLeftClass"))
 
 class LastRaceLeftClass(XClass):
 
@@ -32,7 +25,7 @@ class LastRaceLeftClass(XClass):
 
             # 経過日数を計算
             delta = relativedelta(self.d0, last_race_date)
-            logger.debug("horse_id={0}, last_race_id={1}, last_race_date={2}, delta={3}".format(horse_id, last_race_id, last_race_date, delta))
+            self.logger.debug("horse_id={0}, last_race_id={1}, last_race_date={2}, delta={3}".format(horse_id, last_race_id, last_race_date, delta))
 
             last_race_left_list.append(delta.years + (delta.months / 12.0) + (delta.days / 365.0))
 

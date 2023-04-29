@@ -2,23 +2,18 @@ import pickle
 import os
 import shutil
 import datetime
-import logging
+
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 from iteration_utilities import deepflatten
 
 from file_path_mgr import path_ini
-from debug         import stream_hdl, file_hdl
 from make_RaceInfo import raceinfo_by_raceID
 import RaceInfo
 import xross
 np = xross.facttory_xp()
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # 連番保存フォルダまでのパスを取得する
 def encoding_serial_dir_path(path_root):
@@ -69,30 +64,32 @@ def encoding_load(dir_path=""):
     パスを指定しない時はpath.iniのpath_learningListから読み込む
     ATTENTION: パスを指定するときは最後にスラッシュをつけてください
     '''
-
-    # 学習データファイル名フォーマット
-    encoded_file_name_list = [
-        "x_data.pickle",
-        "t_data.pickle",
-    ]
     
     # パス読み込み
     if dir_path == "":
         path_learningList = path_ini('nn', 'path_learningList')
     else:
         path_learningList = dir_path
-    
-    # エンコード済みデータ読み込み
+
     encoding_data_list = []
-    for name in encoded_file_name_list:
-        with open(path_learningList + name, 'rb') as f:
-            logger.info("load learningList = {0}".format(path_learningList + name))
-            e = pickle.load(f)
-            flat_list = np.array(list(deepflatten(e)))
-            data = flat_list.reshape(len(e), -1)
-            logger.info("{0} = {1}".format(name, data.shape))
-            encoding_data_list.append(data)
-    
+
+    with open(path_learningList + "t_data.pickle", 'rb') as f:
+        logger.info("load learningList = {0}".format(path_learningList + "t_data.pickle"))
+        e = pickle.load(f)
+        flat_list = np.array(list(deepflatten(e)))
+        data = flat_list.reshape(len(e), -1)
+        logger.info("{0} = {1}".format("t_data.shape", data.shape))
+        encoding_data_list.append(data)
+        row_shape = data.shape[0]
+
+    with open(path_learningList + "x_data.pickle", 'rb') as f:
+        logger.info("load learningList = {0}".format(path_learningList + "x_data.pickle"))
+        e = pickle.load(f)
+        flat_list = np.array(list(deepflatten(e)))
+        data = flat_list.reshape(row_shape, -1)
+        logger.info("{0} = {1}".format("x_data.shape", data.shape))
+        encoding_data_list.append(data)
+
     return encoding_data_list
 
 # スタート年、終了年、件数、生成に使ったクラスや条件を保存しておく
@@ -117,11 +114,11 @@ def prob_win(value_list):
     if xross.isCPU():
         prob_disp = ["{:.3f}".format(i) for i in prob] # 表示桁数を制限
 
-        print(["{:^5d}".format(i) for i in ls_sorted_idx+1])
-        print(prob_disp)
+        logger.info(["{:^5d}".format(i) for i in ls_sorted_idx+1])
+        logger.info(prob_disp)
     else:
-        print(ls_sorted_idx+1)
-        print(prob)
+        logger.info(ls_sorted_idx+1)
+        logger.info(prob)
     return list(ls_sorted_idx)
 
 def read_RaceInfo(race_id = ""):

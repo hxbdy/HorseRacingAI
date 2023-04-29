@@ -8,13 +8,15 @@
 # 1. 取得に失敗したIDを再度取得チャレンジするオプションの追加
 # 2. ログがフォーマット通り出力されない問題の対処
 
+from log import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 import re
 import os
 import time
-import logging
 import argparse
 import datetime
-import pickle
 from dateutil.relativedelta import relativedelta
 from multiprocessing        import Process, Queue
 from collections            import deque
@@ -28,17 +30,9 @@ import psutil
 import webdriver_functions as wf
 from NetkeibaDB_IF import NetkeibaDB_IF
 from file_path_mgr import path_ini, private_ini
-from debug         import stream_hdl, file_hdl
 
 from deepLearning_common import write_RaceInfo
 from RaceInfo      import RaceInfo
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-#loggerにハンドラを設定
-logger.addHandler(stream_hdl(logging.INFO))
-logger.addHandler(file_hdl("output"))
 
 # プロセス優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
@@ -157,7 +151,7 @@ def scrape_race_today(driver, raceID):
 
     # 開催地 + 曜日 表記
     # 自動投票に必要
-    raceInfo.venue = venue + '(' + weekday[raceInfo.date.weekday()] + ')'
+    raceInfo.venue = venue + '（' + weekday[raceInfo.date.weekday()] + '）'
 
     # テーブルから
     shutuba_table = driver.find_element(By.XPATH, "//*[@class='Shutuba_Table RaceTable01 ShutubaTable tablesorter tablesorter-default']")
@@ -208,32 +202,32 @@ def scrape_race_today(driver, raceID):
     raceInfo.jockey_id = list(map(lambda x: x[4], contents))
     raceInfo.horse_weight = list(map(lambda x: x[5], contents))
     
-    print("開催地")
-    print(raceInfo.venue)
-    print("レース")
-    print(raceInfo.race_no)
-    print("枠")
-    print(raceInfo.post_position)
-    print("馬番")
-    print(raceInfo.horse_number)
-    print("horse id")
-    print(raceInfo.horse_id)
-    print("斤量")
-    print(raceInfo.burden_weight)
-    print("jockey id")
-    print(raceInfo.jockey_id)
-    print("馬体重")
-    print(raceInfo.horse_weight)
-    print("発走時刻")
-    print(raceInfo.start_time)
-    print("距離")
-    print(raceInfo.distance)
-    print("天候")
-    print(raceInfo.weather)
-    print("馬場状態")
-    print(raceInfo.course_condition)
-    print("本賞金")
-    print(raceInfo.prize)
+    logger.info("開催地")
+    logger.info(raceInfo.venue)
+    logger.info("レース")
+    logger.info(raceInfo.race_no)
+    logger.info("枠")
+    logger.info(raceInfo.post_position)
+    logger.info("馬番")
+    logger.info(raceInfo.horse_number)
+    logger.info("horse id")
+    logger.info(raceInfo.horse_id)
+    logger.info("斤量")
+    logger.info(raceInfo.burden_weight)
+    logger.info("jockey id")
+    logger.info(raceInfo.jockey_id)
+    logger.info("馬体重")
+    logger.info(raceInfo.horse_weight)
+    logger.info("発走時刻")
+    logger.info(raceInfo.start_time)
+    logger.info("距離")
+    logger.info(raceInfo.distance)
+    logger.info("天候")
+    logger.info(raceInfo.weather)
+    logger.info("馬場状態")
+    logger.info(raceInfo.course_condition)
+    logger.info("本賞金")
+    logger.info(raceInfo.prize)
     return raceInfo
 
 def main_process(untracked_race_id_list, children_num, roll):
