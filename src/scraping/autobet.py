@@ -6,7 +6,7 @@ import time
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import webdriver_functions as wf
 import RaceInfo
@@ -47,7 +47,7 @@ class AutoBet:
 
     # venue
     def _click_venue(self, venue):
-        elements = self.driver.find_elements(By.CLASS_NAME, 'place-btn-area block-inline gutter-sm ng-scope')
+        elements = self.driver.find_elements(By.CLASS_NAME, 'ng-binding')
         for element in elements:
             text = element.text
             text = text.replace('(','（')
