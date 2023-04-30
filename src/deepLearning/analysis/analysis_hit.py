@@ -1,5 +1,5 @@
 # ネットワークの正答率の分布を確認する
-# 正解したレース、不正解だったレースを確認できるSQLファイルを生成する
+# 正解したレース、不正解だったレースを確認できるテーブルをDBに生成する
 from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,6 +25,12 @@ np = xross.facttory_xp()
 
 # ==========================================================================
 
+# TODO:賭けるべきかの検討メモ
+# 2022年を除いたデータでエンコード、学習
+# 2022年のデータをここで取得して正答率を調べる
+# 正解とする賭け方は一度確認する(最初は単勝で確認するべき。)
+# probを確認して賭けるしきい値を確認する
+
 if __name__ == "__main__":
     # パス読み込み
     path_tmp          = path_ini('common', 'path_tmp')
@@ -42,6 +48,8 @@ if __name__ == "__main__":
     race_id_list = nf.db_race_list_id(start_year, end_year, -1)
     hit = []
     miss = []
+    probs_hit = {}
+    probs_miss = {}
     # ======================================================================
 
     for race_id in track(race_id_list, description="Predict..."):
@@ -64,7 +72,7 @@ if __name__ == "__main__":
 
         # 推測
         y = list(deepflatten(network.predict(x)))
-        predict_y, _ = prob_win(y)
+        predict_y, prob = prob_win(y)
 
         # 正解ラベル取り出し
         # 正解用テーブルtTblに入っているのを持ってくる
@@ -76,11 +84,23 @@ if __name__ == "__main__":
 
         if int(acc) == 1:
             hit.append(race_id)
+            probs_hit[race_id] = prob
         else:
             miss.append(race_id)
+            probs_miss[race_id] = prob
 
         logger.info("acc = {0}".format(len(hit) / len(race_id_list)))
 
     # 予測したrace_idの的中/非的中を確認するためのSQL作成
     nf.db_race_make_debug_table("hit", hit)
     nf.db_race_make_debug_table("miss", miss)
+
+    # 正解、不正解のprobを書き込む
+    os.makedirs('./dst/analysis', exist_ok=True)
+    with open('./dst/analysis/probs_hit.txt','w') as f:
+        for key, value in probs_hit.items():
+            f.writelines(f"{key}:{value}\n")
+
+    with open('./dst/analysis/probs_miss.txt','w') as f:
+        for key, value in probs_miss.items():
+            f.writelines(f"{key}:{value}\n")
