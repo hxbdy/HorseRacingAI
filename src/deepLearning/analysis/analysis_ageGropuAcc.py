@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
         # 推測
         y = list(deepflatten(network.predict(x)))
-        predict_y = prob_win(y)
+        predict_y, _ = prob_win(y)
 
         # 正解ラベル取り出し
         ans = encoder.Encoder_RankOneHot.RankOneHotClass()

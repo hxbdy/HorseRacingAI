@@ -102,7 +102,9 @@ def encoding_save_condition(dir_path):
         f.write("original_path = " + dir_path)
 
 def prob_win(value_list):
-    # 勝つ可能性 (ロジットモデル)
+    """推測結果を出力する(ロジットモデル)
+    出力内容は馬番のリストと、それぞれが一着になる確率のリスト
+    return 馬番インデックスリスト(ゼロが馬番1であることに注意), (確率リスト)"""
 
     ls = np.array(value_list)
     ls_sorted_idx = np.argsort(-ls) # 降順のソート
@@ -119,7 +121,7 @@ def prob_win(value_list):
     else:
         logger.info(ls_sorted_idx+1)
         logger.info(prob)
-    return list(ls_sorted_idx)
+    return list(ls_sorted_idx), prob
 
 def read_RaceInfo(race_id = ""):
     """推測するレースのRaceInfoオブジェクトを読み込む

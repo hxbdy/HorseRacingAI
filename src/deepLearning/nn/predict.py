@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # 推測
     y = list(deepflatten(network.predict(x)))
-    y = prob_win(y)
+    y, _ = prob_win(y)
 
     # 推測結果を保存
     tmp_param.predict_y = y
