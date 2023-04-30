@@ -121,7 +121,7 @@ def prob_win(value_list):
     else:
         logger.info(ls_sorted_idx+1)
         logger.info(prob)
-    return list(ls_sorted_idx), prob
+    return list(ls_sorted_idx), prob.tolist()
 
 def read_RaceInfo(race_id = ""):
     """推測するレースのRaceInfoオブジェクトを読み込む
