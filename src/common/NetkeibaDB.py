@@ -130,12 +130,12 @@ class NetkeibaDB:
         self.conn.commit()
 
         for i in range(0, len(race_id_list), 50):
-            race_ids = race_id_list[i:i+50]
+            race_ids = race_id_list[i:min(i+50, len(race_id_list))]
             param = [' race_id = ? '] * len(race_ids)
             param = ' OR '.join(param)
 
             sql = f"INSERT INTO _debug_{table_name} SELECT * FROM race_info WHERE {param};"
-            self.cur.execute(sql, race_id_list)
+            self.cur.execute(sql, race_ids)
         self.conn.commit()
 
     def sql_mul_all(self, table_name):
