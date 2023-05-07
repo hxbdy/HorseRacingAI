@@ -71,26 +71,23 @@ def encoding_load(dir_path=""):
     else:
         path_learningList = dir_path
 
-    encoding_data_list = []
-
+    # 学習データからは何個エンコーダを使用したかわからないため
+    # 正解ラベルの行数を先に取得して、次に学習データをreshapeする
     with open(path_learningList + "t_data.pickle", 'rb') as f:
         logger.info("load learningList = {0}".format(path_learningList + "t_data.pickle"))
         e = pickle.load(f)
-        flat_list = np.array(list(deepflatten(e)))
-        data = flat_list.reshape(len(e), -1)
-        logger.info("{0} = {1}".format("t_data.shape", data.shape))
-        encoding_data_list.append(data)
-        row_shape = data.shape[0]
+        t_data = np.array(list(deepflatten(e)))
+        t_data = t_data.reshape(len(e), -1)
+        logger.info("{0} = {1}".format("t_data.shape", t_data.shape))
 
     with open(path_learningList + "x_data.pickle", 'rb') as f:
         logger.info("load learningList = {0}".format(path_learningList + "x_data.pickle"))
         e = pickle.load(f)
-        flat_list = np.array(list(deepflatten(e)))
-        data = flat_list.reshape(row_shape, -1)
-        logger.info("{0} = {1}".format("x_data.shape", data.shape))
-        encoding_data_list.append(data)
+        x_data = np.array(list(deepflatten(e)))
+        x_data = x_data.reshape(t_data.shape[0], -1)
+        logger.info("{0} = {1}".format("x_data.shape", x_data.shape))
 
-    return encoding_data_list
+    return x_data, t_data
 
 # スタート年、終了年、件数、生成に使ったクラスや条件を保存しておく
 # TODO:コピーのタイミングを早める。
