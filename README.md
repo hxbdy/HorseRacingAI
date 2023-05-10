@@ -10,68 +10,17 @@
 
 # Setup
 
-## conda env
-| About | Ver |
-| ----       | ---    |
-| Python     | 3.8.13 |
-| cuda       | 11.7.0 |
-| cupy       | 8.3.0 |
-| selenium   | 4.2.0 |
-| sqlite3    | 3.8.6 |
-| matplotlib | 3.6.2 |
-| pandas     | 1.5.2 |
-| psutil     | 5.9.1 |
-
-## conda installation
-### app
+## app
 1. [Anaconda | Anaconda Distribution](https://www.anaconda.com/products/distribution)
 2. [CUDA Toolkit - Free Tools and Training | NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
 
-### package
-1. [Cupy :: Anaconda.org](https://anaconda.org/anaconda/cupy)
-2. [Selenium::Anaconda.org](https://anaconda.org/conda-forge/selenium)
-3. [Webdriver Manager :: Anaconda.org](https://anaconda.org/conda-forge/webdriver-manager)
-4. [Python Dateutil :: Anaconda.org](https://anaconda.org/conda-forge/python-dateutil)
-5. [Sqlite3 :: Anaconda.org](https://anaconda.org/blaze/sqlite3)
-6. [Matplotlib :: Anaconda.org](https://anaconda.org/conda-forge/matplotlib)
-7. [Iteration Utilities :: Anaconda.org](https://anaconda.org/conda-forge/iteration_utilities)
-8. [Pandas :: Anaconda.org](https://anaconda.org/anaconda/pandas)
-9. [Psutil :: Anaconda.org](https://anaconda.org/conda-forge/psutil)
-10. [Py Cord :: Anaconda.org](https://anaconda.org/conda-forge/py-cord)
-11. [Schedule :: Anaconda.org](https://anaconda.org/conda-forge/schedule)
-12. [Rich :: Anaconda.org](https://anaconda.org/conda-forge/rich)
-
-## PATH
-conda 仮想環境上で各フォルダへパスを通す作業が必要です。  
-以下コマンドを仮想環境上で実行してパスを通してください。
-
+## python env
+依存パッケージ及び PATH は [HorseRacingAI.yaml](./HorseRacingAI.yaml) で管理されています。  
+Anaconda Powershell Promptで以下を実行することで  
+新規に仮想環境HorseRacingAIを作成し、依存パッケージのバージョンを揃え、  
+仮想環境上で必要なPATHを自動で通します。
 ```bash:
-> conda env config vars set PYTHONPATH=\
-src/deepLearning/encoding/encoder;\
-src/deepLearning/analysis;\
-src/deepLearning/encoding;\
-src/deepLearning/nn;\
-src/deepLearning;\
-src/common;\
-src/sample;\
-src/scraping;\
-src;\
-```
-
-パスを追加できたかは以下コマンドで確認できます。
-```bash:
-> conda env config vars list
-```
-
-追加したパスを有効にするにはリアクティベートします。
-```bash:
-> conda deactivate
-> conda activate {YOUR ENV NAME}
-```
-
-内部的には追加したパスは以下ファイルで管理されています。
-```bash:
-"C:\Users\{YOUR USERNAME}\anaconda3\envs\{YOUR ENV NAME}\conda-meta\state"
+> conda env create -f HorseRacingAI.yaml
 ```
 
 # Untracked Dir / File
@@ -108,14 +57,14 @@ PASS =
 
 ```
 ## resrc
-net.keiba から作成したデータベースを resrc\netkeibaDB\netkeiba.db に保存します  
+[netkeiba.com](https://www.netkeiba.com/) から作成したデータベースを resrc\netkeibaDB\netkeiba.db に保存します  
 
 ## dst
 |Dir|About|
 | ---- | ---- |
 |dst\learningList\newest|データベースから作成する学習用にエンコードされた学習用データをpickle形式で保存します|
 |dst\trainedParam\newest|NNによって学習した行列パラメータを保存します|
-|dst\output.log|直前に実行したプログラムのログを保存します|
+|./dst/log/output.log|直前に実行したプログラムのWARNING以上のログを保存します|
 
 # About DB
  * エンコード高速化のため、以下の事をしています。
@@ -140,7 +89,7 @@ race_result_grade
 race_result_race_data2
 ```
 
-# 参考
+# Ref
 - [クローリング&スクレイピング 競馬情報抜き出してみた - Qiita](https://qiita.com/penguinz222/items/6a30d026ede2e822e245)
 - [海外競馬英和辞典　ＪＲＡ](https://www.jra.go.jp/keiba/overseas/yougo/index.html)
 - [着差 (競馬) - Wikipedia](https://ja.wikipedia.org/wiki/%E7%9D%80%E5%B7%AE_(%E7%AB%B6%E9%A6%AC)#:~:text=%E7%AB%B6%E9%A6%AC%E3%81%AE%E7%AB%B6%E8%B5%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E7%9D%80,%E7%AB%B6%E8%B5%B0%E3%81%A7%E3%81%AF%E7%94%A8%E3%81%84%E3%82%89%E3%82%8C%E3%81%AA%E3%81%84%E3%80%82)
