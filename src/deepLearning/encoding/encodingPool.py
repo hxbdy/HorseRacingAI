@@ -7,6 +7,7 @@ import multiprocessing
 from multiprocessing import Pool, Queue
 from logging.handlers import QueueHandler, QueueListener
 
+import numpy as np
 from rich.progress import track
 
 from log import *
@@ -17,6 +18,12 @@ from NetkeibaDB_IF       import NetkeibaDB_IF
 from table               import XTbl, tTbl
 from deepLearning_common import encoding_serial_dir_path, encoding_save_nn_data, encoding_newest_dir_path
 from file_path_mgr       import path_ini
+
+# 各エンコードごとに列数は一定ではないため
+# numpyの警告「ジャグ配列の使用」が出るので出力を抑制する
+import warnings
+warnings.resetwarnings()
+warnings.simplefilter('ignore', np.VisibleDeprecationWarning)
 
 def encode(encoder, race_id_list):
 
@@ -78,6 +85,10 @@ if __name__ == "__main__":
     # 結果をxとtに分ける
     t_data = result.pop(-1)
     x_data = result
+
+    # 転置T
+    # numpyの警告「ジャグ配列の使用」が出る
+    x_data = np.array(x_data).reshape(len(XTbl), -1).T.tolist()
 
     logger.debug("encode x_data: len({0}) {1}".format(len(x_data), x_data))
     logger.debug("encode t_data: len({0}) {1}".format(len(t_data), t_data))
