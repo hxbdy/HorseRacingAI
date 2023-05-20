@@ -69,7 +69,7 @@ class MultiLayerNetExtend:
 
         # 正解ラベルがone-hotなら SoftmaxWithLoss()
         # そうでないなら          IdentityWithLoss()
-        self.last_layer = IdentityWithLoss()
+        self.last_layer = SoftmaxWithLoss()
 
     def __init_weight(self, weight_init_std):
         """重みの初期値設定
