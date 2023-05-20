@@ -33,11 +33,11 @@ class NetkeibaDB:
         # sqliteを操作するカーソルオブジェクトを作成
         self.cur = self.conn.cursor()
         if self.loc == "RAM":
-            logger.info("DB will be located in RAM")
+            logger.debug("DB will be located in RAM")
             self._switch_RAM()
         else:
-            logger.info("DB will be located in ROM")
-        logger.info("Database {0} loading complete".format(self.path_db))
+            logger.debug("DB will be located in ROM")
+        logger.debug("Database {0} loading complete".format(self.path_db))
 
     def _create_table(self, dbname):
         """データベースの作成
