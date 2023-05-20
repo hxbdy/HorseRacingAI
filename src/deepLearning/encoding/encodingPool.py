@@ -47,12 +47,13 @@ def encode(encoder, race_id_list):
     
     return result_list
 
-if __name__ == "__main__":
-    
+def multi_encode(start_year = 1800, end_year = 2020, limit = -1, pattern = False, save = False):
+    """マルチプロセスでエンコード実行して結果を返す"""
+
     # エンコード予定のrace_idリストをDBから取得
     # (start_year <= 取得範囲 <=  end_year) の race_id
     nf = NetkeibaDB_IF("RAM")
-    race_id_list = nf.db_race_list_id(start_year = 1800, end_year = 2023, limit = -1, pattern = False)
+    race_id_list = nf.db_race_list_id(start_year, end_year, limit, pattern)
     # logger.debug(race_id_list)
 
     # プロセスをエンコーダ予定の数だけ用意
@@ -99,22 +100,28 @@ if __name__ == "__main__":
     # ログリスナーを閉じる
     listener.stop()
 
-    # 書き込み
-    # 保存先パス取得
-    path_root = path_ini('nn', 'path_root_learningList')
+    if save:
+        # 書き込み
+        # 保存先パス取得
+        path_root = path_ini('nn', 'path_root_learningList')
 
-    # 連番取得
-    serial_dir_path = encoding_serial_dir_path(path_root)
-    
-    # 連番フォルダにエンコード済みデータ保存
-    encoding_save_nn_data(serial_dir_path, "x_data.pickle", x_data)
-    encoding_save_nn_data(serial_dir_path, "t_data.pickle", t_data)
+        # 連番取得
+        serial_dir_path = encoding_serial_dir_path(path_root)
 
-    # 最新フォルダまでのパスを取得
-    newest_dir_path = encoding_newest_dir_path()
+        # 連番フォルダにエンコード済みデータ保存
+        encoding_save_nn_data(serial_dir_path, "x_data.pickle", x_data)
+        encoding_save_nn_data(serial_dir_path, "t_data.pickle", t_data)
 
-    # newestフォルダ削除
-    shutil.rmtree(newest_dir_path)
+        # 最新フォルダまでのパスを取得
+        newest_dir_path = encoding_newest_dir_path()
 
-    # 最新フォルダに結果をコピー
-    shutil.copytree(serial_dir_path, newest_dir_path)
+        # newestフォルダ削除
+        shutil.rmtree(newest_dir_path)
+
+        # 最新フォルダに結果をコピー
+        shutil.copytree(serial_dir_path, newest_dir_path)
+
+    return race_id_list, x_data, t_data
+
+if __name__ == "__main__":
+    race_id_list, x_data, t_data = multi_encode(start_year = 1800, end_year = 2022, limit = -1, pattern = False, save = True)
