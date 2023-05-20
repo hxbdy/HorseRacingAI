@@ -136,21 +136,25 @@ class Bet:
         
         # 2位までの予想
         sort_y = y.copy()
-        sort_y = sort_y.argsort(axis=1)
-        sort_y = sort_y[:, -2:]
+        sort_y = sort_y.argsort(axis=-1)
+        if sort_y.ndim == 1:
+            sort_y = sort_y[-2:]
+        elif sort_y.ndim == 2:
+            sort_y = sort_y[:, -2:]
 
         # 3位までの正解
         sort_t = t.copy()
-        sort_t = sort_t.argsort(axis=1)
-        sort_t = sort_t[:, -3:]
-
-        # y が t に含まれている数を計上
-        isin = numpy_isin(sort_y, sort_t)
-        # print("isin?        = ", isin[0])
-
-        isin_sum = np.sum(isin, axis=1)
-        # 2頭以上の予想が含まれている
-        cnt_hit = np.sum(isin_sum >= 2)
+        sort_t = sort_t.argsort(axis=-1)
+        if sort_t.ndim == 1:
+            sort_t = sort_t[-3:]
+            isin = numpy_isin(sort_y, sort_t)
+            isin_sum = np.sum(isin)
+            cnt_hit = isin_sum
+        elif sort_t.ndim == 2:
+            sort_t = sort_t[:, -3:]
+            isin = numpy_isin(sort_y, sort_t)
+            isin_sum = np.sum(isin, axis=1)
+            cnt_hit = np.sum(isin_sum >= 2)
         
         accuracy = cnt_hit / float(t.shape[0])
 
