@@ -11,6 +11,7 @@ np = xross.facttory_xp()
 from iteration_utilities import deepflatten
 
 from multi_layer_net_extend import MultiLayerNetExtend
+from bet_judge              import BetJudge
 from deepLearning_common    import read_RaceInfo, write_RaceInfo, prob_win
 from file_path_mgr          import path_ini
 from predictClass           import predict_XTbl
@@ -52,7 +53,13 @@ if __name__ == "__main__":
 
     # 推測
     y = list(deepflatten(network.predict(x)))
-    y, _ = prob_win(y)
+    y, prob = prob_win(y)
+
+    # 賭けるべきか
+    if BetJudge.rankonehot(prob):
+        logger.info("GO !!!!!!!!!!!!!!!!")
+    else:
+        logger.warning("Low confidence")
 
     # 推測結果を保存
     tmp_param.predict_y = y

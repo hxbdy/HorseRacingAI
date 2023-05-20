@@ -10,7 +10,6 @@ import os
 
 from iteration_utilities import deepflatten
 
-import encoder
 from NetkeibaDB_IF          import NetkeibaDB_IF
 from multi_layer_net_extend import MultiLayerNetExtend
 from deepLearning_common    import read_RaceInfo, prob_win
@@ -19,6 +18,7 @@ from predictClass           import predict_XTbl
 from table                  import tTbl
 
 from bet                    import Bet
+from bet_judge              import BetJudge
 
 import xross
 np = xross.facttory_xp()
@@ -43,8 +43,8 @@ if __name__ == "__main__":
     # ======================================================================
     nf = NetkeibaDB_IF("ROM", read_only=False)
 
-    start_year = 1986
-    end_year = 2020
+    start_year = 2023
+    end_year = 2023
     race_id_list = nf.db_race_list_id(start_year, end_year, -1)
     hit = []
     miss = []
@@ -75,19 +75,16 @@ if __name__ == "__main__":
         y = list(deepflatten(network.predict(x)))
         predict_y, prob = prob_win(y)
 
-        # ベットすべきか判断
-        # 単勝の場合、1着予想が一定のprobを切っているなら賭けない
-        if prob[0] < 0.7:
+        if BetJudge.rankonehot(prob):
+            # 正解ラベル取り出し
+            # 正解用テーブルtTblに入っているのを持ってくる
+            ans = tTbl[0]()
+            ans.set(race_id)
+            ans.adj()
+            acc = Bet.win(np.array(y), np.array(ans.xList))
+        else:
             continue
         bet_cnt += 1
-
-        # 正解ラベル取り出し
-        # 正解用テーブルtTblに入っているのを持ってくる
-        ans = tTbl[0]()
-        ans.set(race_id)
-        ans.adj()
-
-        acc = Bet.win(np.array(y), np.array(ans.xList))
 
         if int(acc) == 1:
             hit.append(race_id)
