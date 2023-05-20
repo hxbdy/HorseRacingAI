@@ -50,6 +50,7 @@ if __name__ == "__main__":
     miss = []
     probs_hit = {}
     probs_miss = {}
+    bet_cnt = 0 # 賭けたレース数
     # ======================================================================
 
     for race_id in track(race_id_list, description="Predict..."):
@@ -74,13 +75,19 @@ if __name__ == "__main__":
         y = list(deepflatten(network.predict(x)))
         predict_y, prob = prob_win(y)
 
+        # ベットすべきか判断
+        # 単勝の場合、1着予想が一定のprobを切っているなら賭けない
+        if prob[0] < 0.7:
+            continue
+        bet_cnt += 1
+
         # 正解ラベル取り出し
         # 正解用テーブルtTblに入っているのを持ってくる
         ans = tTbl[0]()
         ans.set(race_id)
         ans.adj()
 
-        acc = Bet.quinella_place_box3(np.array(y), np.array(ans.xList))
+        acc = Bet.win(np.array(y), np.array(ans.xList))
 
         if int(acc) == 1:
             hit.append(race_id)
@@ -89,7 +96,7 @@ if __name__ == "__main__":
             miss.append(race_id)
             probs_miss[race_id] = prob
 
-        logger.info("acc = {0}".format(len(hit) / len(race_id_list)))
+        logger.info("acc = {0}".format(len(hit) / bet_cnt))
 
     # 予測したrace_idの的中/非的中を確認するためのSQL作成
     nf.db_race_make_debug_table("hit", hit)

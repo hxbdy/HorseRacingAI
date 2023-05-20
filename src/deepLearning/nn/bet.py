@@ -22,9 +22,21 @@ class Bet:
     def win(cls, y:np, t:np):
         """単勝
         1位を予想する賭け方"""
-        y = np.argmax(y, axis=1)
-        if t.ndim != 1 : t = np.argmax(t, axis=1)
-        accuracy = np.sum(y == t) / float(t.shape[0])
+        
+        accuracy = 0
+        if t.ndim == 1:
+            t = np.argmax(t)
+            y = np.argmax(y)
+            if y == t:
+                accuracy = 1
+            else:
+                accuracy = 0
+            
+        elif t.ndim == 2:
+            t = np.argmax(t, axis=1)
+            y = np.argmax(y, axis=1)
+            accuracy = np.sum(y == t) / float(t.shape[0])
+
         return accuracy
 
     @classmethod
