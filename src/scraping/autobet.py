@@ -107,8 +107,9 @@ class AutoBet:
         wf.select_from_id_dropdown(self.driver, "bet-basic-type", type)
 
     def _select_method(self, method):
-        time.sleep(1)
-        wf.select_from_id_dropdown(self.driver, "bet-basic-method", method)
+        if method is not None:
+            time.sleep(1)
+            wf.select_from_id_dropdown(self.driver, "bet-basic-method", method)
 
     def _select_horse_no(self, no_list):
         for no in no_list:
@@ -118,14 +119,22 @@ class AutoBet:
     def _bet_money(self, money):
         wf.input_text(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/div/div[3]/select-list/div/div/div[3]/div[1]/input', int(money / 100))
 
-    def _expand_set(self):
-        wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/div/div[3]/select-list/div/div/div[3]/div[4]/button[1]')
+    def _set(self, kind):
+        if kind == "expand":
+            # 展開セット
+            # ボックス買いのときはこちら
+            wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/div/div[3]/select-list/div/div/div[3]/div[4]/button[1]')
+        else:
+            # 通常セット
+            wf.click_button(self.driver, '//*[@id="main"]/ui-view/div[2]/ui-view/main/div/div[3]/select-list/div/div/div[3]/div[4]/button[2]')
 
     def _vote(self):
         time.sleep(1)
         wf.click_button(self.driver, '//*[@id="ipat-navbar"]/div/ng-transclude/div/ul/li/button')
         time.sleep(1)
         money = wf.get_class_text(self.driver, '//*[@id="bet-list-top"]/div[5]/table/tbody/tr[5]/td/span[2]')
+        # element = self.driver.find_elements(By.CLASS_NAME, 'total text-right green')[1]
+        # money = element.get_attribute("textContent")
         wf.input_text(self.driver, '//*[@id="bet-list-top"]/div[5]/table/tbody/tr[6]/td/input', money)
 
     def _buy(self):
@@ -159,7 +168,7 @@ class AutoBet:
         self._bet_money(money)
 
         # set
-        self._expand_set()
+        self._set("expand")
 
         # confirm
         self._vote()
@@ -187,3 +196,6 @@ if __name__ == "__main__":
     bet1, bet2, bet3 = tmp_param.predict_y[0:3]
 
     better.bet(venue=tmp_param.venue, race_no=tmp_param.race_no, type="ワイド", method="ボックス", horse_no=[bet1 + 1, bet2 + 1, bet3 + 1], money=100)
+    
+    # TODO: 単勝ベット時 _vote() で金額のテキストボックスに入力できずにアサートする
+    # better.bet(venue=tmp_param.venue, race_no=tmp_param.race_no, type="単勝", method=None, horse_no=[bet1 + 1], money=100)
