@@ -264,10 +264,6 @@ class NetkeibaDB_IF:
         # 見つからなかった場合、出走レース一覧から一番最近のrace_idを返す
         # 指定のrace_idより古いレースがない場合は指定のrace_idをそのまま返す
 
-        # これは直前の調子をはかるために使う
-        # 直前のレースが重賞以外のとき、現状は重賞まで遡ってタイムを取得している。
-        # が、直前のレースのグレードは関係ないと思う。ラスト3ハロンタイムは
-
         # horse_idの出走レース一覧をrace_infoテーブルから取得する
         race_list = self.netkeibaDB.sql_mul_tbl("race_info", ["race_id"], ["horse_id"], [horse_id], pattern)
 
