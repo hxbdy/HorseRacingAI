@@ -235,9 +235,9 @@ class NetkeibaDB_IF:
         # race_id で horse_id は何位だったか取得
         return self.netkeibaDB.sql_one_race_info(race_id, horse_id, "result")
 
-    def db_race_list_1v1(self, horse_id_1, horse_id_2):
-        # horse_id_1, horse_id_2 が出走したレースリストを返す
-        return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2)
+    def db_race_list_1v1(self, horse_id_1, horse_id_2, upper_race_id):
+        """ <upper_race_id のレースのうち horse_id_1, horse_id_2 両方が出たレースIDを返す"""
+        return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2, upper_race_id)
     
     def db_horse_parent(self, horse_id, parent):
         """親のhorse_idを返す

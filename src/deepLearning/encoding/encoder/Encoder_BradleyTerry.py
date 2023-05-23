@@ -27,7 +27,9 @@ class BradleyTerryClass(XClass):
                 win = 0
                 lose = 0
                 horse_x = self.xList[x]
-                races = self.nf.db_race_list_1v1(horse_y, horse_x)
+                races = self.nf.db_race_list_1v1(horse_y, horse_x, self.race_id)
+
+                self.logger.debug("{0} vs {1} history ~ {2} | race_id_list = {3}".format(horse_y, horse_x, self.race_id, races))
                 for race in races:
                     # race で horse_x, y は何位だったか取得
                     rank_y = self.getRankFromDB(race, horse_y)

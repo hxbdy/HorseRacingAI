@@ -62,6 +62,8 @@ class PredictBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
         # horse_id
         self.xList = self.race_info.horse_id
         self.col_num = len(self.xList)
+        # race_id
+        self.race_id = self.race_info.race_id
 class PredictUmamusumeClass(encoder.Encoder_Umamusume.UmamusumeClass):
     def get(self):
         # horse_id
@@ -77,6 +79,8 @@ class PredictFatherBradleyTerryClass(encoder.Encoder_FatherBradleyTerry.FatherBr
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)
+        # race_id
+        self.race_id = self.race_info.race_id
 class PredictMotherBradleyTerryClass(encoder.Encoder_MotherBradleyTerry.MotherBradleyTerryClass):
     def get(self):
         # horse_id
@@ -88,6 +92,8 @@ class PredictMotherBradleyTerryClass(encoder.Encoder_MotherBradleyTerry.MotherBr
             parentList.append(parent)
         self.xList = parentList
         self.col_num = len(self.xList)
+        # race_id
+        self.race_id = self.race_info.race_id
 class PredictLast3fClass(encoder.Encoder_Last3f.Last3fClass):
     def get(self):
         # race_id

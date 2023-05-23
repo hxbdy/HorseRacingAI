@@ -281,10 +281,10 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-    def sql_mul_race_id_1v1(self, horse1, horse2):
-        # horse1, horse2 両方が出たレースIDを返す
-        sql = "SELECT race_info.race_id FROM (SELECT horse_id, race_id, result, COUNT(race_id) AS CNT FROM race_info WHERE (horse_id=? OR horse_id=?) GROUP BY race_id) AS race_sum INNER JOIN race_info ON race_info.horse_id = race_sum.horse_id AND race_info.race_id = race_sum.race_id AND race_sum.CNT > 1;"
-        self.cur.execute(sql, [horse1, horse2])
+    def sql_mul_race_id_1v1(self, horse1, horse2, upper_race_id):
+        """ <upper_race_id のレースのうち horse1, horse2 両方が出たレースIDを返す"""
+        sql = "SELECT race_info.race_id FROM (SELECT horse_id, race_id, result, COUNT(race_id) AS CNT FROM race_info WHERE ((horse_id=? OR horse_id=?) AND race_id < ?) GROUP BY race_id) AS race_sum INNER JOIN race_info ON race_info.horse_id = race_sum.horse_id AND race_info.race_id = race_sum.race_id AND race_sum.CNT > 1;"
+        self.cur.execute(sql, [horse1, horse2, upper_race_id])
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
