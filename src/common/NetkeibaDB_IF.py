@@ -234,10 +234,18 @@ class NetkeibaDB_IF:
     def db_race_rank(self, race_id, horse_id):
         # race_id で horse_id は何位だったか取得
         return self.netkeibaDB.sql_one_race_info(race_id, horse_id, "result")
+    
+    def db_race_rank_jockey(self, race_id, jockey_id):
+        # race_id で jockey_id は何位だったか取得
+        return self.netkeibaDB.sql_jockey_race_info(race_id, jockey_id, "result")
 
     def db_race_list_1v1(self, horse_id_1, horse_id_2, upper_race_id):
         """ <upper_race_id のレースのうち horse_id_1, horse_id_2 両方が出たレースIDを返す"""
         return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2, upper_race_id)
+    
+    def db_race_list_jockey_1v1(self, jockey_id_1, jockey_id_2, upper_race_id):
+        """ <upper_race_id のレースのうち jockey_id_1, jockey_id_2 両方が出たレースIDを返す"""
+        return self.netkeibaDB.sql_mul_race_id_jockey_1v1(jockey_id_1, jockey_id_2, upper_race_id)
     
     def db_horse_parent(self, horse_id, parent):
         """親のhorse_idを返す
