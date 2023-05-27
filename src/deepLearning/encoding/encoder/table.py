@@ -22,7 +22,8 @@ XTbl = [
     encoder.Encoder_CornerPos.CornerPosClass,
     encoder.Encoder_Pace.PaceClass,
     encoder.Encoder_Review.ReviewClass,
-    encoder.Encoder_LastRaceLeft.LastRaceLeftClass
+    encoder.Encoder_LastRaceLeft.LastRaceLeftClass,
+    encoder.Encoder_JockeyBradleyTerry.JockeyBradleyTerryClass
 ]
 
 # 正解用テーブル

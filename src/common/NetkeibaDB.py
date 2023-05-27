@@ -108,6 +108,7 @@ class NetkeibaDB:
         # race_info 
         self.cur.execute("CREATE INDEX race_info_date ON race_info(race_id, date);")
         self.cur.execute("CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);")
+        self.cur.execute("CREATE INDEX race_info_jockey_id ON race_info(race_id, jockey_id, result);")
 
         # race_result
         self.cur.execute("CREATE INDEX race_result_grade      ON race_result(horse_id, race_id, grade);")
@@ -158,6 +159,17 @@ class NetkeibaDB:
         sql = "SELECT " + col_name + " FROM race_info WHERE race_id=? AND horse_id=?;"
         self.cur.execute(sql, [race_id, horse_id])
         return self.cur.fetchone()[0]
+    
+    def sql_jockey_race_info(self, race_id, jockey_id, col_name):
+        """ race_info テーブルから指定列の要素を一つ取り出す 
+        特定のレースの特定の騎手を指定するため、結果は必ず1つ """
+        sql = "SELECT " + col_name + " FROM race_info WHERE race_id=? AND jockey_id=?;"
+        self.cur.execute(sql, [race_id, jockey_id])
+        data = self.cur.fetchone()
+        if data is None:
+            return None
+        else:
+            return data[0]
 
     def sql_one_race_result(self, race_id, horse_id, col_name):
         # race_result テーブルから指定列の要素を一つ取り出す
@@ -283,8 +295,17 @@ class NetkeibaDB:
 
     def sql_mul_race_id_1v1(self, horse1, horse2, upper_race_id):
         """ <upper_race_id のレースのうち horse1, horse2 両方が出たレースIDを返す"""
-        sql = "SELECT race_info.race_id FROM (SELECT horse_id, race_id, result, COUNT(race_id) AS CNT FROM race_info WHERE ((horse_id=? OR horse_id=?) AND race_id < ?) GROUP BY race_id) AS race_sum INNER JOIN race_info ON race_info.horse_id = race_sum.horse_id AND race_info.race_id = race_sum.race_id AND race_sum.CNT > 1;"
+        sql = "SELECT race_id FROM race_info WHERE ((horse_id=? OR horse_id=?) AND (race_id < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
         self.cur.execute(sql, [horse1, horse2, upper_race_id])
+        retList = []
+        for i in self.cur.fetchall():
+            retList.append(i[0])
+        return retList
+    
+    def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, upper_race_id):
+        """ <upper_race_id のレースのうち jockey1, jockey2 両方が出たレースIDを返す"""
+        sql = "SELECT race_id FROM race_info WHERE ((jockey_id=? OR jockey_id=?) AND (race_id < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
+        self.cur.execute(sql, [jockey1, jockey2, upper_race_id])
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
