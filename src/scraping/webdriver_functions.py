@@ -6,6 +6,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import time
@@ -96,6 +97,21 @@ def click_button(driver, xpath):
     """ボタンをクリックする
     """
     driver.find_element(By.XPATH, xpath).click()
+
+def click_button_class(driver, class_name):
+    """ボタンをclass名からクリックする
+    クリックに成功したらTrue, NoSuchElementExceptionで失敗した場合はFalseを返す(それ以外はその場でアサート)
+    """
+    try:
+        element = driver.find_element(By.CLASS_NAME, class_name)
+        if element.is_enabled():
+            element.click()
+        else:
+            return False
+    except NoSuchElementException:
+        logger.error("NoSuchElementException pass")
+        return False
+    return True
 
 def input_text(driver, xpath, text):
     """テキストボックスに入力する

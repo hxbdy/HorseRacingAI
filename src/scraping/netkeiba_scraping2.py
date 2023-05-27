@@ -10,7 +10,7 @@
 
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import re
 import os
@@ -842,15 +842,48 @@ def scrape_racedata(driver, race_id):
     
     return dfs[0]
 
+def get_race_id_list_from_search_result(driver):
+    """レース検索結果画面からrace_idリストを作成する
+    次ページ以降も取得する"""
+
+    raceID_list = []
+    # 次のページリンクをクリックできる限り無限ループ
+    while True:
+        ## 画面遷移後
+        # raceIDをレース名のURLから取得
+        # 5列目のデータ全部
+        race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
+        
+        # race_id 取得
+        for i in range(len(race_column_html)):
+            race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
+            raceID_list.append(url2ID(race_url_str, "race"))
+
+        # 次ページへ遷移する
+        # 「次」リンクにhrefがあればクリックする
+        # 無ければexceptするので終了する
+        page_links = driver.find_elements(By.TAG_NAME, "li")
+        for page_link in page_links:
+            if page_link.text == "次":
+                try:
+                    link = page_link.find_element(By.TAG_NAME, "a").get_attribute("href")
+                    logger.debug("href = {}".format(link))
+                    if link is not None:
+                        wf.click_button_class(driver, "CSS3_Icon_R")
+                    break
+                except:
+                    return raceID_list
+            
+        time.sleep(1)
+    return raceID_list
+
 def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade):
     """start_YYMM から end_YYMM までの芝・ダートレースのraceIDを取得する
     driver: webdriver
     start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
     end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
-    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, 5: ALL
     """
-
-    race_grade_name = "check_grade_{}".format(race_grade)
 
     try:
         head = datetime.datetime.strptime(start_YYMM, '%Y%m')
@@ -885,36 +918,33 @@ def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade):
         for i in range(1,11): # 全競馬場を選択
             wf.click_checkbox(driver, "check_Jyo_{:02}".format(i))
         # クラスの選択
-        wf.click_checkbox(driver, race_grade_name)
-        # 表示件数を100件にする
-        wf.select_from_dropdown(driver, "list", "100")
+        # グレードの指定があればチェックする
+        if race_grade!=5:
+            race_grade_name = "check_grade_{}".format(race_grade)
+            wf.click_checkbox(driver, race_grade_name)
+        # 表示件数を20件にする
+        wf.select_from_dropdown(driver, "list", "20")
         # 検索ボタンをクリック
         wf.click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
         time.sleep(1)
-        ## 画面遷移後
-        # raceIDをレース名のURLから取得
-        # 5列目のデータ全部
-        race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
-        
-        raceID_list = []
-        for i in range(len(race_column_html)):
-            race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-            raceID_list.append(url2ID(race_url_str, "race"))
 
+        # 検索結果のレース一覧取得
+        raceID_list = get_race_id_list_from_search_result(driver)
+        
         # raceID_listが日付降順なので、昇順にする
         raceID_list.reverse()
 
         # 検索の開始年月を (ptr + 1) 月からに再設定
         head = ptr + relativedelta(months = 1)
 
-        print("raceID_list = ", raceID_list)
+        logger.debug("race_id_list({0}) = {1}".format(len(raceID_list), raceID_list))
 
         yield raceID_list
 
 def regist_scrape_race_id(driver, start, end, grade):
     # 期間内のrace_idをuntracked_race_idテーブルへ保存
-    grade_dict = {"G1": 1, "G2": 2, "G3": 3, "OP": 4}
-    grade_list = re.findall("G1|G2|G3|OP", grade)
+    grade_dict = {"G1": 1, "G2": 2, "G3": 3, "OP": 4, "ALL":5}
+    grade_list = re.findall("G1|G2|G3|OP|ALL", grade)
 
     nf = NetkeibaDB_IF("ROM")
     for key in grade_list:
@@ -1006,7 +1036,7 @@ if __name__ == "__main__":
         end = datetime.datetime.now().strftime("%Y%m")
 
         # すべてのグレードを対象とする
-        grade = "OP"
+        grade = "ALL"
 
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
@@ -1032,7 +1062,7 @@ if __name__ == "__main__":
         end = end.strftime("%Y%m")
         start = start.strftime("%Y%m")
         
-        grade = "OP"
+        grade = "ALL"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
         driver = wf.start_driver(browser, arg_list, False)
