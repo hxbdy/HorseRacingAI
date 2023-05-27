@@ -246,6 +246,7 @@ class NetkeibaDB_IF:
     
     def db_race_list_jockey_1v1(self, jockey_id_1, jockey_id_2, upper_race_id):
         """ <upper_race_id のレースのうち jockey_id_1, jockey_id_2 両方が出たレースIDを返す"""
+        upper_race_id = upper_race_id[0:4] + "99999999"
         return self.netkeibaDB.sql_mul_race_id_jockey_1v1(jockey_id_1, jockey_id_2, upper_race_id)
     
     def db_horse_parent(self, horse_id, parent):
