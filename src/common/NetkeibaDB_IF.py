@@ -235,9 +235,10 @@ class NetkeibaDB_IF:
         # race_id で horse_id は何位だったか取得
         return self.netkeibaDB.sql_one_race_info(race_id, horse_id, "result")
 
-    def db_race_list_1v1(self, horse_id_1, horse_id_2):
-        # horse_id_1, horse_id_2 が出走したレースリストを返す
-        return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2)
+    def db_race_list_1v1(self, horse_id_1, horse_id_2, upper_race_id):
+        """ <(upper_race_id の開催年)レースのうち horse_id_1, horse_id_2 両方が出たレースIDを返す"""
+        upper_race_id = upper_race_id[0:4] + "99999999"
+        return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2, upper_race_id)
     
     def db_horse_parent(self, horse_id, parent):
         """親のhorse_idを返す
@@ -263,10 +264,6 @@ class NetkeibaDB_IF:
         # horse_id が出走したレースのうち、race_idの直前に走ったレースIDを返す
         # 見つからなかった場合、出走レース一覧から一番最近のrace_idを返す
         # 指定のrace_idより古いレースがない場合は指定のrace_idをそのまま返す
-
-        # これは直前の調子をはかるために使う
-        # 直前のレースが重賞以外のとき、現状は重賞まで遡ってタイムを取得している。
-        # が、直前のレースのグレードは関係ないと思う。ラスト3ハロンタイムは
 
         # horse_idの出走レース一覧をrace_infoテーブルから取得する
         race_list = self.netkeibaDB.sql_mul_tbl("race_info", ["race_id"], ["horse_id"], [horse_id], pattern)
