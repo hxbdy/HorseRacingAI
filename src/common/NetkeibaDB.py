@@ -48,7 +48,7 @@ class NetkeibaDB:
         race_resultテーブル: レースのページにあるレース名やレース結果の情報(オッズは含まず)
         jockey_infoテーブル: 騎手の騎乗回数を1年ごとに計上してまとめたテーブル
         """
-        os.makedirs(os.path.dirname(dbname))
+        os.makedirs(os.path.dirname(dbname),  exist_ok=True)
 
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
