@@ -4,10 +4,6 @@
 # 2.1. 並列で動作するプロセスは、スクレイププロセス + DB制御プロセス
 # 2.2. スクレイププロセスは、レース情報をスクレイプするか馬情報をスクレイプするかはキューのたまり具合で判断する
 
-# 残件
-# 1. 取得に失敗したIDを再度取得チャレンジするオプションの追加
-# 2. ログがフォーマット通り出力されない問題の対処
-
 from log import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -34,9 +30,10 @@ from file_path_mgr import path_ini, private_ini
 from deepLearning_common import write_RaceInfo
 from RaceInfo      import RaceInfo
 
-# プロセス優先度設定(通常以上にはしないこと)
+# 長時間スクレイピングが予想される場合、スクレイピング以外の作業を同じマシン上で行いたい時向け
+# スクレイピングプロセスの優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
-# 通常 : psutil.NORMAL_PRIORITY_CLASS
+# 通常     : psutil.NORMAL_PRIORITY_CLASS
 psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
 
 ####################################################################################
