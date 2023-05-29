@@ -56,8 +56,9 @@ def multi_encode(start_year = 1800, end_year = 2020, limit = -1, pattern = False
     race_id_list = nf.db_race_list_id(start_year, end_year, limit, pattern)
     # logger.debug(race_id_list)
 
-    # プロセスをエンコーダ予定の数だけ用意
-    p = Pool(len(XTbl) + len(tTbl))
+    # プロセス用意
+    # processes 指定しないことで、環境ごとの使用可能論理プロセス数を使用する
+    p = Pool()
 
     # ログ用のキューを用意
     queue = Queue()
