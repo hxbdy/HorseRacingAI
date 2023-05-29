@@ -452,4 +452,4 @@ class NetkeibaDB:
 
         # 処理の重さ確認用
         time_end = time.perf_counter()
-        logger.info("upsert time = {0} [sec]".format(time_end - time_sta))
+        logger.debug("upsert time = {0} [sec]".format(time_end - time_sta))
