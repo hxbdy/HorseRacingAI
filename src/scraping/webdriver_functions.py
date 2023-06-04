@@ -47,11 +47,12 @@ def start_driver(browser_name, arg_list=[], pageLoadStrategy=False):
         # ページの読み込みを待たない
         if pageLoadStrategy:
             desired = DesiredCapabilities().CHROME
-            desired['pageLoadStrategy'] = 'none'
+            desired['pageLoadStrategy'] = 'none' # normal > eager > none
         else:
             desired = None
 
         driver = webdriver.Chrome(service=service, options=ChromeOptions, desired_capabilities=desired)
+        driver.set_window_size(1500,1500)
         logger.info('initialize chrome driver completed')
     
     elif(browser_name == 'FireFox'):
