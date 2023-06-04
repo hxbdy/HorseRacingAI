@@ -64,7 +64,6 @@ def scrape(scraping_queue, db_ctrl_queue):
             break
 
         arg_dict["driver"] = driver
-        logger.info("driver.html = {}".format(driver.page_source.encode('utf-8')))
         rets = func(arg_dict)
 
         logger.debug("rets = {0}".format(rets))
