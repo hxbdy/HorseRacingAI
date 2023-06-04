@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.service import Service
+from selenium.common.exceptions import NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -51,6 +52,7 @@ def start_driver(browser_name, arg_list=[], pageLoadStrategy=False):
             desired = None
 
         driver = webdriver.Chrome(service=service, options=ChromeOptions, desired_capabilities=desired)
+        driver.set_window_size(1500,1500)
         logger.info('initialize chrome driver completed')
     
     elif(browser_name == 'FireFox'):
@@ -61,6 +63,21 @@ def start_driver(browser_name, arg_list=[], pageLoadStrategy=False):
         logger.info('initialize firefox driver completed')
 
     return driver
+
+def click_button_class(driver, class_name):
+    """ボタンをclass名からクリックする
+    クリックに成功したらTrue, NoSuchElementExceptionで失敗した場合はFalseを返す(それ以外はその場でアサート)
+    """
+    try:
+        element = driver.find_element(By.CLASS_NAME, class_name)
+        if element.is_enabled():
+            element.click()
+        else:
+            return False
+    except NoSuchElementException:
+        logger.error("NoSuchElementException pass")
+        return False
+    return True
 
 def access_page(driver, url):
     """url先にアクセスする
