@@ -471,7 +471,7 @@ def scrape_process(parent_queue, child_queue, children_id):
     print("scrape_process fin id:", children_id)
             
 def db_process(parent_queue, child_queue):
-    nf = NetkeibaDB_IF("RAM")
+    nf = NetkeibaDB_IF("ROM")
     queue = child_queue
     while True:
         data = queue.get()
