@@ -4,13 +4,9 @@
 # 2.1. 並列で動作するプロセスは、スクレイププロセス + DB制御プロセス
 # 2.2. スクレイププロセスは、レース情報をスクレイプするか馬情報をスクレイプするかはキューのたまり具合で判断する
 
-# 残件
-# 1. 取得に失敗したIDを再度取得チャレンジするオプションの追加
-# 2. ログがフォーマット通り出力されない問題の対処
-
 from log import *
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import re
 import os
@@ -34,9 +30,10 @@ from file_path_mgr import path_ini, private_ini
 from deepLearning_common import write_RaceInfo
 from RaceInfo      import RaceInfo
 
-# プロセス優先度設定(通常以上にはしないこと)
+# 長時間スクレイピングが予想される場合、スクレイピング以外の作業を同じマシン上で行いたい時向け
+# スクレイピングプロセスの優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
-# 通常 : psutil.NORMAL_PRIORITY_CLASS
+# 通常     : psutil.NORMAL_PRIORITY_CLASS
 psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
 
 ####################################################################################
@@ -274,7 +271,9 @@ def main_process(untracked_race_id_list, children_num, roll):
         # DB制御キューを捌けさせて、メモリが空くのを待つ
         # 一定時間待っても改善しない場合は強制終了する
         mem = psutil.virtual_memory()
-        while mem.percent > 90.0:
+
+        # 現状無制限
+        while mem.percent > 100.0:
             # 待ちの数を10以下になるまで待つ
             # 待ってもメモリの使用率が改善しない場合は一定時間経過後に強制終了
             print("mem {0}% used ! queue size = {1} | wait {2}/{3}".format(mem.percent, db_queue.qsize(), mem_limit_cnt, MEM_LIMIT_WAIT_SEC))
@@ -474,7 +473,7 @@ def scrape_process(parent_queue, child_queue, children_id):
     print("scrape_process fin id:", children_id)
             
 def db_process(parent_queue, child_queue):
-    nf = NetkeibaDB_IF("RAM")
+    nf = NetkeibaDB_IF("ROM")
     queue = child_queue
     while True:
         data = queue.get()
@@ -842,15 +841,49 @@ def scrape_racedata(driver, race_id):
     
     return dfs[0]
 
+def get_race_id_list_from_search_result(driver):
+    """レース検索結果画面からrace_idリストを作成する
+    次ページ以降も取得する"""
+
+    raceID_list = []
+    # 次のページリンクをクリックできる限り無限ループ
+    while True:
+        ## 画面遷移後
+        # raceIDをレース名のURLから取得
+        # 5列目のデータ全部
+        race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
+        
+        # race_id 取得
+        for i in range(len(race_column_html)):
+            race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
+            raceID_list.append(url2ID(race_url_str, "race"))
+
+        # 次ページへ遷移する
+        # 「次」リンクにhrefがあればクリックする
+        # 無ければexceptするので終了する
+        page_links = driver.find_elements(By.TAG_NAME, "li")
+        for page_link in page_links:
+            if page_link.text == "次":
+                try:
+                    link = page_link.find_element(By.TAG_NAME, "a").get_attribute("href")
+                    logger.debug("href = {}".format(link))
+                    if link is not None:
+                        wf.click_button_class(driver, "CSS3_Icon_R")
+                    break
+                except Exception as e:
+                    logger.error(e.args)
+                    return raceID_list
+            
+        time.sleep(1)
+    return raceID_list
+
 def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade):
     """start_YYMM から end_YYMM までの芝・ダートレースのraceIDを取得する
     driver: webdriver
     start_YYMM: 取得開始年月(1986年以降推奨) <例> "198601" (1986年1月)
     end_YYMM: 取得終了年月(1986年以降推奨) <例> "198601" (1986年1月)
-    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て
+    race_grade: 取得するグレードのリスト 1: G1, 2: G2, 3: G3, 4: OP以上全て, 5: ALL
     """
-
-    race_grade_name = "check_grade_{}".format(race_grade)
 
     try:
         head = datetime.datetime.strptime(start_YYMM, '%Y%m')
@@ -885,36 +918,33 @@ def scrape_raceID(driver, start_YYMM, end_YYMM, race_grade):
         for i in range(1,11): # 全競馬場を選択
             wf.click_checkbox(driver, "check_Jyo_{:02}".format(i))
         # クラスの選択
-        wf.click_checkbox(driver, race_grade_name)
-        # 表示件数を100件にする
-        wf.select_from_dropdown(driver, "list", "100")
+        # グレードの指定があればチェックする
+        if race_grade!=5:
+            race_grade_name = "check_grade_{}".format(race_grade)
+            wf.click_checkbox(driver, race_grade_name)
+        # 表示件数を20件にする
+        wf.select_from_dropdown(driver, "list", "20")
         # 検索ボタンをクリック
         wf.click_button(driver, "//*[@id='db_search_detail_form']/form/div/input[1]")
         time.sleep(1)
-        ## 画面遷移後
-        # raceIDをレース名のURLから取得
-        # 5列目のデータ全部
-        race_column_html = driver.find_elements(By.XPATH, "//*[@class='nk_tb_common race_table_01']/tbody/tr/td[5]")
-        
-        raceID_list = []
-        for i in range(len(race_column_html)):
-            race_url_str = race_column_html[i].find_element(By.TAG_NAME,"a").get_attribute("href")
-            raceID_list.append(url2ID(race_url_str, "race"))
 
+        # 検索結果のレース一覧取得
+        raceID_list = get_race_id_list_from_search_result(driver)
+        
         # raceID_listが日付降順なので、昇順にする
         raceID_list.reverse()
 
         # 検索の開始年月を (ptr + 1) 月からに再設定
         head = ptr + relativedelta(months = 1)
 
-        print("raceID_list = ", raceID_list)
+        logger.debug("race_id_list({0}) = {1}".format(len(raceID_list), raceID_list))
 
         yield raceID_list
 
 def regist_scrape_race_id(driver, start, end, grade):
     # 期間内のrace_idをuntracked_race_idテーブルへ保存
-    grade_dict = {"G1": 1, "G2": 2, "G3": 3, "OP": 4}
-    grade_list = re.findall("G1|G2|G3|OP", grade)
+    grade_dict = {"G1": 1, "G2": 2, "G3": 3, "OP": 4, "ALL":5}
+    grade_list = re.findall("G1|G2|G3|OP|ALL", grade)
 
     nf = NetkeibaDB_IF("ROM")
     for key in grade_list:
@@ -980,6 +1010,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip_login', action='store_true', default=False, help='skip login')                     # netkeibaへのログイン作業をスキップする
     parser.add_argument('--skip_untracked', action='store_true', default=False, help='retry')                      # 前回スクレイピングで取得に失敗したページの再取得をスキップする
     parser.add_argument('--untracked', action='store_true', default=False, help='retry')                           # 前回スクレイピングで取得に失敗したページの再取得をのみを実行する
+    parser.add_argument('--period', help='(start YYYYMM)-(end YYYYMM)', type=str)                                            # スクレイピング期間を指定する
 
     args = parser.parse_args()
 
@@ -1006,7 +1037,7 @@ if __name__ == "__main__":
         end = datetime.datetime.now().strftime("%Y%m")
 
         # すべてのグレードを対象とする
-        grade = "OP"
+        grade = "ALL"
 
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
@@ -1032,7 +1063,22 @@ if __name__ == "__main__":
         end = end.strftime("%Y%m")
         start = start.strftime("%Y%m")
         
-        grade = "OP"
+        grade = "ALL"
+        race_id = []
+        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
+        driver = wf.start_driver(browser, arg_list, False)
+        for race_id_list in regist_scrape_race_id(driver, start, end, grade):
+            race_id.extend(race_id_list)
+        driver.quit()
+        main_process(race_id, process_num, args.skip_untracked)
+
+        # jockey_infoテーブルアップデート
+        update_jockey_info(int(start[:-2]), int(end[:-2]))
+
+    elif args.period:
+        start, end = args.period.split('-')
+
+        grade = "ALL"
         race_id = []
         arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging']
         driver = wf.start_driver(browser, arg_list, False)
