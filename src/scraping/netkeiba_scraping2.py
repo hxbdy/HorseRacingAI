@@ -454,22 +454,16 @@ def scrape_process(parent_queue, child_queue, children_id):
             func(queue, [id], driver)
 
         # スクレイプ完了通知受信 (From func)
-        # 次のスクレイプ id の要求を送信してから
-        # 結果を親プロセスに送信する
-        # この順番により次のジョブがくるまでの間隔が短くなるはず
         elif data[0] == "SUCCESS":
             print("-> SUCCESS REQ id =", children_id)
-            parent_queue.put(["REQ", children_id])
             parent_queue.put(data)
+            parent_queue.put(["REQ", children_id])
 
         # スクレイプ失敗通知受信 (From func)
-        # 次のスクレイプ id の要求を送信してから
-        # 結果を親プロセスに送信する
-        # この順番により次のジョブがくるまでの間隔が短くなるはず
         elif data[0] == "FAILED":
             print("-> FAILED REQ id =", children_id)
-            parent_queue.put(["REQ", children_id])
             parent_queue.put(data)
+            parent_queue.put(["REQ", children_id])
     print("scrape_process fin id:", children_id)
             
 def db_process(parent_queue, child_queue):
@@ -951,10 +945,10 @@ def regist_scrape_race_id(driver, start, end, grade):
         for race_id_list in scrape_raceID(driver, start, end, grade_dict[key]):
 
             # 実際にスクレイプするレースを絞るフィルタ処理
-            checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
+            # checked_race_id_list = nf.db_filter_scrape_race_id(race_id_list)
 
             # フィルタ処理を行わない
-            # checked_race_id_list = race_id_list
+            checked_race_id_list = race_id_list
 
             logger.debug("saving checked_race_id_list = {0}".format(checked_race_id_list))
             yield checked_race_id_list
@@ -981,8 +975,8 @@ def scrape_horse_result(queue, horse_id_list, driver):
     # checked_list = nf.db_not_retired_list(horse_id_list)
     checked_list = horse_id_list
     try:
-        for race_id in checked_list:
-            horse_prof_data, race_info_data = scrape_horsedata(driver, race_id)
+        for horse_id in checked_list:
+            horse_prof_data, race_info_data = scrape_horsedata(driver, horse_id)
             if race_info_data is None:
                 raise Exception
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
@@ -1113,12 +1107,17 @@ if __name__ == "__main__":
 
     elif args.debug:
         # debug用引数
-        arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
-        driver = wf.start_driver(browser, arg_list, False)
-        prof, race_info = scrape_horsedata(driver, "2008190006")
-        print("prof = ", prof)
-        print("race_info = ", race_info)
-        driver.close()
+
+        # ウマの情報のみ取得する。DBに追加はしない
+        # arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
+        # driver = wf.start_driver(browser, arg_list, False)
+        # prof, race_info = scrape_horsedata(driver, "201905010102")
+        # print("prof = ", prof)
+        # print("race_info = ", race_info)
+        # driver.close()
+
+        # レースの取得を行う。DBに追加も行う
+        main_process(["201907010307"], process_num, args.skip_untracked)
 
     else:
         logger.error("read usage: netkeiba_scraping.py -h")
