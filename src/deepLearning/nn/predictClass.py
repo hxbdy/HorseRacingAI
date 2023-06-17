@@ -123,9 +123,17 @@ class PredictLastRaceLeft(encoder.Encoder_LastRaceLeft.LastRaceLeftClass):
         self.d0 = self.race_info.date
         # horse_id
         self.xList = self.race_info.horse_id
+class PredictJockeyBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
+    def get(self):
+        # jockey_id
+        self.xList = self.race_info.jockey_id
+        self.col_num = len(self.xList)
+        # race_id
+        self.race_id = self.race_info.race_id
 # ==========================================================================
 
 # 推論時の入力用テーブル
+# XTbl と同じ並び順、要素にする必要がある
 predict_XTbl = [
     PredictMoneyClass,
     PredictHorseNumClass,
@@ -147,5 +155,6 @@ predict_XTbl = [
     PredictCornerPos,
     PredictPace,
     PredictReview,
-    PredictLastRaceLeft
+    PredictLastRaceLeft,
+    PredictJockeyBradleyTerryClass
 ]
