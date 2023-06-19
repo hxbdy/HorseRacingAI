@@ -61,6 +61,7 @@ class CumPerformClass(XClass):
 
         # raw = [[(馬Aレースa情報), (馬Aレースb情報), ... ], [(馬Bレースc情報), (馬Bレースd情報), ...]]
         for race in self.xList:
+            max_performance = -1000.0
             for horse_info in race:
                 # horse_info = ('1982106916', '3小倉8', '1:12.7', '53', '良', '芝1200', '-1')
                 # logger.debug("horse_info = {0}".format(horse_info))

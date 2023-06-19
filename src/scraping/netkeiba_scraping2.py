@@ -134,8 +134,8 @@ def scrape_race_today(driver, raceID):
 
     try:
         # レース前に天候, 馬場が取得できない時は晴、良とする
-        raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip(" ") # '晴'
-        raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:]   # '良'
+        raceInfo.weather = racedata01[2][racedata01[2].find(":")+1:].strip() # '晴'
+        raceInfo.course_condition = racedata01[3][racedata01[3].find(":")+1:].strip()   # '良'
     except IndexError:
         logger.error("!!! IndexError : racedata01 = {0}".format(racedata01))
         raceInfo.weather = '晴'

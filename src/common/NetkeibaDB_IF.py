@@ -148,7 +148,7 @@ class NetkeibaDB_IF:
         #  良 / 発走 
         sep1 = sep1.split("/")[0]
         # 良
-        sep1 = sep1.replace(" ", "")
+        sep1 = sep1.strip()
 
         return sep1
     
