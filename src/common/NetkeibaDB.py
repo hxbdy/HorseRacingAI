@@ -158,7 +158,11 @@ class NetkeibaDB:
         # 主キーを指定するため必ず1つに絞れる
         sql = "SELECT " + col_name + " FROM race_info WHERE race_id=? AND horse_id=?;"
         self.cur.execute(sql, [race_id, horse_id])
-        return self.cur.fetchone()[0]
+        data = self.cur.fetchone()
+        if data is None:
+            return None
+        else:
+            return data[0]
     
     def sql_jockey_race_info(self, race_id, jockey_id, col_name):
         """ race_info テーブルから指定列の要素を一つ取り出す 

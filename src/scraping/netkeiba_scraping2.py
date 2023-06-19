@@ -199,6 +199,8 @@ def scrape_race_today(driver, raceID):
     raceInfo.jockey_id = list(map(lambda x: x[4], contents))
     raceInfo.horse_weight = list(map(lambda x: x[5], contents))
     
+    logger.info("開催日")
+    logger.info(raceInfo.date)
     logger.info("開催地")
     logger.info(raceInfo.venue)
     logger.info("レース")

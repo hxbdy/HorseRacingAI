@@ -61,6 +61,9 @@ class NetkeibaDB_IF:
         race_info テーブルの date から検索する"""
 
         raceDate = self.netkeibaDB.sql_mul_tbl("race_info", ["date"], ["race_id"], [race_id], False)
+
+        if len(raceDate) == 0:
+            return None
         raceDate = raceDate[0]
 
         year, month, day = raceDate.split('/')

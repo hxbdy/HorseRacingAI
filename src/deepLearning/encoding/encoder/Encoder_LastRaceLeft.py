@@ -20,6 +20,8 @@ class LastRaceLeftClass(XClass):
         for horse_id in self.xList:
             # 前走のrace_id取得
             last_race_id = self.nf.db_race_last_race(self.race_id, horse_id, False)
+            if len(last_race_id) == 0:
+                last_race_id  = self.race_id
             # 前走の開催日を取得
             last_race_date = self.nf.db_race_date(last_race_id)
 

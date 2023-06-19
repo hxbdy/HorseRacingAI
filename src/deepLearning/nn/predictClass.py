@@ -123,6 +123,8 @@ class PredictLastRaceLeft(encoder.Encoder_LastRaceLeft.LastRaceLeftClass):
         self.d0 = self.race_info.date
         # horse_id
         self.xList = self.race_info.horse_id
+        # race_id
+        self.race_id = self.race_info.race_id
 class PredictJockeyBradleyTerryClass(encoder.Encoder_BradleyTerry.BradleyTerryClass):
     def get(self):
         # jockey_id
