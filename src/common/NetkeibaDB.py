@@ -164,16 +164,12 @@ class NetkeibaDB:
         else:
             return data[0]
     
-    def sql_jockey_race_info(self, race_id, jockey_id, col_name):
+    def sql_jockey_race_info(self, race_id):
         """ race_info テーブルから指定列の要素を一つ取り出す 
         特定のレースの特定の騎手を指定するため、結果は必ず1つ """
-        sql = "SELECT " + col_name + " FROM race_info WHERE race_id=? AND jockey_id=?;"
-        self.cur.execute(sql, [race_id, jockey_id])
-        data = self.cur.fetchone()
-        if data is None:
-            return None
-        else:
-            return data[0]
+        sql = "SELECT jockey_id, result FROM race_info WHERE race_id=?;"
+        self.cur.execute(sql, [race_id])
+        return self.cur.fetchall()
 
     def sql_one_race_result(self, race_id, horse_id, col_name):
         # race_result テーブルから指定列の要素を一つ取り出す
