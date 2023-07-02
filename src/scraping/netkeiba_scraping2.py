@@ -826,6 +826,11 @@ def scrape_racedata(driver, race_id):
     # horse_id取得
     horse_id_list = re.findall('/horse/[0-9a-zA-Z]{10}', html)
     horse_id_list = list(map(lambda x: (x.replace("/horse/", '')), horse_id_list))
+
+    # date列をrace_data2から作る
+    date = re.findall(r"\d{1,4}年\d{1,2}月\d{1,2}日", race_data2)[0]
+    date = datetime.datetime.strptime(date, '%Y年%m月%d日')
+    date = date.strftime("%Y/%m/%d")
     
     # 共通列追加
     dfs[0]["grade"]      = grade
@@ -834,6 +839,7 @@ def scrape_racedata(driver, race_id):
     dfs[0]["race_data2"] = race_data2
     dfs[0]["race_id"]    = race_id
     dfs[0]["horse_id"]   = horse_id_list
+    dfs[0]["date"]       = date
     
     return dfs[0]
 

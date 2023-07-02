@@ -54,7 +54,7 @@ class NetkeibaDB:
         cur = conn.cursor()
         cur.execute('CREATE TABLE horse_prof(horse_id PRIMARY KEY, bod, trainer, owner, owner_info, producer, area, auction_price, earned, lifetime_record, main_winner, relative, blood_f, blood_ff, blood_fm, blood_m, blood_mf, blood_mm, horse_title, check_flg, retired_flg, review_cource_left_text, review_cource_left, review_cource_right, review_cource_right_text, review_distance_left_text, review_distance_left, review_distance_right, review_distance_right_text, review_style_left_text, review_style_left, review_style_right, review_style_right_text, review_grow_left_text, review_grow_left, review_grow_right, review_grow_right_text, review_heavy_left_text, review_heavy_left, review_heavy_right, review_heavy_right_text);')
         cur.execute('CREATE TABLE race_info(horse_id, race_id, date, venue, horse_num, post_position, horse_number, odds, fav, result, jockey_id, burden_weight, distance, course_condition, time, margin, corner_pos, pace, last_3f, prize, grade, PRIMARY KEY(horse_id, race_id));')
-        cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, PRIMARY KEY(horse_id, race_id));')
+        cur.execute('CREATE TABLE race_result(horse_id, race_id, race_name, grade, race_data1, race_data2, post_position, burden_weight, time, margin, horse_weight, prize, result, date, PRIMARY KEY(horse_id, race_id));')
         cur.execute('CREATE TABLE jockey_info(jockey_id, year, num, PRIMARY KEY(jockey_id, year));')
         # netkeiba_scraping2.py では未使用のテーブル。互換性保持のため用意してある。
         cur.execute('CREATE TABLE race_id(race_No INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT);')
@@ -297,19 +297,19 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
 
-    def sql_mul_race_id_1v1(self, horse1, horse2, upper_race_id):
+    def sql_mul_race_id_1v1(self, horse1, horse2, date_with_0):
         """ <upper_race_id のレースのうち horse1, horse2 両方が出たレースIDを返す"""
-        sql = "SELECT race_id FROM race_info WHERE ((horse_id=? OR horse_id=?) AND (race_id < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
-        self.cur.execute(sql, [horse1, horse2, upper_race_id])
+        sql = "SELECT race_id FROM race_info WHERE ((horse_id=? OR horse_id=?) AND (date < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
+        self.cur.execute(sql, [horse1, horse2, date_with_0])
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
         return retList
     
-    def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, upper_race_id):
+    def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, date_with_0):
         """ <upper_race_id のレースのうち jockey1, jockey2 両方が出たレースIDを返す"""
-        sql = "SELECT race_id FROM race_info WHERE ((jockey_id=? OR jockey_id=?) AND (race_id < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
-        self.cur.execute(sql, [jockey1, jockey2, upper_race_id])
+        sql = "SELECT race_id FROM race_info WHERE ((jockey_id=? OR jockey_id=?) AND (date < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
+        self.cur.execute(sql, [jockey1, jockey2, date_with_0])
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
