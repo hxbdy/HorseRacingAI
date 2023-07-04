@@ -109,6 +109,7 @@ class NetkeibaDB:
         self.cur.execute("CREATE INDEX race_info_date ON race_info(race_id, date);")
         self.cur.execute("CREATE INDEX race_info_grade ON race_info(horse_id, race_id, grade);")
         self.cur.execute("CREATE INDEX race_info_jockey_id ON race_info(race_id, jockey_id, result);")
+        self.cur.execute("CREATE INDEX jockey_id_date ON race_info(jockey_id, date);")
 
         # race_result
         self.cur.execute("CREATE INDEX race_result_grade      ON race_result(horse_id, race_id, grade);")
@@ -303,12 +304,12 @@ class NetkeibaDB:
         return retList
     
     def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, date_with_0):
-        """ <upper_race_id のレースのうち jockey1, jockey2 両方が出たレースIDを返す"""
-        sql = "SELECT race_id FROM race_info WHERE ((jockey_id=? OR jockey_id=?) AND (date < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
-        self.cur.execute(sql, [jockey1, jockey2, date_with_0])
+        """ <upper_race_id のレースのうち jockey1, jockey2 両方が出たレース順位を返す"""
+        sql = f'SELECT new_table_a.result, new_table_b.result FROM (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey1}" AND date < "{date_with_0}") AS new_table_a INNER JOIN (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey2}" AND date < "{date_with_0}") AS new_table_b ON new_table_a.race_id = new_table_b.race_id;'
+        self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():
-            retList.append(i[0])
+            retList.append(i)
         return retList
     
     def sql_one_review(self, horse_id):
