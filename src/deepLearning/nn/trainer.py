@@ -72,7 +72,7 @@ class Trainer:
 
             if self.verbose:
                 time_epoch = time.perf_counter()
-                c = "=== epoch :" + str(self.current_epoch) + ", train acc :" + str(train_acc) + ", test acc :" + str(test_acc) + ", time :" + str(time_epoch - self.time_now) + " ==="
+                c = f"=== epoch :{self.current_epoch}, train acc :{train_acc}, test acc :{test_acc}, time :" + str(time_epoch - self.time_now) + f" loss :{loss}==="
                 console.log(c)
                 self.time_now = time_epoch
 

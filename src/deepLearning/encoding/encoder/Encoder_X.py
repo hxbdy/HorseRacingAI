@@ -10,7 +10,7 @@ from RaceInfo      import RaceInfo
 class XClass:
     # 全インスタンス共通の変数
     race_id:str        = '0'
-    pad_size:int       = 18
+    pad_size:int       = 16
     race_info:RaceInfo = RaceInfo()
     
     # 自身が子プロセスか判断するために使う

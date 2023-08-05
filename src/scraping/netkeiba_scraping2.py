@@ -34,7 +34,7 @@ from RaceInfo      import RaceInfo
 # スクレイピングプロセスの優先度設定(通常以上にはしないこと)
 # 通常以下 : psutil.BELOW_NORMAL_PRIORITY_CLASS
 # 通常     : psutil.NORMAL_PRIORITY_CLASS
-psutil.Process().nice(psutil.NORMAL_PRIORITY_CLASS)
+psutil.Process().nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 ####################################################################################
 
