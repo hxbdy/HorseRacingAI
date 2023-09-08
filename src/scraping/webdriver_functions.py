@@ -29,7 +29,17 @@ def start_driver(browser_name, arg_list=[], pageLoadStrategy=False):
     if(browser_name == 'Chrome'):
         # Chromeを起動 (エラーメッセージを表示しない)
         logger.info('initialize chrome driver')
-        service = Service(executable_path=ChromeDriverManager(path=DRIVER_DIRECTORY).install())
+
+        # 最新ドライバ取得
+        # service = Service(executable_path=ChromeDriverManager(path=DRIVER_DIRECTORY).install())
+
+        # 2023/09/05 現在
+        # chromedriver ver.15 以降はDLリンクが変更されており
+        # webdriver_manager がまだそのリンク変更に対応していないため、ドライバの自動取得に失敗する
+        # 暫定対応として以下リンクからドライバを手動でDLして使用する
+        # https://googlechromelabs.github.io/chrome-for-testing/#stable
+        service = Service(executable_path="src/scraping/.wdm/drivers/chromedriver/win64/116.0.5845.96/chromedriver.exe")
+
         ChromeOptions = webdriver.ChromeOptions()
 
         # 起動オプション追加
