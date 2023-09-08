@@ -303,9 +303,9 @@ class NetkeibaDB:
             retList.append(i[0])
         return retList
     
-    def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, date_with_0):
-        """ <upper_race_id のレースのうち jockey1, jockey2 両方が出たレース順位を返す"""
-        sql = f'SELECT new_table_a.result, new_table_b.result FROM (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey1}" AND date < "{date_with_0}") AS new_table_a INNER JOIN (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey2}" AND date < "{date_with_0}") AS new_table_b ON new_table_a.race_id = new_table_b.race_id;'
+    def sql_mul_race_id_jockey_1v1(self, jockey1, jockey2, date2_with_0, date_with_0):
+        """ date2_with_0 から date_with_0 のレースのうち jockey1, jockey2 両方が出たレース順位を返す"""
+        sql = f'SELECT new_table_a.result, new_table_b.result FROM (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey1}" AND date < "{date_with_0}" AND date > "{date2_with_0}") AS new_table_a INNER JOIN (SELECT race_id, jockey_id, result FROM race_info WHERE jockey_id="{jockey2}" AND date < "{date_with_0}" AND date > "{date2_with_0}") AS new_table_b ON new_table_a.race_id = new_table_b.race_id;'
         self.cur.execute(sql)
         retList = []
         for i in self.cur.fetchall():

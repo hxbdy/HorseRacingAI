@@ -5,6 +5,7 @@
 
 import re
 from datetime import date
+from dateutil import relativedelta
 from typing   import OrderedDict
 
 from log import *
@@ -249,10 +250,15 @@ class NetkeibaDB_IF:
         return self.netkeibaDB.sql_mul_race_id_1v1(horse_id_1, horse_id_2, date_with_0)
     
     def db_race_list_jockey_1v1(self, jockey_id_1, jockey_id_2, upper_race_id):
-        """ <upper_race_id のレースのうち jockey_id_1, jockey_id_2 両方が出たレースIDを返す"""
-        d :date= self.db_race_date(upper_race_id)
+        """ upper_race_id -5 ～ upper_race_id のレースのうち jockey_id_1, jockey_id_2 両方が出たレースIDを返す"""
+        
+        d  :date = self.db_race_date(upper_race_id)
         date_with_0 = d.strftime("%Y/%m/%d")
-        return self.netkeibaDB.sql_mul_race_id_jockey_1v1(jockey_id_1, jockey_id_2, date_with_0)
+
+        d2 :date = d - relativedelta.relativedelta(years = 5)
+        date2_with_0 = d2.strftime("%Y/%m/%d")
+        
+        return self.netkeibaDB.sql_mul_race_id_jockey_1v1(jockey_id_1, jockey_id_2, date2_with_0, date_with_0)
     
     def db_horse_parent(self, horse_id, parent):
         """親のhorse_idを返す
