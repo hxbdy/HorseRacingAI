@@ -2,6 +2,7 @@
 # DB からデータを取得して、学習データX と 教師データt の対となるリストを作成する
 # start_year <= data <= end_year のレースから limit 件取得する
 
+import copy
 import shutil
 import multiprocessing
 from multiprocessing import Pool, Queue
@@ -25,7 +26,10 @@ import warnings
 warnings.resetwarnings()
 warnings.simplefilter('ignore', np.VisibleDeprecationWarning)
 
-def encode(encoder, race_id_list):
+def encode(encoder, race_id_list_org):
+
+    # ディープコピー
+    race_id_list = copy.copy(race_id_list_org)
 
     # 結果保存リスト
     result_list = []
@@ -36,8 +40,10 @@ def encode(encoder, race_id_list):
     # マルチプロセス実行なので、各エンコードクラスは子プロセスにて実行する
     instance.is_child = True
 
-    # TODO: 同じ行に複数エンコーダが表示される
-    # imapは複数argsを渡せないため要別案
+    # JockeyBradleyTerryClass は、例外的に一番大きいrace_id一つだけを入れる
+    if(instance.__class__.__name__ == "JockeyBradleyTerryClass"):
+        race_id_list = [max(race_id_list)]
+
     for race_id in track(race_id_list, description="[bold green]{0:25s} encoding... ".format(instance.__class__.__name__)):
         # エンコード対象のrace_idをセットする
         instance.set(race_id)
@@ -125,4 +131,4 @@ def multi_encode(start_year = 1800, end_year = 2020, limit = -1, pattern = False
     return race_id_list, x_data, t_data
 
 if __name__ == "__main__":
-    race_id_list, x_data, t_data = multi_encode(start_year = 1800, end_year = 2022, limit = -1, pattern = False, save = True)
+    race_id_list, x_data, t_data = multi_encode(start_year = 2000, end_year = 2022, limit = -1, pattern = False, save = True)

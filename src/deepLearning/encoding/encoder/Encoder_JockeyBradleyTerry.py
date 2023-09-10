@@ -1,10 +1,18 @@
 from Encoder_BradleyTerry import BradleyTerryClass
 
 class JockeyBradleyTerryClass(BradleyTerryClass):
+    # self.race_id までの「全騎手リスト」と 「今回出場する騎手リスト」を取得
+    # 全騎手リストでパワーを計算、その中から今回の騎手を取り出す
 
     def get(self):
-        self.xList = self.nf.db_race_list_jockey(self.race_id)
+        # 「全騎手リスト」を取得
+        self.xList = self.nf.db_race_info_jockey_list('0', self.race_id)
         self.col_num = len(self.xList)
+
+        self.logger.debug("col_num = {0}".format(self.col_num))
+
+        # 「今回出場する騎手リスト」を取得
+        self.target = self.nf.db_race_list_jockey(self.race_id)
 
     def gen_wl_table(self):
         # 馬数x馬数の対戦表作成
@@ -17,6 +25,8 @@ class JockeyBradleyTerryClass(BradleyTerryClass):
                 win = 0
                 lose = 0
                 horse_x = self.xList[x]
+
+                # TODO: 騎手vs騎手の勝敗ではなく、単純なこのレースまでの勝利数比較のほうが良い判断材料にならないか？
                 races = self.nf.db_race_list_jockey_1v1(horse_y, horse_x, self.race_id)
 
                 self.logger.debug("{0} vs {1} history ~ {2} | race_id_list = {3}".format(horse_y, horse_x, self.race_id, races))
@@ -43,3 +53,22 @@ class JockeyBradleyTerryClass(BradleyTerryClass):
                         lose += 1
                 self.wl_table[y][x] = win
                 self.wl_table[x][y] = lose
+
+    def fix(self):
+        self.calcPower()
+
+        a = []
+        for jockey_id in self.target:
+
+            try:
+                idx = self.xList.index(jockey_id)
+                val = self.p[idx]
+            except ValueError:
+                # 以前に出場経験がない場合はこちら
+                # 平均のパワーとする
+                val = sum(self.p) / len(self.p)
+
+            a.append(val)
+
+        self.logger.debug("power = {0}".format(a))
+        self.xList = a
