@@ -278,14 +278,14 @@ def main_process(untracked_race_id_list, children_num, roll):
         while mem.percent > 100.0:
             # 待ちの数を10以下になるまで待つ
             # 待ってもメモリの使用率が改善しない場合は一定時間経過後に強制終了
-            print("mem {0}% used ! queue size = {1} | wait {2}/{3}".format(mem.percent, db_queue.qsize(), mem_limit_cnt, MEM_LIMIT_WAIT_SEC))
+            logger.warning("mem {0}% used ! queue size = {1} | wait {2}/{3}".format(mem.percent, db_queue.qsize(), mem_limit_cnt, MEM_LIMIT_WAIT_SEC))
             if db_queue.qsize() > 10:
                 time.sleep(1)
             else:
                 if mem_limit_cnt > MEM_LIMIT_WAIT_SEC:
                     # 強制終了
                     # スクレイププロセスに終了要求送信
-                    print("scrape imm FIN send")
+                    logger.error("scrape imm FIN send")
                     for i in range(children_num):
                         children_queue[i].put(["FIN", i, None, None])
                         children_comp_flg[children_id] = 1
@@ -294,15 +294,15 @@ def main_process(untracked_race_id_list, children_num, roll):
                     for i in range(children_num):
                         children_process[i].join(timeout = 90)
                     # untracked キューで待っていたidを払い出し。DBに保存しておく
-                    print("scrape_race_result send")
+                    logger.error("scrape_race_result send")
                     while len(untracked_race_id_queue) > 0:
                         race_id = untracked_race_id_queue.pop()
                         db_queue.put(["FAILED_INSERT", "scrape_race_result", race_id])
-                    print("scrape_horse_result send")
+                    logger.error("scrape_horse_result send")
                     while len(untracked_horse_id_queue) > 0:
                         horse_id = untracked_horse_id_queue.pop()
                         db_queue.put(["FAILED_INSERT", "scrape_horse_result", horse_id])
-                    print("db_queue FIN send")
+                    logger.error("db_queue FIN send")
                     db_queue.put(["FIN"])
                     # DB制御プロセス終了待ち
                     # メインプロセスが先に終了してしまう時のデッドロック回避
@@ -313,8 +313,8 @@ def main_process(untracked_race_id_list, children_num, roll):
         mem_limit_cnt = 0
 
         # 進捗確認
-        logger.info("untracked_race_id_queue:{0}".format(len(untracked_race_id_queue)))
-        logger.info("untracked_horse_id_queue:{0}".format(len(untracked_horse_id_queue)))
+        logger.info("untracked_race_id_queue  : {0}".format(len(untracked_race_id_queue)))
+        logger.info("untracked_horse_id_queue : {0}".format(len(untracked_horse_id_queue)))
 
         # REQ メッセージ
         # 子プロセスからジョブの要求があったときに受信する
@@ -357,7 +357,7 @@ def main_process(untracked_race_id_list, children_num, roll):
             # そのレースに出走した horse_id をエンキューする
             if data[1] == "scrape_race_result":
                 race_result, horse_id_list = data[2]
-                print("<- rcv SUCCESS scrape_race_result")
+                logger.info("<- rcv SUCCESS scrape_race_result")
 
                 db_queue.put(["SUCCESS_UPSERT", race_result, "race_result"])
                 # horse_idのスクレイピング依頼
@@ -367,7 +367,7 @@ def main_process(untracked_race_id_list, children_num, roll):
             # horse_prof / race_info テーブルの更新
             elif data[1] == "scrape_horse_result":
                 horse_prof, race_info = data[2]
-                print("<- rcv SUCCESS scrape_horse_result")
+                logger.info("<- rcv SUCCESS scrape_horse_result")
 
                 db_queue.put(["SUCCESS_UPSERT", horse_prof, "horse_prof"])
                 db_queue.put(["SUCCESS_UPSERT", race_info, "race_info"])
@@ -376,22 +376,22 @@ def main_process(untracked_race_id_list, children_num, roll):
         # untracked テーブルに挿入しておく
         elif data[0] == "FAILED":
             if data[1] == "scrape_race_result":
-                print("<- rcv FAILED scrape_race_result")
+                logger.warning("<- rcv FAILED scrape_race_result")
                 db_queue.put(["FAILED_INSERT", "scrape_race_result", data[2]])
 
             elif data[1] == "scrape_horse_result":
-                print("<- rcv FAILED scrape_horse_result")
+                logger.warning("<- rcv FAILED scrape_horse_result")
                 db_queue.put(["FAILED_INSERT", "scrape_horse_result", data[2]])
 
         # すべての子プロセスの完了確認
         if 0 in children_comp_flg:
-            print("children_comp_flg = ", children_comp_flg)
+            logger.debug("children_comp_flg = {0}".format(children_comp_flg))
         else:
             break
 
     # DB制御プロセス終了
     db_queue.put(["FIN"])
-    print("snd db_queue FIN")
+    logger.info("snd db_queue FIN")
 
     # 子プロセス終了待ち
     # メインプロセスが先に終了してしまう時のデッドロック回避
@@ -428,11 +428,11 @@ def scrape_process(parent_queue, child_queue, children_id):
         try:
             data = queue.get(timeout=60)
         except Exception as e:
-            print("Exception", e.args)
+            logger.error("Exception : {0}".format(e.args))
             # スクレイピングに60 sec以上かかった
             # 失敗としてdriverは再起動して次に行く
-            print("scrape timeout !!!")
-            print("-> TIMEOUT FAILED REQ id =", children_id)
+            logger.error("scrape timeout !!!")
+            logger.error("-> TIMEOUT FAILED REQ id : {0}".format(children_id))
 
             # reboot driver
             driver.close()
@@ -450,23 +450,23 @@ def scrape_process(parent_queue, child_queue, children_id):
         elif data[0] == "REQ":
             children_id, func, id = data[1:]
             if func is None:
-                print("!!! func is not defined !!!")
+                logger.critical("!!! func is not defined !!!")
             if id is None:
-                print("!!! id is not defined !!!")
+                logger.critical("!!! id is not defined !!!")
             func(queue, [id], driver)
 
         # スクレイプ完了通知受信 (From func)
         elif data[0] == "SUCCESS":
-            print("-> SUCCESS REQ id =", children_id)
+            logger.info("-> SUCCESS REQ id = {0}".format(children_id))
             parent_queue.put(data)
             parent_queue.put(["REQ", children_id])
 
         # スクレイプ失敗通知受信 (From func)
         elif data[0] == "FAILED":
-            print("-> FAILED REQ id =", children_id)
+            logger.warning("-> FAILED REQ id = {0}".format(children_id))
             parent_queue.put(data)
             parent_queue.put(["REQ", children_id])
-    print("scrape_process fin id:", children_id)
+    logger.info("scrape_process fin id : {0}".format(children_id))
             
 def db_process(parent_queue, child_queue):
     nf = NetkeibaDB_IF("ROM")
@@ -475,7 +475,7 @@ def db_process(parent_queue, child_queue):
         data = queue.get()
 
         # 進捗確認
-        logger.info("db_ctrl_queue:{0}".format(queue.qsize()))
+        logger.info("db_ctrl_queue : {0}".format(queue.qsize()))
 
         # 親プロセスから終了要求受信
         if data[0] == "FIN":
@@ -491,7 +491,7 @@ def db_process(parent_queue, child_queue):
                 nf.db_insert_untracked_race_id(data[2])
             elif data[1]=="scrape_horse_result":
                 nf.db_insert_untracked_horse_id(data[2])
-    print("db_process fin")
+    logger.info("db_process fin")
 
 ####################################################################################
 
@@ -610,7 +610,6 @@ def build_perform_contents(driver, horseID):
     # race_id 取得
     race_link_list = re.findall('/race/[0-9a-zA-Z]{12}', html)
     race_link_list = list(map(lambda x: (x.replace("/race/", '')), race_link_list))
-    # print("race_link_list = ", race_link_list)
 
     dfs[0]["horse_id"] = horseID
     dfs[0]["race_id"] = race_link_list
@@ -975,7 +974,7 @@ def scrape_race_result(queue, race_id_list, driver):
             # (次段の horse_id スクレイピング対象のため)
             queue.put(["SUCCESS", "scrape_race_result", [race_result, race_result["horse_id"]]], block=True)
     except Exception as e:
-        print("Exception", e.args)
+        logger.error("Exception : {0}".format(e.args))
         queue.put(["FAILED", "scrape_race_result", race_id_list], block=True)
 
 def scrape_horse_result(queue, horse_id_list, driver):
@@ -989,7 +988,7 @@ def scrape_horse_result(queue, horse_id_list, driver):
                 raise Exception
             queue.put(["SUCCESS", "scrape_horse_result", [horse_prof_data, race_info_data]], block=True)
     except Exception as e:
-        print("Exception", e.args)
+        logger.error("Exception : {0}".format(e.args))
         queue.put(["FAILED", "scrape_horse_result", checked_list], block=True)
 
 ####################################################################################################
@@ -1019,14 +1018,14 @@ if __name__ == "__main__":
     # スクレイピングに使うブラウザのダミーユーザデータの保存場所を用意
     path_userdata = os.getcwd() + '/' + path_ini("scraping", "path_userdata")
     path_userdata = path_userdata.replace('\\', '/')
-    print("path_userdata = ", path_userdata)
+    logger.debug("path_userdata : {0}".format(path_userdata))
 
     # スクレイピング用driver設定
     # プロセス数分のログインセッションを持ったダミーユーザを作成
     # ログインボタンは画像のためここでは画像を読む
     if not args.skip_login:
         for i in range(process_num):
-            print("process {0} init...".format(i))
+            logger.info("process {0} init...".format(i))
             arg_list = ['--user-data-dir=' + path_userdata + str(i), '--profile-directory=Profile '+str(i), '--disable-logging']
             driver = wf.start_driver(browser, arg_list, False)
             login(driver, mail_address, password)
@@ -1120,8 +1119,6 @@ if __name__ == "__main__":
         # arg_list = ['--user-data-dir=' + path_userdata + str(0), '--profile-directory=Profile 0', '--disable-logging', '--blink-settings=imagesEnabled=false']
         # driver = wf.start_driver(browser, arg_list, False)
         # prof, race_info = scrape_horsedata(driver, "201905010102")
-        # print("prof = ", prof)
-        # print("race_info = ", race_info)
         # driver.close()
 
         # レースの取得を行う。DBに追加も行う
