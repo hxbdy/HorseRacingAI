@@ -56,6 +56,12 @@ class NetkeibaDB_IF:
         totalRaceList = self.netkeibaDB.sql_mul_distinctColCnt(start_year, end_year, limit, pattern)
 
         return totalRaceList
+    
+    def db_race_list_id_under_sampling(self, race_id):
+        """1位の馬番を返す interface
+        """
+        horse_number_1st = self.netkeibaDB.sql_mul_distinctColCnt_number(race_id)
+        return horse_number_1st
 
     def db_race_date(self, race_id):
         """レース開催日をdate型で返す

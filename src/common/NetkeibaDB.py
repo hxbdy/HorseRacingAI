@@ -261,6 +261,27 @@ class NetkeibaDB:
         for i in self.cur.fetchall():
             retList.append(i[0])
         return retList
+    
+    def sql_mul_distinctColCnt_number(self, race_id):
+        """1位の馬番を返す
+        """
+        # logger.info("race_id = {0}".format(race_id))
+        sql = f'SELECT horse_number FROM race_info WHERE race_id="{race_id}" AND result=?;'
+        # logger.info("sql = {0}".format(sql))
+        self.cur.execute(sql, (1,))
+        ret = self.cur.fetchone()
+
+        if ret is None:
+            # 1がstrで挿入されるケースがある
+            self.cur.execute(sql, ("1",))
+            ret = self.cur.fetchone()
+
+        # logger.info("sql exe = {0}".format(ret))
+        if ret is None:
+            ret = None
+        else:
+            ret = ret[0]
+        return ret
 
     def sql_mul_sortHorseNum(self, target_col_list, hint_col, data):
         # 複数テーブルから内部結合(inner join)してから指定列を取り出す

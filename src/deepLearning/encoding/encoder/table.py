@@ -23,7 +23,7 @@ XTbl = [
     encoder.Encoder_Pace.PaceClass,
     encoder.Encoder_Review.ReviewClass,
     encoder.Encoder_LastRaceLeft.LastRaceLeftClass,
-    encoder.Encoder_JockeyBradleyTerry.JockeyBradleyTerryClass
+    # encoder.Encoder_JockeyBradleyTerry.JockeyBradleyTerryClass # TODO: 1件分しか出力されない.要修正
 ]
 
 # 正解用テーブル
