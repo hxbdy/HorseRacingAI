@@ -123,7 +123,12 @@ class MultiLayerNetExtend:
         weight_decay = 0
         for idx in range(1, self.hidden_layer_num + 2):
             W = self.params['W' + str(idx)]
+            # Lmax
+            # weight_decay += np.max(np.abs(W))
+            # L2
             weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W**2)
+            # L1
+            # weight_decay += np.sum(np.abs(W))
 
         return self.last_layer.forward(y, t) + weight_decay
 
@@ -175,6 +180,7 @@ class MultiLayerNetExtend:
         # 設定
         grads = {}
         for idx in range(1, self.hidden_layer_num+2):
+            # TODO: ノルムを変更したとき、ここのweight_decay_lambdaも変えるべきでは?
             grads['W' + str(idx)] = self.layers['Affine' + str(idx)].dW + self.weight_decay_lambda * self.params['W' + str(idx)]
             grads['b' + str(idx)] = self.layers['Affine' + str(idx)].db
 
