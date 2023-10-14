@@ -317,8 +317,15 @@ class NetkeibaDB:
 
     def sql_mul_race_id_1v1(self, horse1, horse2, date_with_0):
         """ <upper_race_id のレースのうち horse1, horse2 両方が出たレースIDを返す"""
-        sql = "SELECT race_id FROM race_info WHERE ((horse_id=? OR horse_id=?) AND (date < ?)) GROUP BY race_id HAVING COUNT(race_id) > 1;"
+
+        # 日付による検索範囲の上限設定版
+        sql = "SELECT race_id FROM race_info WHERE ((horse_id=? OR horse_id=?) AND (date < ?)) GROUP BY race_id HAVING COUNT(race_id) >= 1;"
         self.cur.execute(sql, [horse1, horse2, date_with_0])
+
+        # DB内すべてのレースから取得する
+        # sql = "SELECT race_id FROM race_info WHERE (horse_id=? OR horse_id=?) GROUP BY race_id HAVING COUNT(race_id) >= 1;"
+        # self.cur.execute(sql, [horse1, horse2])
+        
         retList = []
         for i in self.cur.fetchall():
             retList.append(i[0])
