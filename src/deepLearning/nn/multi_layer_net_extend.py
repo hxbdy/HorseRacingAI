@@ -20,6 +20,7 @@ class MultiLayerNetExtend:
     output_size : 出力サイズ（MNISTの場合は10）
     activation : 'relu' or 'sigmoid'
     norm : 'L1' or 'L2' or 'Lmax' 正則化の強さは L1 に近いほうが強い
+    t_is_onehot : 正解ラベルがonehot形式かどうか
     weight_init_std : 重みの標準偏差を指定（e.g. 0.01）
         'relu'または'he'を指定した場合は「Heの初期値」を設定
         'sigmoid'または'xavier'を指定した場合は「Xavierの初期値」を設定
@@ -29,7 +30,7 @@ class MultiLayerNetExtend:
     use_batchNorm: Batch Normalizationを使用するかどうか
     """
     def __init__(self, input_size, hidden_size_list, output_size,
-                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, norm='L2',
+                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, norm='L2', t_is_onehot=True,
                  use_dropout = False, dropout_ration = 0.5, use_batchnorm=False):
         self.input_size = input_size
         self.output_size = output_size
@@ -42,6 +43,7 @@ class MultiLayerNetExtend:
         self.use_batchnorm = use_batchnorm
         self.params = {}
         self.norm = norm
+        self.t_is_onehot = t_is_onehot
 
         # 重みの初期化
         self.__init_weight(weight_init_std)
@@ -69,9 +71,10 @@ class MultiLayerNetExtend:
         idx = self.hidden_layer_num + 1
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
 
-        # 正解ラベルがone-hotなら SoftmaxWithLoss()
-        # そうでないなら          IdentityWithLoss()
-        self.last_layer = SoftmaxWithLoss()
+        if self.t_is_onehot:
+            self.last_layer = SoftmaxWithLoss()
+        else:
+            self.last_layer = IdentityWithLoss()
 
     def __init_weight(self, weight_init_std):
         """重みの初期値設定
