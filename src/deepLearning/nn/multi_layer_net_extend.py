@@ -19,6 +19,7 @@ class MultiLayerNetExtend:
     hidden_size_list : 隠れ層のニューロンの数のリスト（e.g. [100, 100, 100]）
     output_size : 出力サイズ（MNISTの場合は10）
     activation : 'relu' or 'sigmoid'
+    norm : 'L1' or 'L2' or 'Lmax' 正則化の強さは L1 に近いほうが強い
     weight_init_std : 重みの標準偏差を指定（e.g. 0.01）
         'relu'または'he'を指定した場合は「Heの初期値」を設定
         'sigmoid'または'xavier'を指定した場合は「Xavierの初期値」を設定
@@ -28,7 +29,7 @@ class MultiLayerNetExtend:
     use_batchNorm: Batch Normalizationを使用するかどうか
     """
     def __init__(self, input_size, hidden_size_list, output_size,
-                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, 
+                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, norm='L2',
                  use_dropout = False, dropout_ration = 0.5, use_batchnorm=False):
         self.input_size = input_size
         self.output_size = output_size
@@ -40,6 +41,7 @@ class MultiLayerNetExtend:
         self.weight_decay_lambda = weight_decay_lambda
         self.use_batchnorm = use_batchnorm
         self.params = {}
+        self.norm = norm
 
         # 重みの初期化
         self.__init_weight(weight_init_std)
@@ -123,12 +125,15 @@ class MultiLayerNetExtend:
         weight_decay = 0
         for idx in range(1, self.hidden_layer_num + 2):
             W = self.params['W' + str(idx)]
-            # Lmax
-            # weight_decay += np.max(np.abs(W))
-            # L2
-            weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W**2)
-            # L1
-            # weight_decay += np.sum(np.abs(W))
+
+            if self.norm=='Lmax':
+                weight_decay += np.max(np.abs(W))
+            elif self.norm=='L2':
+                weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W**2)
+            elif self.norm=='L1':
+                weight_decay += np.sum(np.abs(W))
+            else:
+                raise ValueError("invalid norm")
 
         return self.last_layer.forward(y, t) + weight_decay
 
