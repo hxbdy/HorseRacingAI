@@ -44,31 +44,20 @@ class Bet:
         """馬連
         1位、2位の組み合わせを予想する賭け方。着順は問わない"""
 
-        # 昇順ソート済みインデックスのリストを作成
+        # 上位2つの値のみTrueにする
         sort_y = y.copy()
-        sort_y = sort_y.argsort(axis=1)
+        sort_y = sort_y.argsort(axis=1) > (y.shape[1] - 3)
 
-        # 各データの1～3位のリスト 
-        sort_y_1st = sort_y[:, -1]
-        sort_y_2nd = sort_y[:, -2]
-        # sort_y_3rd = sort_y[:, -3]
-
+        # 上位2つの値のみTrueにする
         sort_t = t.copy()
-        sort_t = sort_t.argsort(axis=1)
+        sort_t = sort_t.argsort(axis=1) > (t.shape[1] - 3)
 
-        sort_t_1st = sort_t[:, -1]
-        sort_t_2nd = sort_t[:, -2]
-        # sort_t_3rd = sort_t[:, -3]
-        
-        # ヒット数 = 
-        # (予想1位 == 正解1位) かつ (予想2位 == 正解2位) +
-        # (予想1位 == 正解2位) かつ (予想2位 == 正解1位)
-        cnt_hit = np.sum(sort_y_1st == sort_t_1st) + np.sum(sort_y_2nd == sort_t_2nd) + \
-                  np.sum(sort_y_1st == sort_t_2nd) + np.sum(sort_y_2nd == sort_t_1st)
+        # print(f"sort_y | {sort_y.shape} = {sort_y}")
+        # print(f"sort_t | {sort_t.shape} = {sort_t}")
 
-        # Trueの数を数える
+        # 行ごとのTrueの数が2つなら的中
+        cnt_hit = np.sum(np.sum(sort_y & sort_t, axis=1) == 2)
         accuracy = cnt_hit / float(t.shape[0])
-
         return accuracy
     
     @classmethod
