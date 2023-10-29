@@ -20,7 +20,7 @@ class MultiLayerNetExtend:
     output_size : 出力サイズ（MNISTの場合は10）
     activation : 'relu' or 'sigmoid'
     norm : 'L1' or 'L2' or 'Lmax' 正則化の強さは L1 に近いほうが強い
-    t_is_onehot : 正解ラベルがonehot形式かどうか
+    regression_or_classification : 回帰問題か分類問題か
     weight_init_std : 重みの標準偏差を指定（e.g. 0.01）
         'relu'または'he'を指定した場合は「Heの初期値」を設定
         'sigmoid'または'xavier'を指定した場合は「Xavierの初期値」を設定
@@ -30,7 +30,7 @@ class MultiLayerNetExtend:
     use_batchNorm: Batch Normalizationを使用するかどうか
     """
     def __init__(self, input_size, hidden_size_list, output_size,
-                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, norm='L2', t_is_onehot=True,
+                 activation='relu', weight_init_std='relu', weight_decay_lambda=0, norm='L2', regression_or_classification="classification",
                  use_dropout = False, dropout_ration = 0.5, use_batchnorm=False):
         self.input_size = input_size
         self.output_size = output_size
@@ -43,7 +43,7 @@ class MultiLayerNetExtend:
         self.use_batchnorm = use_batchnorm
         self.params = {}
         self.norm = norm
-        self.t_is_onehot = t_is_onehot
+        self.regression_or_classification = regression_or_classification
 
         # 重みの初期化
         self.__init_weight(weight_init_std)
@@ -71,10 +71,15 @@ class MultiLayerNetExtend:
         idx = self.hidden_layer_num + 1
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
 
-        if self.t_is_onehot:
+        # 回帰問題なら出力層に恒等関数,損失関数は2乗和誤差
+        # 分類問題なら出力層にソフトマックス関数,損失関数は交差エントロピー誤差を使用する
+        # (mnistは分類問題)
+        if self.regression_or_classification == "classification":
             self.last_layer = SoftmaxWithLoss()
-        else:
+        elif self.regression_or_classification == "regression":
             self.last_layer = IdentityWithLoss()
+        else:
+            raise ValueError(f"Invalid last layer: {self.last_layer}")
 
     def __init_weight(self, weight_init_std):
         """重みの初期値設定
