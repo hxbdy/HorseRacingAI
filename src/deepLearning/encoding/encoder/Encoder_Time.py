@@ -21,5 +21,18 @@ class TimeClass(XClass):
 
     def nrm(self):
         np_xList = np.array(self.xList)
-        val = self.zscore(np_xList, axis=-1, reverse=True)
-        self.xList = val.tolist()
+        
+        # zscore
+        # IdentityWithLoss を使用する場合
+        # val = self.zscore(np_xList, axis=-1, reverse=True)
+        # self.xList = val.tolist()
+
+        # 合計で割って和が1になるようにする
+        # SoftmaxWithLoss を使用するため
+        total = np_xList.sum()
+        self.logger.debug(f"{np_xList} / {total}")
+
+        nrm_xList = np_xList / total
+        self.logger.debug(f"nrm_xList.sum() = {nrm_xList.sum()}")
+
+        self.xList = nrm_xList.tolist()
